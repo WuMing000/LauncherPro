@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="90sp"
+            android:textColor="@color/white"
+            android:layout_centerVertical="true"/>
+
+        <TextView
+            android:id="@+id/tv_calendar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="2000年1月1日 星期一"
+            android:layout_below="@id/tv_time" />
+
+        <ImageView
+            android:id="@+id/iv_picture"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@mipmap/picture"
+            android:layout_toLeftOf="@id/et_source"
+            android:layout_marginRight="20dp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:id="@+id/et_source"
+            android:layout_width="150dp"
+            android:layout_height="30dp"
+            android:background="@drawable/selector_et_bg"
+            android:drawableLeft="@mipmap/bg_home_et_source"
+            android:padding="8dp"
+            android:hint="你要搜索什么呢"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="12sp"
+            android:drawablePadding="5dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="7"
+        android:layout_marginTop="50dp"
+        android:orientation="vertical"
+        android:layout_marginBottom="30dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2" >
+
+            <ImageButton
+                android:id="@+id/btn_picture"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@mipmap/bg_home_picture"
+                android:src="@mipmap/bg_home_picture"
+                android:scaleType="centerCrop"
+                android:layout_marginRight="10dp"/>
+
+            <ImageButton
+                android:id="@+id/btn_music"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@mipmap/bg_home_music"
+                android:background="@mipmap/bg_home_music"
+                android:scaleType="centerCrop"
+                android:visibility="gone"/>
+
+            <RelativeLayout
+                android:id="@+id/rl_music"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@mipmap/bg_rl_music"
+                >
+
+                <TextView
+                    android:id="@+id/tv_music_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/iv_music"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:duplicateParentState="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="暂无歌曲信息"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <com.example.launchproject.view.OvalImageView
+                    android:id="@+id/iv_music"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_centerInParent="true"
+                    android:duplicateParentState="true"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/iv_music_circle"
+                    android:layout_marginBottom="10dp"/>
+
+                <ImageButton
+                    android:id="@+id/btn_previous"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@mipmap/previous_music_32"
+                    android:layout_below="@id/iv_music"
+                    android:layout_marginRight="30dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_toLeftOf="@id/btn_control"
+                    android:layout_centerVertical="true"/>
+
+                <ImageButton
+                    android:id="@+id/btn_control"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@mipmap/start_music"
+                    android:layout_below="@id/iv_music"
+                    android:layout_marginRight="30dp"
+                    android:layout_centerHorizontal="true"/>
+
+                <ImageButton
+                    android:id="@+id/btn_next"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@mipmap/next_music"
+                    android:layout_marginTop="5dp"
+                    android:layout_below="@id/iv_music"
+                    android:layout_toRightOf="@id/btn_control" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <ImageButton
+                    android:id="@+id/btn_projection_screen"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:src="@mipmap/bg_home_projection_screen"
+                    android:background="@mipmap/bg_home_projection_screen"
+                    android:scaleType="centerCrop"
+                    android:layout_marginRight="10dp"/>
+
+                <ImageButton
+                    android:id="@+id/btn_alarm"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:src="@mipmap/bg_home_alarm"
+                    android:background="@mipmap/bg_home_alarm"
+                    android:scaleType="centerCrop"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btn_browser"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:src="@mipmap/bg_home_browser"
+            android:background="@mipmap/bg_home_browser"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="10dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
