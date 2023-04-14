@@ -2,11 +2,16 @@ package com.example.launchproject.utils;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+
+import org.jetbrains.annotations.NotNull;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 public class CustomUtil {
 
@@ -56,4 +61,30 @@ public class CustomUtil {
 //        return y in top..bottom && x >= left && x <= right
 //    }
 
+    public static boolean isTouchPointInView(@NotNull View view, int x, int y) {
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        int left = location[0];
+        int top = location[1];
+        int right = left + view.getMeasuredWidth();
+        int bottom = top + view.getMeasuredHeight();
+        if (top <= y) {
+            if (bottom >= y && x >= left && x <= right) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int findItem(RecyclerView recyclerView, int x, int y) {
+        View childViewUnder = recyclerView.findChildViewUnder(x, y);
+        if (childViewUnder != null) {
+            RecyclerView.ViewHolder childViewHolder = recyclerView.getChildViewHolder(childViewUnder);
+            if (childViewHolder != null) {
+                return childViewHolder.getAdapterPosition();
+            }
+        }
+        return -1;
+
+    }
 }
