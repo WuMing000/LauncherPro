@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:padding="25dp"
     android:layout_margin="10dp"
-    android:background="@mipmap/dialog"
+    android:background="@drawable/dialog"
     android:orientation="vertical">
 
     <LinearLayout
