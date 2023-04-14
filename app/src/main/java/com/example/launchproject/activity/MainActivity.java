@@ -44,7 +44,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -55,10 +54,13 @@ import com.example.launchproject.R;
 import com.example.launchproject.adapter.RecyclerViewAPPAdapter;
 import com.example.launchproject.bean.APPBean;
 import com.example.launchproject.helper.PagingScrollHelper;
+import com.example.launchproject.manager.HandlerManager;
 import com.example.launchproject.manager.HorizontalPageLayoutManager;
-import com.example.launchproject.recevier.MyReceiver;
+import com.example.launchproject.recevier.MusicReceiver;
+import com.example.launchproject.recevier.MyInstalledReceiver;
 import com.example.launchproject.utils.CustomUtil;
 import com.example.launchproject.utils.DataUtil;
+import com.example.launchproject.view.DragRecyclerView;
 import com.example.launchproject.view.OvalImageView;
 
 import java.io.BufferedReader;
@@ -76,7 +78,6 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
@@ -87,17 +88,12 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 
     private static final String TAG = "MainActivity==============>";
 
-    private static final int GET_SYSTEM_TIME = 0;
-    private static final int HOME_LONG_CLICK = 2;
-    private static final int MUSIC_PLAY_UI = 3;
-    private static final int MUSIC_PAUSE_UI = 4;
-
     private ViewPager mViewPager;
     private ArrayList<View> mPageView;
     private ImageView ivFirst, ivSecond, ivThird;
     private LinearLayout mImgLayout, llBgHome;
     //    private ListView listViewAPP;
-    private RecyclerView rvAPPList;
+    private DragRecyclerView rvAPPList;
     //    private ListViewAPPAdapter adapter;
     private RecyclerViewAPPAdapter recyclerViewAPPAdapter;
     private List<APPBean> appBeanList;
@@ -111,21 +107,24 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     private RelativeLayout rlMusic;
     private OvalImageView ivMusic;
     private TextView tvMusicName;
-    private ImageButton btnControl, btnPrevious, btnNext;
-    private ImageButton btnPicture, btnMusic, btnProjectionScreen, btnAlarm, btnBrowser;
+    private ImageView btnControl, btnPrevious, btnNext;
+    private ImageView btnPicture, btnProjectionScreen, btnAlarm, btnBrowser;
 
     //View2 control
-    private ImageButton ibVideo, ibMusic, ibTiktok, ibOffice;
-
+    private ImageView ibVideo, ibMusic, ibTiktok, ibOffice;
     private AudioManager audioManager;
     private Animation animation;
 
-    MyReceiver myReceiver;
+    MusicReceiver myReceiver;
     private String musicName, date, calendar;
 
     private SharedPreferences sp;
     private SharedPreferences.Editor editor;
     private String spMusicName;
+    private int savePosition = -1;
+    private APPBean saveFrontAPPContent;
+    private APPBean saveMoveAPPContent;
+    private int downPosition;
 
     Handler handler = new Handler(Looper.myLooper()) {
 
@@ -140,6 +139,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     String appName = data.getString("appName");
                     String packageName = data.getString("packageName");
                     Bitmap bitmap = BitmapFactory.decodeByteArray(appIcons, 0, appIcons.length);
+                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
                     appBeanList.add(new APPBean(appName, bitmap, packageName));
                     mImgLayout.removeAllViews();
                     if (appBeanList.size() % 18 == 0) {
@@ -150,10 +150,10 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     recyclerViewAPPAdapter.notifyDataSetChanged();
 //                    adapter.notifyDataSetChanged();
                     break;
-                case GET_SYSTEM_TIME:
+                case HandlerManager.GET_SYSTEM_TIME:
                     handler.postDelayed(updateTimeThread, 1000);
                     break;
-                case HOME_LONG_CLICK :
+                case HandlerManager.HOME_LONG_CLICK :
                     AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
                     alertDialog.setMessage("是否设置壁纸")
                             .setPositiveButton("设置壁纸", new DialogInterface.OnClickListener() {
@@ -170,11 +170,15 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                             })
                             .show();
                     break;
-                case MUSIC_PLAY_UI :
-                    btnControl.setBackground(getResources().getDrawable(R.mipmap.start_music));
+                case HandlerManager.MUSIC_PLAY_UI :
+                    btnControl.setBackground(getResources().getDrawable(R.drawable.start_music));
                     break;
-                case MUSIC_PAUSE_UI :
-                    btnControl.setBackground(getResources().getDrawable(R.mipmap.pause_music));
+                case HandlerManager.MUSIC_PAUSE_UI :
+                    btnControl.setBackground(getResources().getDrawable(R.drawable.pause_music));
+                    break;
+                case HandlerManager.REMOVED_APP_SUCCESS:
+                    appBeanList.remove(savePosition);
+                    recyclerViewAPPAdapter.notifyDataSetChanged();
                     break;
             }
         }
@@ -195,7 +199,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     Runnable updateWallpaper = new Runnable() {
 
         public void run() {
-            handler.sendEmptyMessageAtTime(HOME_LONG_CLICK, 500);
+            handler.sendEmptyMessageAtTime(HandlerManager.HOME_LONG_CLICK, 500);
         }
     };
 
@@ -203,7 +207,12 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //隐藏底部导航栏
+//        View decorView = getWindow().getDecorView();
+//        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+//        decorView.setSystemUiVisibility(uiOptions);
         setContentView(R.layout.activity_main);
+        HandlerManager.putHandler(handler);
         sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
         initData();
         if (savedInstanceState != null) {
@@ -263,6 +272,28 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         outState.putString("calendar", calendar);
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        LayoutInflater layoutInflater = getLayoutInflater();
+        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
+        HorizontalPageLayoutManager horizontalPageLayoutManager = null;
+        int ori = mConfiguration.orientation; //获取屏幕方向
+        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+            //横屏
+            view1 = layoutInflater.inflate(R.layout.one_view_pager_landscape, null);
+            view2 = layoutInflater.inflate(R.layout.two_view_pager_landscape, null);
+            horizontalPageLayoutManager = new HorizontalPageLayoutManager(3, 6);
+        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+            //竖屏
+            view1 = layoutInflater.inflate(R.layout.one_view_pager_portrait, null);
+            view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
+            horizontalPageLayoutManager = new HorizontalPageLayoutManager(6, 3);
+        }
+        rvAPPList.setLayoutManager(horizontalPageLayoutManager);
+        recyclerViewAPPAdapter.notifyDataSetChanged();
+    }
+
     private void initData() {
 
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -289,7 +320,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 
         tvTime = view1.findViewById(R.id.tv_time);
         tvCalendar = view1.findViewById(R.id.tv_calendar);
-        handler.sendEmptyMessageAtTime(GET_SYSTEM_TIME, 1000);
+        handler.sendEmptyMessageAtTime(HandlerManager.GET_SYSTEM_TIME, 1000);
         ivPicture = view1.findViewById(R.id.iv_picture);
         etSource = view1.findViewById(R.id.et_source);
         rlMusic = view1.findViewById(R.id.rl_music);
@@ -299,7 +330,6 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         btnPrevious = view1.findViewById(R.id.btn_previous);
         btnNext = view1.findViewById(R.id.btn_next);
         btnPicture = view1.findViewById(R.id.btn_picture);
-        btnMusic = view1.findViewById(R.id.btn_music);
         btnProjectionScreen = view1.findViewById(R.id.btn_projection_screen);
         btnAlarm = view1.findViewById(R.id.btn_alarm);
         btnBrowser = view1.findViewById(R.id.btn_browser);
@@ -343,6 +373,72 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                 getAllAppNames();
             }
         }.start();
+//        recyclerViewAPPAdapter.setOnClickListener(new RecyclerViewAPPAdapter.OnClickListener() {
+//            @Override
+//            public void OnClick(int position) {
+//                Log.d(TAG, "click recyclerview item " + position);
+//                //查询这个应用程序的入口activity。把他开启起来
+//                PackageManager pm = getPackageManager();
+//                Intent intent = pm.getLaunchIntentForPackage(appBeanList.get(position).getPackageName());
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                startActivity(intent);
+//            }
+//        });
+//        recyclerViewAPPAdapter.setOnTouchListener(new RecyclerViewAPPAdapter.OnTouchListener() {
+//            @Override
+//            public void OnTouch(View view, MotionEvent motionEvent, int position) {
+//                firstPosition = position;
+//            }
+//        });
+
+        rvAPPList.setOnItemMoveListener(new DragRecyclerView.OnItemMoveListener() {
+            @Override
+            public void onDown(int position) {
+//                Log.d(TAG, "onDown====>" + position + "");
+//                if (rvAPPList.isDrag()) {
+//                    saveFrontAPPContent = new APPBean(appBeanList.get(position).getAppName(), appBeanList.get(position).getAppIcon(), appBeanList.get(position).getPackageName());
+//                    Log.e(TAG, saveFrontAPPContent.toString());
+//                }
+//                downPosition = position;
+            }
+
+            @Override
+            public void onMove(int x, int y, View v) {
+//                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
+//                if (movePosition != -1 && movePosition != downPosition) {
+//                    appBeanList.set(downPosition, appBeanList.get(movePosition));
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+//                else {
+//                    appBeanList.set(downPosition, saveFrontAPPContent);
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+            }
+
+            @Override
+            public void onUp(int position) {
+//                Log.d(TAG, "onUp====>" + position + "");
+//                if (saveFrontAPPContent != null) {
+//                    Log.e(TAG, "我进来了");
+//                    appBeanList.set(position, saveFrontAPPContent);
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+//                appBeanList.set(position, appBeanList.get(movePosition));
+//                appBeanList.set(movePosition, appBeanList.get(position));
+//                recyclerViewAPPAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onItemClick(int position) {
+                Log.d(TAG, "onItemClick====>" + position + "");
+                Log.d(TAG, "click recyclerview item " + position);
+                //查询这个应用程序的入口activity。把他开启起来
+                PackageManager pm = getPackageManager();
+                Intent intent = pm.getLaunchIntentForPackage(appBeanList.get(position).getPackageName());
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        });
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -405,33 +501,12 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             }
             return true;
         });
-        btnMusic.setOnTouchListener((view, motionEvent) -> {
-            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
-                btnMusic.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                btnMusic.clearAnimation();
-                try {
-                    Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusic", "com.tencent.qqmusic.activity.AppStarterActivity");
-                    intent.setComponent(componentNameGallery);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
-                }
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
-                btnMusic.clearAnimation();
-            }
-            return true;
-        });
         rlMusic.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
-                btnMusic.startAnimation(animation);
+                rlMusic.startAnimation(animation);
             } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                btnMusic.clearAnimation();
+                rlMusic.clearAnimation();
                 try {
                     Intent intent = new Intent();
                     ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusic", "com.tencent.qqmusic.activity.AppStarterActivity");
@@ -443,7 +518,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
-                btnMusic.clearAnimation();
+                rlMusic.clearAnimation();
             }
             return true;
         });
@@ -533,12 +608,12 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                         if (audioManager.isMusicActive()) {
                             Instrumentation mInst = new Instrumentation();
                             mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PAUSE);
-                            handler.sendEmptyMessageAtTime(MUSIC_PLAY_UI, 100);
+                            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
                             ivMusic.clearAnimation();
                         } else {
                             Instrumentation mInst = new Instrumentation();
                             mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PLAY);
-                            handler.sendEmptyMessageAtTime(MUSIC_PAUSE_UI, 100);
+                            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
                             ivMusic.startAnimation(animation);//開始动画
                         }
                     }
@@ -555,7 +630,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                         super.run();
                         Instrumentation mInst = new Instrumentation();
                         mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-                        handler.sendEmptyMessageAtTime(MUSIC_PAUSE_UI, 100);
+                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
                         ivMusic.startAnimation(animation);//開始动画
                     }
                 }.start();
@@ -571,14 +646,14 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                         super.run();
                         Instrumentation mInst = new Instrumentation();
                         mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_NEXT);
-                        handler.sendEmptyMessageAtTime(MUSIC_PAUSE_UI, 100);
+                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
                         ivMusic.startAnimation(animation);//開始动画
                     }
                 }.start();
             }
         });
 
-        ivMusic.setStrokeWidth(30);
+        ivMusic.setStrokeWidth(20);
         ivMusic.setStrokeColor(Color.BLACK);
 
         //View2 listener
@@ -676,7 +751,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     protected void onStart() {
         super.onStart();
         etSource.setText("");
-        registerForContextMenu(rvAPPList);//为ListView注册上下文菜单
+//        registerForContextMenu(rvAPPList);//为RecyclerviewView注册上下文菜单
         receive();
     }
 
@@ -684,16 +759,16 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     protected void onResume() {
         super.onResume();
         if (audioManager.isMusicActive()) {
-            handler.sendEmptyMessageAtTime(MUSIC_PAUSE_UI, 100);
+            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
             ivMusic.startAnimation(animation);//開始动画
         } else {
-            handler.sendEmptyMessageAtTime(MUSIC_PLAY_UI, 100);
+            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
             ivMusic.clearAnimation();
         }
 
     }
     private void receive(){
-        myReceiver = new MyReceiver(new MyReceiver.DataCallBack() {
+        myReceiver = new MusicReceiver(new MusicReceiver.DataCallBack() {
             @Override
             public void onDataChanged(String trackName, String artist, String albumName) {
                 musicName = trackName + " - " + artist;
@@ -706,6 +781,14 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         IntentFilter iF = new IntentFilter();
         iF.addAction("com.android.music.metachanged");
         registerReceiver(myReceiver, iF);
+
+        //动态注册应用安装和卸载广播
+        MyInstalledReceiver myInstalledReceiver = new MyInstalledReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addDataScheme("package");
+        intentFilter.addAction("android.intent.action.PACKAGE_ADDED");
+        intentFilter.addAction("android.intent.action.PACKAGE_REMOVED");
+        registerReceiver(myInstalledReceiver, intentFilter);
     }
 
     @Override
@@ -725,9 +808,25 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            int rawX = (int) ev.getRawX();
+            int rawY = (int) ev.getRawY();
             View v = getCurrentFocus();
 
-            if (!(v instanceof TextView)) {
+            Log.e(TAG, "rawX " + rawX + "rawY " + rawY);
+
+            if (!(CustomUtil.isTouchPointInView(etSource, rawX, rawY) || CustomUtil.isTouchPointInView(rlMusic, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(tvTime, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(tvCalendar, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(ivPicture, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(btnPicture, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(btnBrowser, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(btnAlarm, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(btnProjectionScreen, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(ibMusic, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(ibOffice, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(ibTiktok, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(ibVideo, rawX, rawY)
+                    || CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY))) {
                 handler.postDelayed(updateWallpaper, 500);
             }
             if (CustomUtil.isShouldHideInput(v, ev)) {
@@ -801,10 +900,10 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         for (int i = 0; i < dotViews.length; i++) {
             if (index == i) {
                 dotViews[i].setSelected(true);
-                dotViews[i].setImageResource(R.mipmap.light_oval);
+                dotViews[i].setImageResource(R.drawable.light_oval);
             } else {
                 dotViews[i].setSelected(false);
-                dotViews[i].setImageResource(R.mipmap.oval);
+                dotViews[i].setImageResource(R.drawable.oval);
             }
         }
 
@@ -827,7 +926,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         for (int i = 0; i < page; i++) {//这里也是循环页面数量
             imageView = new ImageView(this);
             imageView.setLayoutParams(params);
-            imageView.setImageResource(R.mipmap.oval);//设置默认没有选中时所有图片为灰色
+            imageView.setImageResource(R.drawable.oval);//设置默认没有选中时所有图片为灰色
             if (i == 0) {
                 //默认启动时，选中第一个小圆点
                 imageView.setSelected(true);
@@ -836,7 +935,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             }
             //得到每个小圆点的引用，用于滑动页面时，更改它们的状态。
             dotViews[i] = imageView;
-            dotViews[0].setImageResource(R.mipmap.light_oval);//设置第一个页面选择为黑色
+            dotViews[0].setImageResource(R.drawable.light_oval);//设置第一个页面选择为黑色
             //添加到布局里面显示
             mImgLayout.addView(imageView);
         }
@@ -857,19 +956,19 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         public void onPageSelected(int position) {
             switch (position) {
                 case 0:
-                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.light_oval));
-                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.oval));
-                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.oval));
+                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.light_oval));
+                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
+                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
                     break;
                 case 1:
-                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.oval));
-                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.light_oval));
-                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.oval));
+                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
+                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.light_oval));
+                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
                     break;
                 case 2:
-                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.oval));
-                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.oval));
-                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.light_oval));
+                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
+                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
+                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.light_oval));
                     break;
             }
         }
@@ -906,6 +1005,15 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         switch (item.getItemId()) {
             case R.id.menu_uninstall://卸载选中项
                 //TODO
+                Intent intent = new Intent();
+                intent.setAction("android.intent.action.DELETE");
+                intent.setData(Uri.parse("package:" + appBeanList.get(position).getPackageName()));
+                Toast.makeText(MainActivity.this, "卸载" + appBeanList.get(position).getAppName(), Toast.LENGTH_LONG).show();
+                savePosition = position;
+                startActivity(intent);
+//                startActivity(intent);
+//                appBeanList.remove(position);
+//                recyclerViewAPPAdapter.notifyDataSetChanged();
                 break;
             case R.id.menu_information://应用信息选中项
                 //TODO
@@ -946,20 +1054,26 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         //生成一个设置壁纸的请求
 //        final Intent pickWallpaper = new Intent(Intent.ACTION_SET_WALLPAPER);
 //        Intent chooser = Intent.createChooser(pickWallpaper, "chooser_wallpaper");
-        Intent intent = new Intent();
-        ComponentName componentName = new ComponentName("com.android.wallpaper", "com.android.wallpaper.picker.TopLevelPickerActivity");
-        intent.setComponent(componentName);
-        //发送设置壁纸的请求
-        startActivityForResult(intent, 1001);
+        try {
+            Intent intent = new Intent();
+            ComponentName componentName = new ComponentName("com.android.wallpaper", "com.android.wallpaper.picker.TopLevelPickerActivity");
+            intent.setComponent(componentName);
+            //发送设置壁纸的请求
+            startActivityForResult(intent, 1001);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            if (requestCode == 1001) {
-//                Log.e("1111111111111", data.getData() + "");
-                setBackground();
+            switch (requestCode) {
+                case 1001 :
+                    // Log.e("1111111111111", data.getData() + "");
+                    setBackground();
+                    break;
             }
         }
     }
