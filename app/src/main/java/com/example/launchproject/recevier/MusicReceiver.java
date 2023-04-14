@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.widget.ImageView;
 import android.widget.TextView;
  
-public class MyReceiver extends BroadcastReceiver {
+public class MusicReceiver extends BroadcastReceiver {
  
     private ImageView mCover;
     private TextView mTitle ;
@@ -15,7 +15,7 @@ public class MyReceiver extends BroadcastReceiver {
  
     private DataCallBack mDataCallBack;
  
-    public MyReceiver(DataCallBack callBack) {
+    public MusicReceiver(DataCallBack callBack) {
         mDataCallBack = callBack;
     }
  
