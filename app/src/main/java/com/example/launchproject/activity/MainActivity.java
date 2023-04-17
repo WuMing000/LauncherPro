@@ -394,20 +394,20 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         rvAPPList.setOnItemMoveListener(new DragRecyclerView.OnItemMoveListener() {
             @Override
             public void onDown(int position) {
-//                Log.d(TAG, "onDown====>" + position + "");
+                Log.d(TAG, "onDown====>" + position + "");
 //                if (rvAPPList.isDrag()) {
-//                    saveFrontAPPContent = new APPBean(appBeanList.get(position).getAppName(), appBeanList.get(position).getAppIcon(), appBeanList.get(position).getPackageName());
+                saveFrontAPPContent = new APPBean(appBeanList.get(position).getAppName(), appBeanList.get(position).getAppIcon(), appBeanList.get(position).getPackageName());
 //                    Log.e(TAG, saveFrontAPPContent.toString());
 //                }
-//                downPosition = position;
+                downPosition = position;
             }
 
             @Override
-            public void onMove(int x, int y, View v) {
+            public void onMove(int x, int y, View v, boolean isCanDrag) {
+//                Log.e(TAG, "isCanDrag:" + isCanDrag);
 //                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
 //                if (movePosition != -1 && movePosition != downPosition) {
 //                    appBeanList.set(downPosition, appBeanList.get(movePosition));
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
 //                }
 //                else {
 //                    appBeanList.set(downPosition, saveFrontAPPContent);
@@ -417,6 +417,11 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 
             @Override
             public void onUp(int position) {
+                if (position != downPosition && rvAPPList.isDrag()) {
+                    appBeanList.set(downPosition, appBeanList.get(position));
+                    appBeanList.set(position, saveFrontAPPContent);
+                }
+                recyclerViewAPPAdapter.notifyDataSetChanged();
 //                Log.d(TAG, "onUp====>" + position + "");
 //                if (saveFrontAPPContent != null) {
 //                    Log.e(TAG, "我进来了");
@@ -766,6 +771,26 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             ivMusic.clearAnimation();
         }
 
+        rvAPPList.setOnUninstallClick(new DragRecyclerView.OnUninstallClick() {
+            @Override
+            public void OnClick() {
+                Intent intent = new Intent();
+                intent.setAction("android.intent.action.DELETE");
+                intent.setData(Uri.parse("package:" + appBeanList.get(downPosition).getPackageName()));
+                Toast.makeText(MainActivity.this, "卸载" + appBeanList.get(downPosition).getAppName(), Toast.LENGTH_LONG).show();
+                savePosition = downPosition;
+                startActivity(intent);
+            }
+        });
+
+        rvAPPList.setOnInformationClick(new DragRecyclerView.OnInformationClick() {
+            @Override
+            public void OnClick() {
+                Log.e("onContextItemSelected", appBeanList.get(downPosition).getPackageName());
+                gotoAppDetailIntent(MainActivity.this, appBeanList.get(downPosition).getPackageName());
+            }
+        });
+
     }
     private void receive(){
         myReceiver = new MusicReceiver(new MusicReceiver.DataCallBack() {
@@ -813,6 +838,9 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             View v = getCurrentFocus();
 
             Log.e(TAG, "rawX " + rawX + "rawY " + rawY);
+            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY)) {
+                rvAPPList.removeLongClick();
+            }
 
             if (!(CustomUtil.isTouchPointInView(etSource, rawX, rawY) || CustomUtil.isTouchPointInView(rlMusic, rawX, rawY)
                     || CustomUtil.isTouchPointInView(tvTime, rawX, rawY)

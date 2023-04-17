@@ -3,12 +3,12 @@ package com.example.launchproject.view;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -18,18 +18,24 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
+import com.example.launchproject.R;
+
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
- 
-import java.util.Objects;
- 
+
 /**
  * @explain 长按移动的recyclerView
  */
 public class DragRecyclerView extends RecyclerView {
 
     private static final String TAG = "DragRecyclerView======>";
+
+    private static final int CREATE_LONG_CLICK_WINDOW = 0;
+    private static final int CANCEL_LONG_CLICK_WINDOW = 1;
 
     //拖拽响应的时间 默认为1s
     private long mDragResponseMs = 1000;
@@ -72,7 +78,6 @@ public class DragRecyclerView extends RecyclerView {
  
     //item发生变化的回调接口
     private OnItemMoveListener itemMoveListener;
-    private final Handler mHandler;
 
     //移动到的item的position
     private int mMovePosition;
@@ -81,23 +86,50 @@ public class DragRecyclerView extends RecyclerView {
 
     private boolean isMove = false;
     private int actionUpPosition;
- 
+    private int firstMovePosition;
+    private View firstMoveView;
+//    private ObjectAnimator translationAnimator;
+    private Animation translateAnimation;
+    private boolean isCanDrag = false;
+
+    private OnUninstallClick onUninstallClick;
+    private OnInformationClick onInformationClick;
+    LinearLayout linearLayoutParent;
+
+    private final Handler mHandler;
+//            = new Handler(Looper.myLooper()) {
+//        @Override
+//        public void dispatchMessage(@NonNull Message msg) {
+//            super.dispatchMessage(msg);
+//            switch (msg.what) {
+//                case CREATE_LONG_CLICK_WINDOW:
+//                    onCreateLongButton(mDownX, mDownY);
+//                    break;
+//                case CANCEL_LONG_CLICK_WINDOW:
+//                    removeLongClick();
+//                    break;
+//            }
+//        }
+//    };
+
     /**
      * 长按的Runnable
      */
     private final Runnable mLongClickRunnable = new Runnable() {
         @Override
         public void run() {
- 
+
+//            isCanDrag = true;
+            onCreateLongButton(mDownX, mDownY);
             isDrag = true;
-            mVibrator.vibrate(200);
+            mVibrator.vibrate(100);
             //隐藏该item
             mDragView.setVisibility(INVISIBLE);
             //在点击的地方创建并显示item镜像
             createDragView(mDragBitmap, mDownX, mDownY);
-            if (itemMoveListener != null) {
-                itemMoveListener.onDown(mDragPosition);
-            }
+//            if (itemMoveListener != null) {
+//                itemMoveListener.onDown(mDragPosition);
+//            }
         }
     };
 
@@ -157,15 +189,36 @@ public class DragRecyclerView extends RecyclerView {
                 Log.e(TAG, "view:mDownX " + mDownX + ", mDownY " + mDownY);
                 Log.e(TAG, "view:left " + mDragView.getLeft() + ", right " + mDragView.getRight());
                 Log.e(TAG, "view:top " + mDragView.getTop() + ",bottom " + mDragView.getBottom());
+                if (itemMoveListener != null) {
+                    itemMoveListener.onDown(mDragPosition);
+                }
 
                 break;
             case MotionEvent.ACTION_MOVE:
 
+                Log.e(TAG, "onActionMove");
                 mMoveX = (int) ev.getX();
                 mMoveY = (int) ev.getY();
 
                 int disX = Math.abs(mMoveX - mDownX);
                 int disY = Math.abs(mMoveY - mDownY);
+
+                if (disX == 0 && disY == 0) {
+                    isMove = false;
+//                    onCreateLongButton(mDownX, mDownY);
+                } else {
+                    mHandler.removeCallbacks(mLongClickRunnable);
+                    removeLongClick();
+                    getParent().requestDisallowInterceptTouchEvent(true);
+//                    mHandler.sendEmptyMessageAtTime(CANCEL_LONG_CLICK_WINDOW, 100);
+                    if (isDrag) {
+//                        isDrag = true;
+//                        isCanDrag = false;
+//                        Log.e(TAG, "removeCallbacks");
+//                        mVibrator.vibrate(200);
+                        isMove = true;
+                    }
+                }
 
                 mMoveView = findChildViewUnder(mMoveX, mMoveY);
                 if (mMoveView == null) {
@@ -173,33 +226,54 @@ public class DragRecyclerView extends RecyclerView {
                 }
                 //获取移动的position
                 mMovePosition = getChildAdapterPosition(mMoveView);
+                if (mMovePosition == mDragPosition) {
+                    firstMovePosition = 0;
+                }
+                if (mMovePosition != firstMovePosition) {
+//                    firstMovePosition = mMovePosition;
+                    if (firstMoveView != null) {
+//                        translateAnimation.cancel();
+                        firstMoveView.clearAnimation();
+//                        translationAnimator.cancel();
+                    }
+//                    Log.e(TAG, "firstPosition" + firstMovePosition);
+                }
                 if (mMovePosition == NO_POSITION) {     //无效就返回
                     return super.dispatchTouchEvent(ev);
                 }
                 setActionUpPosition(mMovePosition);
-                if (mMovePosition != mDragPosition && mMoveView != null && isDrag) {
+                if ((mMovePosition != mDragPosition) && (mMovePosition != firstMovePosition) && mMoveView != null && isDrag) {
+                    firstMovePosition = mMovePosition;
+                    firstMoveView = mMoveView;
 //                    mMoveView.setVisibility(INVISIBLE);
 //                    mDragView.setVisibility(VISIBLE);
                     Log.d(TAG, "update:moveX " + mMoveView.getX() + ", moveY " + mMoveView.getY() + "frontX " + mDragView.getX() + ", frontY " + mDragView.getY());
 //                    mMoveView.setTranslationX();
                     if (mMoveView.getX() == mDragView.getX()) {
-                        Animation translateAnimation = new TranslateAnimation(0, 0, 0, mDragView.getY() - mMoveView.getY());//平移动画  从0,0,平移到100,100
-                        translateAnimation.setDuration(500);//动画持续的时间为1.5s
-                        mMoveView.setAnimation(translateAnimation);//给imageView添加的动画效果
+                        translateAnimation = new TranslateAnimation(0, 0, 0, mDragView.getY() - mMoveView.getY());//Y平移动画
+                        translateAnimation.setDuration(500);
+                        translateAnimation.setFillAfter(true);
+                        firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
+//                        ObjectAnimator.ofFloat(mMoveView, "translationX", 0, 300).setDuration(1000).start();
+//                        translationAnimator = ObjectAnimator.ofFloat(mMoveView, "translationY", 0, mDragView.getY() - mMoveView.getY());
+//                        translationAnimator.setDuration(200);
+//                        translationAnimator.start();
 //                        mMoveView.setTranslationY(mDragView.getY() - mMoveView.getY());
+                    } else if (mMoveView.getY() == mDragView.getY()) {
+                        translateAnimation = new TranslateAnimation(0, mDragView.getX() - mMoveView.getX(), 0, 0);//X平移动画
+                        translateAnimation.setDuration(500);
+                        translateAnimation.setFillAfter(true);
+                        firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
+                    } else {
+                        translateAnimation = new TranslateAnimation(0, mDragView.getX() - mMoveView.getX(), 0, mDragView.getY() - mMoveView.getY());//X、Y平移动画
+                        translateAnimation.setDuration(500);
+                        translateAnimation.setFillAfter(true);
+                        firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
                     }
                 }
 
 //                Log.e(TAG, "disX " + disX + ",disY " + disY);
 
-                if (disX == 0 && disY == 0) {
-                    isMove = false;
-                } else {
-                    Log.e(TAG, "removeCallbacks");
-                    mHandler.removeCallbacks(mLongClickRunnable);
-//                    getParent().requestDisallowInterceptTouchEvent(true);
-                    isMove = true;
-                }
 //                if (disX > disY) {
 //                    getParent().requestDisallowInterceptTouchEvent(false);
 //                } else {
@@ -216,19 +290,26 @@ public class DragRecyclerView extends RecyclerView {
                     mHandler.removeCallbacks(mLongClickRunnable);
                 }
                 break;
+            case MotionEvent.ACTION_CANCEL:
+                    Log.e(TAG, "onActionCANCEL");
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                    mHandler.removeCallbacks(mLongClickRunnable);
+                    break;
             case MotionEvent.ACTION_UP:
-                if (itemMoveListener != null) {
-                    itemMoveListener.onUp(actionUpPosition);
-                }
-
-                Log.e(TAG, "ACTIONUP_removeCallbacks");
-                getParent().requestDisallowInterceptTouchEvent(true);
+                Log.e(TAG, "onActionUP");
                 mHandler.removeCallbacks(mLongClickRunnable);
+                Log.e(TAG, "ACTIONUP_removeCallbacks");
+//                mHandler.sendEmptyMessageAtTime(CANCEL_LONG_CLICK_WINDOW, 2000);
+                getParent().requestDisallowInterceptTouchEvent(true);
                 //判断是否是点击
                 if (!isMove && !isDrag && mDragMirrorView == null && itemMoveListener != null && Math.abs(mMoveX - mDownX) <20 && Math.abs(mMoveY - mDownY) <20){
                     Log.e(TAG, "onItemOnClick");
                     itemMoveListener.onItemClick(mDragPosition);
                 }
+                if (itemMoveListener != null) {
+                    itemMoveListener.onUp(actionUpPosition);
+                }
+//                isCanDrag = false;
                 if (isDrag) {
                     onStopDrag();
                     isDrag = false;
@@ -385,6 +466,16 @@ public class DragRecyclerView extends RecyclerView {
             mDragMirrorView = null;
         }
     }
+
+    /**
+     * WindowManager 移除镜像
+     */
+    public void removeLongClick() {
+        if (linearLayoutParent != null) {
+            mWindowManager.removeView(linearLayoutParent);
+            linearLayoutParent = null;
+        }
+    }
  
     /**
      * 拖动item到指定位置
@@ -394,7 +485,8 @@ public class DragRecyclerView extends RecyclerView {
      */
     private void onDragItem(int x, int y) {
         mLayoutParams.x = x - mPoint2ItemLeft + mOffset2Left;
-        mLayoutParams.y = y - mPoint2ItemTop + mOffset2Top - mStatusHeight;
+//        mLayoutParams.y = y - mPoint2ItemTop + mOffset2Top - mStatusHeight;
+        mLayoutParams.y = y - mPoint2ItemTop + mOffset2Top;
         //更新镜像位置
         mWindowManager.updateViewLayout(mDragMirrorView, mLayoutParams);
         int[] location = new int[2];
@@ -402,7 +494,7 @@ public class DragRecyclerView extends RecyclerView {
         int pY = location[1];
         if (itemMoveListener != null){
             View childViewUnder = findChildViewUnder(x, y + pY);
-            itemMoveListener.onMove(x,y + pY, childViewUnder);
+            itemMoveListener.onMove(x,y + pY, childViewUnder, isCanDrag);
         }
 //        Log.e(TAG, "view:onDragItem:mDownX " + x + ", mDownY " + y);
 //        Log.e(TAG, "view:onDragItem:mDragMirrorViewX left " + mDragMirrorView.getLeft() + ", mDragMirrorViewX right " + mDragMirrorView.getRight());
@@ -424,12 +516,13 @@ public class DragRecyclerView extends RecyclerView {
         mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT; //左 上
         //指定位置 其实就是 该 item 对应的 rawX rawY 因为Window 添加View是需要知道 raw x ,y的
         mLayoutParams.x = mOffset2Left + (downX - mPoint2ItemLeft);
-        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop) + mStatusHeight;
+//        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop) + mStatusHeight;
+        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop);
         //指定布局大小
         mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
         //透明度
-        mLayoutParams.alpha = 0.5f;
+//        mLayoutParams.alpha = 0.5f;
         //指定标志 不能获取焦点和触摸,允许拖动到窗口外
         mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE|WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
@@ -439,14 +532,86 @@ public class DragRecyclerView extends RecyclerView {
         //添加View到窗口中
         mWindowManager.addView(mDragMirrorView, mLayoutParams);
     }
+
+    private void onCreateLongButton(int downX, int downY) {
+        linearLayoutParent = new LinearLayout(getContext());
+        linearLayoutParent.setOrientation(LinearLayout.VERTICAL);
+        linearLayoutParent.setPadding(10, 10, 10, 10);
+        linearLayoutParent.setBackgroundColor(getResources().getColor(R.color.white));
+
+        LinearLayout linearLayout1 = new LinearLayout(getContext());
+        ImageView uninstallImg = new ImageView(getContext());
+        Button uninstallButton = new Button(getContext());
+        uninstallImg.setBackground(getResources().getDrawable(R.drawable.uninstall));
+        uninstallButton.setId(R.id.btn_uninstall);
+        uninstallButton.setBackgroundColor(getResources().getColor(R.color.transparent));
+        uninstallButton.setText("卸载");
+        uninstallButton.setGravity(VERTICAL);
+        uninstallButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removeLongClick();
+                onUninstallClick.OnClick();
+            }
+        });
+        linearLayout1.addView(uninstallImg);
+        linearLayout1.addView(uninstallButton);
+
+        LinearLayout linearLayout2 = new LinearLayout(getContext());
+        ImageView informationImg = new ImageView(getContext());
+        Button informationButton = new Button(getContext());
+        informationImg.setBackground(getResources().getDrawable(R.drawable.information));
+        informationButton.setId(R.id.btn_information);
+        informationButton.setBackgroundColor(getResources().getColor(R.color.transparent));
+        informationButton.setText("应用信息");
+        informationButton.setGravity(VERTICAL);
+        informationButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removeLongClick();
+                onInformationClick.OnClick();
+            }
+        });
+        linearLayout2.addView(informationImg);
+        linearLayout2.addView(informationButton);
+
+        linearLayoutParent.addView(linearLayout1);
+        linearLayoutParent.addView(linearLayout2);
+
+        mLayoutParams = new WindowManager.LayoutParams();
+        mLayoutParams.format = PixelFormat.TRANSLUCENT;
+        mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT; //左 上
+        mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        mLayoutParams.x = mOffset2Left + (downX - mPoint2ItemLeft);
+        mLayoutParams.y = mOffset2Top + downY;
+        mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        mWindowManager.addView(linearLayoutParent, mLayoutParams);
+    }
  
     /**
      * item 交换时的回调接口
      */
     public interface OnItemMoveListener {
         void onDown(int position);
-        void onMove(int x, int y, View view);
+        void onMove(int x, int y, View view, boolean isCanDrag);
         void onUp(int position);
         void onItemClick(int position);
+    }
+
+    public void setOnUninstallClick(OnUninstallClick onUninstallClick) {
+        this.onUninstallClick = onUninstallClick;
+    }
+
+    public interface OnUninstallClick {
+        void OnClick();
+    }
+
+    public void setOnInformationClick(OnInformationClick onInformationClick) {
+        this.onInformationClick = onInformationClick;
+    }
+
+    public interface OnInformationClick {
+        void OnClick();
     }
 }
