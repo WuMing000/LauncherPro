@@ -3,6 +3,8 @@ package com.example.launchproject.bean;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
+import java.util.Objects;
+
 public class APPBean {
 
     private String appName;
@@ -10,6 +12,12 @@ public class APPBean {
     private Bitmap appIcon;
     private String packageName;
     private Drawable appIconDrawable;
+
+    public APPBean() {
+        appName = "";
+        appIcon = null;
+        packageName = "";
+    }
 
     public APPBean(String appName, Bitmap appIcon, String packageName) {
         this.appName = appName;
@@ -53,6 +61,14 @@ public class APPBean {
 
     public void setAppIconDrawable(Drawable appIconDrawable) {
         this.appIconDrawable = appIconDrawable;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        APPBean appBean = (APPBean) o;
+        return Objects.equals(packageName, appBean.packageName);
     }
 
     @Override

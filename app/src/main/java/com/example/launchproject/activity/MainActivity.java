@@ -74,6 +74,8 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -93,7 +95,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     private ImageView ivFirst, ivSecond, ivThird;
     private LinearLayout mImgLayout, llBgHome;
     //    private ListView listViewAPP;
-    private DragRecyclerView rvAPPList;
+    private DragRecyclerView rvAPPList, rvAPPList2;
     //    private ListViewAPPAdapter adapter;
     private RecyclerViewAPPAdapter recyclerViewAPPAdapter;
     private List<APPBean> appBeanList;
@@ -133,7 +135,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         public void dispatchMessage(@NonNull Message msg) {
             super.dispatchMessage(msg);
             switch (msg.what) {
-                case 0x001:
+                case HandlerManager.GET_APP_LIST:
                     Bundle data = msg.getData();
                     byte[] appIcons = data.getByteArray("appIcon");
                     String appName = data.getString("appName");
@@ -149,6 +151,13 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     }
                     recyclerViewAPPAdapter.notifyDataSetChanged();
 //                    adapter.notifyDataSetChanged();
+                    break;
+                case HandlerManager.LOAD_APP_FINISH:
+//                    int allAPPNum = (int) msg.obj;
+                    while (appBeanList.size() % 18 != 0) {
+                        appBeanList.add(new APPBean());
+                    }
+                    Log.e(TAG, "加载应用完成" + appBeanList.size());
                     break;
                 case HandlerManager.GET_SYSTEM_TIME:
                     handler.postDelayed(updateTimeThread, 1000);
@@ -177,8 +186,76 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     btnControl.setBackground(getResources().getDrawable(R.drawable.pause_music));
                     break;
                 case HandlerManager.REMOVED_APP_SUCCESS:
-                    appBeanList.remove(savePosition);
-                    recyclerViewAPPAdapter.notifyDataSetChanged();
+                    try {
+                        int i = -1;
+                        String obj = (String) msg.obj;
+                        String removePkg = obj.split(":")[1];
+                        for (APPBean appBean : appBeanList) {
+//                        Log.d(TAG, "removePkg:" + removePkg + ",appBean.getPackageName():" + appBean.getPackageName());
+                            if (removePkg.equals(appBean.getPackageName())) {
+                                i = appBeanList.indexOf(appBean);
+                                Log.d(TAG, "removePkg:" + removePkg + ",i:" + i);
+                            }
+                        }
+                        if (i != -1) {
+//                            appBeanList.remove(i);
+                            appBeanList.set(i, new APPBean());
+                        }
+//                        if ((appBeanList.size() + 1) % 18 == 0) {
+//                            for (APPBean appBean : appBeanList) {
+//                                if (appBean.getPackageName().length() == 0) {
+//                                    appBeanList.remove(appBean);
+//                                }
+//                            }
+//                        }
+                        recyclerViewAPPAdapter.notifyDataSetChanged();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case HandlerManager.INSTALL_APP_SUCCESS:
+                    try {
+                        Bitmap icon = null;
+                        String name = null;
+                        String obj1 = (String) msg.obj;
+                        String installPkg = obj1.split(":")[1];
+                        int firstNullPosition = -1;
+                        Log.e(TAG, installPkg);
+                        Map<Drawable, String> iconANDAppName = CustomUtil.getIconANDAppName(installPkg);
+                        if (iconANDAppName != null) {
+                            Set<Map.Entry<Drawable, String>> entries = iconANDAppName.entrySet();
+                            for (Map.Entry<Drawable, String> entry : entries) {
+                                Drawable key = entry.getKey();
+                                name = entry.getValue();
+                                Log.d(TAG, "appName:" + name);
+                                icon = drawableToBitmap(key);
+                            }
+                        }
+                        APPBean installAPPBean = new APPBean(name, icon, installPkg);
+                        boolean isAdd = appBeanList.contains(installAPPBean);
+                        for (int i = 0; i < appBeanList.size(); i++) {
+                            if (appBeanList.get(i).getPackageName().length() == 0) {
+                                firstNullPosition = i;
+                                break;
+                            }
+                        }
+                        Log.e(TAG, "isADD" + isAdd);
+                        if (!isAdd) {
+                            if (firstNullPosition != -1) {
+                                appBeanList.set(firstNullPosition, installAPPBean);
+                            } else {
+                                appBeanList.add(installAPPBean);
+                            }
+                            Toast.makeText(MainActivity.this, name + " 安装成功", Toast.LENGTH_SHORT).show();
+                        }
+                        while (appBeanList.size() % 18 != 0) {
+                            appBeanList.add(new APPBean());
+                        }
+                        recyclerViewAPPAdapter.notifyDataSetChanged();
+//                        Toast.makeText(MainActivity.this, name + " 安装成功", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     break;
             }
         }
@@ -341,6 +418,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         View view3 = layoutInflater.inflate(R.layout.three_view_pager, null);
 //        listViewAPP = view1.findViewById(R.id.list_view_app);
         rvAPPList = view3.findViewById(R.id.rv_app_list);
+        rvAPPList2 = view3.findViewById(R.id.rv_app_list_2);
         mImgLayout = view3.findViewById(R.id.indicator_layout);
 //        adapter = new ListViewAPPAdapter(this, appBeanList);
         recyclerViewAPPAdapter = new RecyclerViewAPPAdapter(this, appBeanList);
@@ -355,12 +433,23 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             //竖屏
             horizontalPageLayoutManager = new HorizontalPageLayoutManager(6, 3);
         }
+        HorizontalPageLayoutManager horizontalPageLayoutManager2 = null;
+        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
+            //横屏
+            horizontalPageLayoutManager2 = new HorizontalPageLayoutManager(3, 6);
+        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
+            //竖屏
+            horizontalPageLayoutManager2 = new HorizontalPageLayoutManager(6, 3);
+        }
         rvAPPList.setLayoutManager(horizontalPageLayoutManager);
+        rvAPPList2.setLayoutManager(horizontalPageLayoutManager2);
         scrollHelper.updateLayoutManger();
         scrollHelper.scrollToPosition(0);//默认滑动到第一页
         rvAPPList.setHorizontalScrollBarEnabled(true);
+        rvAPPList2.setHorizontalScrollBarEnabled(true);
         scrollHelper.setOnPageChangeListener(this);//设置滑动监听
         rvAPPList.setAdapter(recyclerViewAPPAdapter);
+        rvAPPList2.setAdapter(recyclerViewAPPAdapter);
 //        listViewAPP.setAdapter(adapter);
         mPageView = new ArrayList<>();
         mPageView.add(view1);
@@ -393,7 +482,12 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 
         rvAPPList.setOnItemMoveListener(new DragRecyclerView.OnItemMoveListener() {
             @Override
-            public void onDown(int position) {
+            public void onDown(int position, Handler handler, Runnable runnable) {
+                if (appBeanList.get(position).getPackageName().length() == 0) {
+                    handler.removeCallbacks(runnable);
+                }
+                rvAPPList.setVisibility(View.GONE);
+                rvAPPList2.setVisibility(View.VISIBLE);
                 Log.d(TAG, "onDown====>" + position + "");
 //                if (rvAPPList.isDrag()) {
                 saveFrontAPPContent = new APPBean(appBeanList.get(position).getAppName(), appBeanList.get(position).getAppIcon(), appBeanList.get(position).getPackageName());
@@ -435,6 +529,9 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 
             @Override
             public void onItemClick(int position) {
+                if (appBeanList.get(position).getPackageName().length() == 0) {
+                    return;
+                }
                 Log.d(TAG, "onItemClick====>" + position + "");
                 Log.d(TAG, "click recyclerview item " + position);
                 //查询这个应用程序的入口activity。把他开启起来
@@ -837,6 +934,10 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             int rawY = (int) ev.getRawY();
             View v = getCurrentFocus();
 
+//            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY) && appBeanList.get(CustomUtil.findItem(rvAPPList, rawX, rawY)).getPackageName().length() == 0) {
+//                return true;
+//            }
+
             Log.e(TAG, "rawX " + rawX + "rawY " + rawY);
             if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY)) {
                 rvAPPList.removeLongClick();
@@ -894,14 +995,14 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 //            if  ((itemInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
 //                continue;
 
-            //得到手机上已经安装的应用的名字,即在AndriodMainfest.xml中的app_name。
+            //得到手机上已经安装的应用的名字,即在AndroidManifest.xml中的app_name。
             String appName = packageInfo.applicationInfo.loadLabel(getPackageManager()).toString();
-            //得到手机上已经安装的应用的图标,即在AndriodMainfest.xml中的icon。
+            //得到手机上已经安装的应用的图标,即在AndroidManifest.xml中的icon。
             Drawable drawable = packageInfo.applicationInfo.loadIcon(getPackageManager());
-            //得到应用所在包的名字,即在AndriodMainfest.xml中的package的值。
+            //得到应用所在包的名字,即在AndroidManifest.xml中的package的值。
             String packageName = packageInfo.packageName;
 //            Log.e("=======aaa", "应用的名字:" + appName);
-//            Log.e("=======bbbb", "应用的包名字:" + packageName);
+//            Log.e("=======bbb", "应用的包名字:" + packageName);
 //            APPBean appBean = new APPBean(packageName, drawable);
             byte[] appIconBytes = bitmap2Bytes(drawableToBitmap(drawable));
 
@@ -915,11 +1016,15 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             bundle.putString("appName", appName);
             bundle.putString("packageName", packageName);
             message.setData(bundle);
-            message.what = 0x001;
+            message.what = HandlerManager.GET_APP_LIST;
             handler.sendMessageAtTime(message, 10);
             j++;
         }
-        Log.e("========cccccc", "应用的总个数:" + j);
+        Log.e("========ccc", "应用的总个数:" + j);
+        Message message = new Message();
+        message.what = HandlerManager.LOAD_APP_FINISH;
+        message.obj = j;
+        handler.sendMessageAtTime(message, 100);
     }
 
     @Override

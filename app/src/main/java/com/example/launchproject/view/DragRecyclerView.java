@@ -190,7 +190,7 @@ public class DragRecyclerView extends RecyclerView {
                 Log.e(TAG, "view:left " + mDragView.getLeft() + ", right " + mDragView.getRight());
                 Log.e(TAG, "view:top " + mDragView.getTop() + ",bottom " + mDragView.getBottom());
                 if (itemMoveListener != null) {
-                    itemMoveListener.onDown(mDragPosition);
+                    itemMoveListener.onDown(mDragPosition, mHandler, mLongClickRunnable);
                 }
 
                 break;
@@ -517,7 +517,7 @@ public class DragRecyclerView extends RecyclerView {
         //指定位置 其实就是 该 item 对应的 rawX rawY 因为Window 添加View是需要知道 raw x ,y的
         mLayoutParams.x = mOffset2Left + (downX - mPoint2ItemLeft);
 //        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop) + mStatusHeight;
-        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop);
+        mLayoutParams.y = mOffset2Top + (downY - 2 * mPoint2ItemTop);
         //指定布局大小
         mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -593,7 +593,7 @@ public class DragRecyclerView extends RecyclerView {
      * item 交换时的回调接口
      */
     public interface OnItemMoveListener {
-        void onDown(int position);
+        void onDown(int position, Handler handler, Runnable runnable);
         void onMove(int x, int y, View view, boolean isCanDrag);
         void onUp(int position);
         void onItemClick(int position);

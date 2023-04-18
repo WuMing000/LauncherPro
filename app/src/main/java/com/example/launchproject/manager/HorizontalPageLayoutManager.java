@@ -42,7 +42,11 @@ public class HorizontalPageLayoutManager extends RecyclerView.LayoutManager impl
         }
         offsetX += result;
         offsetChildrenHorizontal(-result);
-        recycleAndFillItems(recycler, state);
+        try {
+            recycleAndFillItems(recycler, state);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return result;
     }
  
@@ -112,7 +116,7 @@ public class HorizontalPageLayoutManager extends RecyclerView.LayoutManager impl
                     addView(view);
                     //测量item
                     measureChildWithMargins(view, itemWidthUsed, itemHeightUsed);
- 
+
                     int width = getDecoratedMeasuredWidth(view);
                     int height = getDecoratedMeasuredHeight(view);
                     //记录显示范围
@@ -131,8 +135,12 @@ public class HorizontalPageLayoutManager extends RecyclerView.LayoutManager impl
             //每一页循环以后就回收一页的View用于下一页的使用
             removeAndRecycleAllViews(recycler);
         }
- 
-        recycleAndFillItems(recycler, state);
+
+        try {
+            recycleAndFillItems(recycler, state);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
  
     private void computePageSize(RecyclerView.State state) {
@@ -222,5 +230,5 @@ public class HorizontalPageLayoutManager extends RecyclerView.LayoutManager impl
     public int computeHorizontalScrollExtent(RecyclerView.State state) {
         return getWidth();
     }
- 
+
 }

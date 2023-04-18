@@ -1,15 +1,21 @@
 package com.example.launchproject.utils;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
+
+import com.example.launchproject.MyApplication;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -87,4 +93,26 @@ public class CustomUtil {
         return -1;
 
     }
+
+    public static Map<Drawable, String> getIconANDAppName(String packageName) {
+        Map<Drawable, String > map = new HashMap<Drawable, String>();
+        PackageManager pm = MyApplication.getContext().getPackageManager();
+        try {
+            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+
+            // 应用名称
+            String appName = (String) pm.getApplicationLabel(applicationInfo);
+
+            //应用图标
+            Drawable appIcon = pm.getApplicationIcon(applicationInfo);
+            map.put(appIcon, appName);
+            Log.d("CustomUtil", "appName:" + appName);
+            return map;
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
