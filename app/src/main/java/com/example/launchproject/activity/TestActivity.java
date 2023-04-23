@@ -20,6 +20,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -69,6 +70,202 @@ public class TestActivity extends AppCompatActivity {
     private boolean isDown;
     int savePosition = 0;
 
+    ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+            Log.e(TAG, position + ":onPageSelected");
+            savePosition = position;
+//                Log.e(TAG, position + ":onPageScrolled");
+            View view = viewPagerList.get(position);
+            DragGridView2 gridView = (DragGridView2) view;
+//            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
+            gridView.setOnItemMoveListener(new DragGridView2.OnItemMoveListener() {
+                @Override
+                public void onDown(int p, Handler handler, Runnable runnable) {
+                    Log.d("TAG", "onDown");
+//                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
+                    int newPosition = p + savePosition * mPageSize;
+                    if (listDatas.get(newPosition).getPackageName().length() == 0) {
+                        handler.removeCallbacks(runnable);
+                    }
+                    gridView.isUninstallVisible(CustomUtil.isSystemApplication(TestActivity.this, listDatas.get(newPosition).getPackageName()));
+                    Log.d("wu", "onDown====>" + newPosition + "");
+//                if (rvAPPList.isDrag()) {
+                    saveFrontAPPContent = new APPBean(listDatas.get(newPosition).getAppName(), listDatas.get(newPosition).getAppIcon(), listDatas.get(newPosition).getPackageName());
+//                    Log.e(TAG, saveFrontAPPContent.toString());
+//                }
+                    downPosition = newPosition;
+//                recyclerViewAPPAdapter.isSetFrameVisible(true);
+//                recyclerViewAPPAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onMove(int x, int y, View v, boolean isMove) {
+                    Log.d("TAG", "onMove" + isMove);
+                    int widthPixels = getResources().getDisplayMetrics().widthPixels;
+
+                    Log.d("TAG", "widthPixels:" + widthPixels + ",x:" + x);
+                    Log.d("TAG", "childCount" + gridView.getChildCount());
+                    if (x >= (widthPixels - 200)) {
+//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() + 1) * 18 + 17);
+//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() + 1);
+                        Log.e(TAG, savePosition + ":savePosition");
+                        handler.postDelayed(nextRunnable, 1500);
+//                            viewPager.requestLayout();
+                    } else if (x <= 200) {
+//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() - 1) * 18);
+//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() - 1);
+//                            --savePosition;
+//                            viewPager.setCurrentItem(savePosition , true);
+                        handler.postDelayed(parentRunnable, 1500);
+                    } else {
+                        handler.removeCallbacks(nextRunnable);
+                        handler.removeCallbacks(parentRunnable);
+                    }
+                    if (isMove && !isScale) {
+                        isDown = true;
+                        isScale = true;
+                        viewPager.setAlpha(0.8f);
+                        scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                        scaleAnimation.setDuration(100);//设置动画持续时间
+                        viewPager.startAnimation(scaleAnimation);
+                        scaleAnimation.setFillAfter(true);
+                        for (View view1 : viewPagerList) {
+                            DragGridView2 view2 = (DragGridView2) view1;
+                            view2.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
+                        }
+//                            viewPager.setPadding(150, 0, 150, 0);
+//                            viewPager.setClipChildren(false);
+
+//                            gridView.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
+//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//                            marginLayoutParams.setMargins(350, 0, 350, 0);
+//                            viewPager.setLayoutParams(marginLayoutParams);
+//                            viewPager.setClipChildren(false);
+                    }
+//                Log.e(TAG, "isCanDrag:" + isCanDrag);
+//                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
+//                if (movePosition != -1 && movePosition != downPosition) {
+//                    appBeanList.set(downPosition, appBeanList.get(movePosition));
+//                }
+//                else {
+//                    appBeanList.set(downPosition, saveFrontAPPContent);
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+                }
+
+                @Override
+                public void onUp(int p) {
+                    Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
+                    int newPosition = p + savePosition * mPageSize;
+                    Log.d("TAG", "onUp:downPosition:" + downPosition + ",position:" + newPosition + ",saveFrontAPPContent:" + saveFrontAPPContent + ",moveData:" + listDatas.get(newPosition));
+                    if (isScale) {
+                        isScale = false;
+                        for (View view1 : viewPagerList) {
+                            DragGridView2 view2 = (DragGridView2) view1;
+                            view2.setBackgroundColor(getResources().getColor(R.color.transparent));
+                        }
+//                            gridView.setBackgroundColor(getResources().getColor(R.color.transparent));
+                        viewPager.setAlpha(1.0f);
+                        scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                        scaleAnimation.setDuration(300);//设置动画持续时间
+                        viewPager.startAnimation(scaleAnimation);
+                        scaleAnimation.setFillAfter(true);
+//                            viewPager.setClipToPadding(true);
+//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//                            marginLayoutParams.setMargins(0, 0, 0, 0);
+//                            viewPager.setLayoutParams(marginLayoutParams);
+                    }
+//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
+//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
+                    if (newPosition != downPosition && gridView.isDrag()) {
+                        Log.e("TAG", "我进来了");
+                        listDatas.set(downPosition, listDatas.get(newPosition));
+                        listDatas.set(newPosition, saveFrontAPPContent);
+                        viewPager.getAdapter().notifyDataSetChanged();
+                    }
+//                    viewPager.getAdapter().notifyDataSetChanged();
+
+//                    adapter.notifyDataSetChanged();
+                    if (isDown) {
+                        isDown = false;
+                    }
+//                Log.d(TAG, "onUp====>" + position + "");
+//                if (saveFrontAPPContent != null) {
+//                    Log.e(TAG, "我进来了");
+//                    appBeanList.set(position, saveFrontAPPContent);
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+//                appBeanList.set(position, appBeanList.get(movePosition));
+//                appBeanList.set(movePosition, appBeanList.get(position));
+//                recyclerViewAPPAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onItemClick(int p) {
+                    int newPosition = p + position * mPageSize;
+                    if (listDatas.get(newPosition).getPackageName().length() == 0) {
+                        return;
+                    }
+                    Log.d("TAG", "onItemClick====>" + newPosition + "");
+                    Log.d("TAG", "click recyclerview item " + newPosition);
+                    //查询这个应用程序的入口activity。把他开启起来
+                    try {
+                        PackageManager pm = getPackageManager();
+                        Intent intent = pm.getLaunchIntentForPackage(listDatas.get(newPosition).getPackageName());
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+
+        }
+    };
+
+    Handler handler = new Handler(Looper.myLooper()) {
+        @Override
+        public void dispatchMessage(@NonNull Message msg) {
+            super.dispatchMessage(msg);
+            switch (msg.what) {
+                case 0x001:
+                    viewPager.setCurrentItem(savePosition + 1, true);
+                    handler.removeCallbacks(nextRunnable);
+                    break;
+                case 0x002 :
+//                    --savePosition;
+                    //                    ++savePosition;
+                    viewPager.setCurrentItem(savePosition - 1, true);
+                    handler.removeCallbacks(parentRunnable);
+                    break;
+            }
+        }
+    };
+
+    Runnable nextRunnable = new Runnable() {
+        @Override
+        public void run() {
+            handler.sendEmptyMessageAtTime(0x001, 100);
+        }
+    };
+
+    Runnable parentRunnable = new Runnable() {
+        @Override
+        public void run() {
+            handler.sendEmptyMessageAtTime(0x002, 100);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,173 +294,16 @@ public class TestActivity extends AppCompatActivity {
 //        viewPager.setPageTransformer(true, new MyGallyPageTransformer());
         viewPager.setOffscreenPageLimit(3);
         ViewPagerScroller scroller =  new ViewPagerScroller(this);
-        scroller.setScrollDuration(2000);
-        scroller.initViewPagerScroll(viewPager); //这个是设置切换过渡时间为2秒
+//        scroller.setScrollDuration(2000);
+//        scroller.initViewPagerScroll(viewPager); //这个是设置切换过渡时间为2秒
         //设置ViewPager适配器
         viewPager.setAdapter(new MyViewPagerAdapter(viewPagerList));
 
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                savePosition = position;
-//                Log.e(TAG, position + ":onPageScrolled");
-                View view = viewPagerList.get(position);
-                DragGridView2 gridView = (DragGridView2) view;
-//            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
-                gridView.setOnItemMoveListener(new DragGridView2.OnItemMoveListener() {
-                    @Override
-                    public void onDown(int p, Handler handler, Runnable runnable) {
-                        Log.d("TAG", "onDown");
-//                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
-                        int newPosition = p + savePosition * mPageSize;
-                        if (listDatas.get(newPosition).getPackageName().length() == 0) {
-                            handler.removeCallbacks(runnable);
-                        }
-                        gridView.isUninstallVisible(CustomUtil.isSystemApplication(TestActivity.this, listDatas.get(newPosition).getPackageName()));
-                        Log.d("wu", "onDown====>" + newPosition + "");
-//                if (rvAPPList.isDrag()) {
-                        saveFrontAPPContent = new APPBean(listDatas.get(newPosition).getAppName(), listDatas.get(newPosition).getAppIcon(), listDatas.get(newPosition).getPackageName());
-//                    Log.e(TAG, saveFrontAPPContent.toString());
-//                }
-                        downPosition = newPosition;
-//                recyclerViewAPPAdapter.isSetFrameVisible(true);
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
-                    }
+        viewPager.addOnPageChangeListener(onPageChangeListener);
 
-                    @Override
-                    public void onMove(int x, int y, View v, boolean isMove) {
-                        Log.d("TAG", "onMove" + isMove);
-                        int widthPixels = getResources().getDisplayMetrics().widthPixels;
-
-                        Log.d("TAG", "widthPixels:" + widthPixels + ",x:" + x);
-                        Log.d("TAG", "childCount" + gridView.getChildCount());
-                        if (x >= (widthPixels - 200)) {
-//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() + 1) * 18 + 17);
-//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() + 1);
-                            Log.e(TAG, savePosition + ":savePosition");
-                            ++savePosition;
-                            viewPager.setCurrentItem(savePosition, true);
-//                            viewPager.requestLayout();
-                        }
-                        if (x <= 200) {
-//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() - 1) * 18);
-//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() - 1);
-                            --savePosition;
-                            viewPager.setCurrentItem(savePosition , true);
-                        }
-                        if (isMove && !isScale) {
-                            isDown = true;
-                            isScale = true;
-                            viewPager.setAlpha(0.8f);
-                            scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                            scaleAnimation.setDuration(100);//设置动画持续时间
-                            viewPager.startAnimation(scaleAnimation);
-                            scaleAnimation.setFillAfter(true);
-                            for (View view1 : viewPagerList) {
-                                DragGridView2 view2 = (DragGridView2) view1;
-                                view2.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
-                            }
-//                            viewPager.setPadding(150, 0, 150, 0);
-//                            viewPager.setClipChildren(false);
-
-//                            gridView.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
-//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-//                            marginLayoutParams.setMargins(350, 0, 350, 0);
-//                            viewPager.setLayoutParams(marginLayoutParams);
-//                            viewPager.setClipChildren(false);
-                        }
-//                Log.e(TAG, "isCanDrag:" + isCanDrag);
-//                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
-//                if (movePosition != -1 && movePosition != downPosition) {
-//                    appBeanList.set(downPosition, appBeanList.get(movePosition));
-//                }
-//                else {
-//                    appBeanList.set(downPosition, saveFrontAPPContent);
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                }
-                    }
-
-                    @Override
-                    public void onUp(int p) {
-                        Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
-                        int newPosition = p + savePosition * mPageSize;
-                        Log.d("TAG", "onUp:downPosition:" + downPosition + ",position:" + newPosition + ",saveFrontAPPContent:" + saveFrontAPPContent + ",moveData:" + listDatas.get(newPosition));
-                        if (isScale) {
-                            isScale = false;
-                            for (View view1 : viewPagerList) {
-                                DragGridView2 view2 = (DragGridView2) view1;
-                                view2.setBackgroundColor(getResources().getColor(R.color.transparent));
-                            }
-//                            gridView.setBackgroundColor(getResources().getColor(R.color.transparent));
-                            viewPager.setAlpha(1.0f);
-                            scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                            scaleAnimation.setDuration(300);//设置动画持续时间
-                            viewPager.startAnimation(scaleAnimation);
-                            scaleAnimation.setFillAfter(true);
-//                            viewPager.setClipToPadding(true);
-//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-//                            marginLayoutParams.setMargins(0, 0, 0, 0);
-//                            viewPager.setLayoutParams(marginLayoutParams);
-                        }
-//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
-//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
-                        if (newPosition != downPosition && gridView.isDrag()) {
-                            Log.e("TAG", "我进来了");
-                            listDatas.set(downPosition, listDatas.get(newPosition));
-                            listDatas.set(newPosition, saveFrontAPPContent);
-                            viewPager.getAdapter().notifyDataSetChanged();
-                        }
-//                    viewPager.getAdapter().notifyDataSetChanged();
-
-//                    adapter.notifyDataSetChanged();
-                        if (isDown) {
-                            isDown = false;
-                        }
-//                Log.d(TAG, "onUp====>" + position + "");
-//                if (saveFrontAPPContent != null) {
-//                    Log.e(TAG, "我进来了");
-//                    appBeanList.set(position, saveFrontAPPContent);
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                }
-//                appBeanList.set(position, appBeanList.get(movePosition));
-//                appBeanList.set(movePosition, appBeanList.get(position));
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onItemClick(int p) {
-                        int newPosition = p + position * mPageSize;
-                        if (listDatas.get(newPosition).getPackageName().length() == 0) {
-                            return;
-                        }
-                        Log.d("TAG", "onItemClick====>" + newPosition + "");
-                        Log.d("TAG", "click recyclerview item " + newPosition);
-                        //查询这个应用程序的入口activity。把他开启起来
-                        try {
-                            PackageManager pm = getPackageManager();
-                            Intent intent = pm.getLaunchIntentForPackage(listDatas.get(newPosition).getPackageName());
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-
-//                Log.e(TAG, position + ":onPageSelected");
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-//                Log.e(TAG, state + ":onPageScrollStateChanged");
-
-            }
-        });
+        onPageChangeListener.onPageSelected(0);
     }
+
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
