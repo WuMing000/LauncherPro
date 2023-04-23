@@ -1,7 +1,9 @@
 package com.example.launchproject.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -113,6 +115,19 @@ public class CustomUtil {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean isSystemApplication(Context context, String packageName){
+        PackageManager mPackageManager = context.getPackageManager();
+        try {
+            final PackageInfo packageInfo = mPackageManager.getPackageInfo(packageName, PackageManager.GET_CONFIGURATIONS);
+            if((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM)!=0){
+                return true;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
 }

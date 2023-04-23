@@ -2,16 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES"/>
-    <uses-permission android:name="android.intent.action.PACKAGE_ADDED"/>
-    <uses-permission android:name="android.intent.action.PACKAGE_REMOVED"/>
-
-    <uses-permission android:name="android.permission.VIBRATE" />
-
     <application
         android:name=".MyApplication"
         android:allowBackup="true"
@@ -23,27 +13,38 @@
         android:theme="@style/Theme.LaunchProject"
         tools:targetApi="31">
         <activity
-            android:name=".activity.MainActivity"
+            android:name=".activity.TestActivity"
+            android:configChanges="keyboardHidden|screenSize|orientation"
             android:exported="true"
             android:screenOrientation="unspecified"
-            android:theme="@style/MyThemeFullScreen"
-            android:configChanges="keyboardHidden|screenSize|orientation">
+            android:theme="@style/MyThemeFullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
+        <activity
+            android:name=".activity.MainActivity"
+            android:exported="true"
+            android:screenOrientation="unspecified"
+            android:theme="@style/MyThemeFullScreen">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--    <queries>-->
-<!--        <package android:name="com.qiyi.video" />-->
-<!--        <package android:name="com.sohu.inputmethod.sogou" />-->
-<!--        <package android:name="com.baidu.appsearch" />-->
-<!--        <package android:name="com.ss.android.ugc.aweme" />-->
-<!--        <package android:name="com.kugou.android" />-->
-<!--        <package android:name="com.qihoo.appstore" />-->
-<!--        <package android:name="org.vv.screentest" />-->
-<!--    </queries>-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+    </application>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission android:name="android.intent.action.PACKAGE_ADDED" />
+    <uses-permission android:name="android.intent.action.PACKAGE_REMOVED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
 </manifest>

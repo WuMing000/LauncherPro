@@ -11,8 +11,9 @@ public class HandlerManager {
     public static final int MUSIC_PAUSE_UI = 5;
     public static final int REMOVED_APP_SUCCESS = 6;
     public static final int INSTALL_APP_SUCCESS = 7;
+    public static final int CLEAR_RECYCLER_ANIMATION = 8;
     public static ThreadLocal<Handler> threadLocal = new ThreadLocal<Handler>();
- 
+
     public static Handler getHandler() {
         return threadLocal.get();
     }

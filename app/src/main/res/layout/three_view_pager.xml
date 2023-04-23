@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="30dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:descendantFocusability="blocksDescendants">
 
     <com.example.launchproject.view.DragRecyclerView
         android:id="@+id/rv_app_list"
@@ -12,17 +13,8 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <com.example.launchproject.view.DragRecyclerView
-        android:id="@+id/rv_app_list_2"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="10dp"
-        android:visibility="gone"
-        android:background="#CDCDCD"/>
-
 <!--    <androidx.recyclerview.widget.RecyclerView-->
-<!--        android:id="@+id/rv_app_list"-->
+<!--        android:id="@+id/linear_recycler_view"-->
 <!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="0dp"-->
 <!--        android:layout_weight="1" />-->

@@ -2,6 +2,7 @@ package com.example.launchproject.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.launchproject.MyApplication;
 import com.example.launchproject.R;
 import com.example.launchproject.bean.APPBean;
 
@@ -26,6 +28,8 @@ public class RecyclerViewAPPAdapter extends RecyclerView.Adapter<RecyclerViewAPP
     OnClickListener onClickListener;
     OnTouchListener onTouchListener;
 
+    private boolean isShowFrame;
+
     public RecyclerViewAPPAdapter(Context mContext, List<APPBean> mAPPList) {
         this.mContext = mContext;
         this.mAPPList = mAPPList;
@@ -36,12 +40,27 @@ public class RecyclerViewAPPAdapter extends RecyclerView.Adapter<RecyclerViewAPP
     public APPViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext).inflate(R.layout.item_list_view_app, parent, false);
         APPViewHolder appViewHolder = new APPViewHolder(view);
+        Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+        int ori = mConfiguration.orientation; //获取屏幕方向
+        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
+            //横屏
+            int parentWidth = parent.getWidth();
+            ViewGroup.LayoutParams layoutParams = appViewHolder.itemView.getLayoutParams();
+            layoutParams.width = parentWidth / 6;
+        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
+            //竖屏
+            int parentWidth = parent.getWidth();
+            ViewGroup.LayoutParams layoutParams = appViewHolder.itemView.getLayoutParams();
+            layoutParams.width = parentWidth / 3;
+        }
         return appViewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull APPViewHolder holder, @SuppressLint("RecyclerView") int position) {
-
+        if (isShowFrame) {
+            holder.appIcon.setBackground(MyApplication.getContext().getResources().getDrawable(R.drawable.selector_iv_bg));
+        }
         holder.appIcon.setImageBitmap(mAPPList.get(position).getAppIcon());
 //        holder.appIcon.setBackground(mAPPList.get(position).getAppIconDrawable());
         holder.appName.setText(mAPPList.get(position).getAppName());
@@ -104,5 +123,9 @@ public class RecyclerViewAPPAdapter extends RecyclerView.Adapter<RecyclerViewAPP
 
     public int getPosition() {
         return mPosition;
+    }
+
+    public void isSetFrameVisible(boolean visible) {
+        isShowFrame = visible;
     }
 }

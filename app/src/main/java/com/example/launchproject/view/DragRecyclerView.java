@@ -7,8 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -24,7 +22,6 @@ import android.widget.LinearLayout;
 
 import com.example.launchproject.R;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -61,7 +58,8 @@ public class DragRecyclerView extends RecyclerView {
     //按下的点到所在item的左边缘距离
     private int mPoint2ItemLeft;
     private int mPoint2ItemTop;
- 
+    private int mPoint2ItemBottom;
+
     //DragView到上边缘的距离
     private int mOffset2Top;
     private int mOffset2Left;
@@ -90,11 +88,13 @@ public class DragRecyclerView extends RecyclerView {
     private View firstMoveView;
 //    private ObjectAnimator translationAnimator;
     private Animation translateAnimation;
-    private boolean isCanDrag = false;
+//    private boolean isCanDrag = false;
 
     private OnUninstallClick onUninstallClick;
     private OnInformationClick onInformationClick;
     LinearLayout linearLayoutParent;
+    private LinearLayout linearLayout1;
+    private boolean isSystemAPP;
 
     private final Handler mHandler;
 //            = new Handler(Looper.myLooper()) {
@@ -123,10 +123,10 @@ public class DragRecyclerView extends RecyclerView {
             onCreateLongButton(mDownX, mDownY);
             isDrag = true;
             mVibrator.vibrate(100);
-            //隐藏该item
-            mDragView.setVisibility(INVISIBLE);
-            //在点击的地方创建并显示item镜像
-            createDragView(mDragBitmap, mDownX, mDownY);
+//            //隐藏该item
+//            mDragView.setVisibility(INVISIBLE);
+//            //在点击的地方创建并显示item镜像
+//            createDragView(mDragBitmap, mDownX, mDownY);
 //            if (itemMoveListener != null) {
 //                itemMoveListener.onDown(mDragPosition);
 //            }
@@ -176,6 +176,7 @@ public class DragRecyclerView extends RecyclerView {
                 //计算按下的点到所在item的left top 距离
                 mPoint2ItemLeft = mDownX - mDragView.getLeft();
                 mPoint2ItemTop = mDownY - mDragView.getTop();
+                mPoint2ItemBottom = mDownY - mDragView.getBottom();
                 //计算RecyclerView的left top 偏移量：原始距离 - 相对距离就是偏移量
                 mOffset2Left = (int) ev.getRawX() - mDownX;
                 mOffset2Top = (int) ev.getRawY() - mDownY;
@@ -216,6 +217,12 @@ public class DragRecyclerView extends RecyclerView {
 //                        isCanDrag = false;
 //                        Log.e(TAG, "removeCallbacks");
 //                        mVibrator.vibrate(200);
+                        if (!isMove) {
+                            //隐藏该item
+                            mDragView.setVisibility(INVISIBLE);
+                            //在点击的地方创建并显示item镜像
+                            createDragView(mDragBitmap, mDownX, mDownY);
+                        }
                         isMove = true;
                     }
                 }
@@ -494,7 +501,7 @@ public class DragRecyclerView extends RecyclerView {
         int pY = location[1];
         if (itemMoveListener != null){
             View childViewUnder = findChildViewUnder(x, y + pY);
-            itemMoveListener.onMove(x,y + pY, childViewUnder, isCanDrag);
+            itemMoveListener.onMove(x,y + pY, childViewUnder, isMove);
         }
 //        Log.e(TAG, "view:onDragItem:mDownX " + x + ", mDownY " + y);
 //        Log.e(TAG, "view:onDragItem:mDragMirrorViewX left " + mDragMirrorView.getLeft() + ", mDragMirrorViewX right " + mDragMirrorView.getRight());
@@ -536,26 +543,28 @@ public class DragRecyclerView extends RecyclerView {
     private void onCreateLongButton(int downX, int downY) {
         linearLayoutParent = new LinearLayout(getContext());
         linearLayoutParent.setOrientation(LinearLayout.VERTICAL);
-        linearLayoutParent.setPadding(10, 10, 10, 10);
-        linearLayoutParent.setBackgroundColor(getResources().getColor(R.color.white));
+        linearLayoutParent.setBackground(getResources().getDrawable(R.drawable.selector_layout_bg));
+        linearLayoutParent.setPadding(15, 15, 15, 15);
 
-        LinearLayout linearLayout1 = new LinearLayout(getContext());
-        ImageView uninstallImg = new ImageView(getContext());
-        Button uninstallButton = new Button(getContext());
-        uninstallImg.setBackground(getResources().getDrawable(R.drawable.uninstall));
-        uninstallButton.setId(R.id.btn_uninstall);
-        uninstallButton.setBackgroundColor(getResources().getColor(R.color.transparent));
-        uninstallButton.setText("卸载");
-        uninstallButton.setGravity(VERTICAL);
-        uninstallButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                removeLongClick();
-                onUninstallClick.OnClick();
-            }
-        });
-        linearLayout1.addView(uninstallImg);
-        linearLayout1.addView(uninstallButton);
+        if (!isSystemAPP) {
+            linearLayout1 = new LinearLayout(getContext());
+            ImageView uninstallImg = new ImageView(getContext());
+            Button uninstallButton = new Button(getContext());
+            uninstallImg.setBackground(getResources().getDrawable(R.drawable.uninstall));
+            uninstallButton.setId(R.id.btn_uninstall);
+            uninstallButton.setBackgroundColor(getResources().getColor(R.color.transparent));
+            uninstallButton.setText("卸载");
+            uninstallButton.setGravity(VERTICAL);
+            uninstallButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    removeLongClick();
+                    onUninstallClick.OnClick();
+                }
+            });
+            linearLayout1.addView(uninstallImg);
+            linearLayout1.addView(uninstallButton);
+        }
 
         LinearLayout linearLayout2 = new LinearLayout(getContext());
         ImageView informationImg = new ImageView(getContext());
@@ -564,7 +573,7 @@ public class DragRecyclerView extends RecyclerView {
         informationButton.setId(R.id.btn_information);
         informationButton.setBackgroundColor(getResources().getColor(R.color.transparent));
         informationButton.setText("应用信息");
-        informationButton.setGravity(VERTICAL);
+        informationButton.setGravity( VERTICAL);
         informationButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -575,7 +584,9 @@ public class DragRecyclerView extends RecyclerView {
         linearLayout2.addView(informationImg);
         linearLayout2.addView(informationButton);
 
-        linearLayoutParent.addView(linearLayout1);
+        if (!isSystemAPP) {
+            linearLayoutParent.addView(linearLayout1);
+        }
         linearLayoutParent.addView(linearLayout2);
 
         mLayoutParams = new WindowManager.LayoutParams();
@@ -583,7 +594,7 @@ public class DragRecyclerView extends RecyclerView {
         mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT; //左 上
         mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         mLayoutParams.x = mOffset2Left + (downX - mPoint2ItemLeft);
-        mLayoutParams.y = mOffset2Top + downY;
+        mLayoutParams.y = (int) (mOffset2Top + mDragView.getY());
         mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
         mWindowManager.addView(linearLayoutParent, mLayoutParams);
@@ -594,9 +605,13 @@ public class DragRecyclerView extends RecyclerView {
      */
     public interface OnItemMoveListener {
         void onDown(int position, Handler handler, Runnable runnable);
-        void onMove(int x, int y, View view, boolean isCanDrag);
+        void onMove(int x, int y, View view, boolean isMove);
         void onUp(int position);
         void onItemClick(int position);
+    }
+
+    public void isUninstallVisible(boolean isVisible) {
+        isSystemAPP = isVisible;
     }
 
     public void setOnUninstallClick(OnUninstallClick onUninstallClick) {

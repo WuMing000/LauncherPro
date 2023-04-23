@@ -37,7 +37,7 @@ public class PagingScrollHelper {
         //处理滑动
         recycleView.setOnFlingListener(mOnFlingListener);
         //设置滚动监听，记录滚动的状态，和总的偏移量
-        recycleView.setOnScrollListener(mOnScrollListener);
+        recycleView.addOnScrollListener(mOnScrollListener);
         //记录滚动开始的位置
         recycleView.setOnTouchListener(mOnTouchListener);
         //获取滚动的方向
@@ -150,13 +150,13 @@ public class PagingScrollHelper {
             //使用动画处理滚动
             if (mAnimator == null) {
                 mAnimator = new ValueAnimator().ofInt(startPoint, endPoint);
- 
+
                 mAnimator.setDuration(300);
                 mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     @Override
                     public void onAnimationUpdate(ValueAnimator animation) {
                         int nowPoint = (int) animation.getAnimatedValue();
- 
+
                         if (mOrientation == ORIENTATION.VERTICAL) {
                             int dy = nowPoint - offsetY;
                             //这里通过RecyclerView的scrollBy方法实现滚动。
@@ -184,7 +184,7 @@ public class PagingScrollHelper {
                 mAnimator.cancel();
                 mAnimator.setIntValues(startPoint, endPoint);
             }
- 
+
             mAnimator.start();
  
             return true;
@@ -205,7 +205,7 @@ public class PagingScrollHelper {
                     vY = 0;
  
                     if (move) {
-                        vY = offsetY - startY < 0 ? -1000 : 1000;
+                        vY = offsetY - startY < 0 ? - 1000 : 1000;
                     }
  
                 } else {
@@ -255,7 +255,7 @@ public class PagingScrollHelper {
  
     }
  
-    private int getPageIndex() {
+    public int getPageIndex() {
         int p = 0;
         if (mRecyclerView.getHeight() == 0 || mRecyclerView.getWidth() == 0) {
             return p;
@@ -268,7 +268,7 @@ public class PagingScrollHelper {
         return p;
     }
  
-    private int getStartPageIndex() {
+    public int getStartPageIndex() {
         int p = 0;
         if (mRecyclerView.getHeight() == 0 || mRecyclerView.getWidth() == 0) {
             //没有宽高无法处理
