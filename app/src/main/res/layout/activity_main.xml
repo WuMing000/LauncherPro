@@ -7,40 +7,15 @@
     android:orientation="vertical"
     tools:context=".activity.MainActivity"
     android:id="@+id/ll_bg_home"
-    android:fitsSystemWindows="true">
+    android:clipChildren="false">
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
         android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="0dp"/>
+        android:layout_height="0dp"
+        android:padding="30dp"
+        android:clipToPadding="false" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_marginBottom="20dp">
-
-        <ImageView
-            android:id="@+id/iv_first"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/light_oval"
-            android:layout_marginRight="10dp"/>
-
-        <ImageView
-            android:id="@+id/iv_second"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/oval"
-            android:layout_marginRight="10dp"/>
-
-        <ImageView
-            android:id="@+id/iv_third"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/oval"/>
-
-    </LinearLayout>
 
 </LinearLayout>

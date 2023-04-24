@@ -4,220 +4,228 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="20dp"
+    android:id="@+id/rv_one">
 
-    <TextView
-        android:id="@+id/tv_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="00:00"
-        android:textSize="78sp"
-        android:textColor="@color/white"
-        android:gravity="center"/>
-
-    <TextView
-        android:id="@+id/tv_calendar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:text="2000年1月1日 星期一"
-        android:layout_toRightOf="@id/tv_time"
-        android:layout_marginBottom="20dp"
-        android:layout_alignBottom="@id/tv_time"/>
-
-    <ImageView
-        android:id="@+id/iv_picture"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:src="@drawable/picture"
-        android:layout_toLeftOf="@id/et_source"
-        android:layout_marginRight="20dp"
-        android:layout_marginBottom="20dp"
-        android:layout_alignBottom="@id/tv_time"/>
-
-    <EditText
-        android:id="@+id/et_source"
-        android:layout_width="150dp"
-        android:layout_height="30dp"
-        android:background="@drawable/selector_et_bg"
-        android:drawableLeft="@drawable/bg_home_et_source"
-        android:padding="8dp"
-        android:hint="你要搜索什么呢"
-        android:imeOptions="actionSearch|flagNoExtractUi"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:textSize="12sp"
-        android:drawablePadding="5dp"
-        android:layout_alignParentRight="true"
-        android:layout_marginBottom="20dp"
-        android:layout_alignBottom="@id/tv_time"/>
-
-    <View
-        android:id="@+id/view_horizontal"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_centerHorizontal="true"/>
-
-    <ImageView
-        android:id="@+id/btn_picture"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@color/white"
-        android:scaleType="centerCrop"
-        android:layout_below="@id/rl_music"
-        android:layout_marginTop="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_toLeftOf="@id/view_horizontal"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="相册"
-        android:layout_alignTop="@id/btn_picture"
-        android:textSize="22sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"/>
-
-    <RelativeLayout
-        android:id="@+id/rl_music"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginTop="10dp"
-        android:background="@color/purple_200"
-        android:layout_below="@id/tv_time"
-        android:padding="5dp">
-
-        <com.example.launchproject.view.OvalImageView
-            android:id="@+id/iv_music"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:duplicateParentState="true"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_launcher"
-            android:layout_marginRight="10dp" />
+<!--    <RelativeLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:visibility="gone">-->
 
         <TextView
-            android:id="@+id/tv_music_name"
+            android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/iv_music"
-            android:duplicateParentState="true"
-            android:layout_centerVertical="true"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="暂无歌曲信息"
+            android:text="00:00"
+            android:textSize="78sp"
             android:textColor="@color/white"
-            android:textSize="18sp" />
-
-        <ImageView
-            android:id="@+id/btn_previous"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/previous_music_32"
-            android:layout_toLeftOf="@id/btn_control"
-            android:layout_centerVertical="true"/>
-
-        <ImageView
-            android:id="@+id/btn_control"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/start_music"
-            android:layout_toLeftOf="@id/btn_next"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="10dp"
-            android:layout_centerVertical="true" />
-
-        <ImageView
-            android:id="@+id/btn_next"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/next_music"
-            android:layout_marginRight="10dp"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"/>
-
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/rl_music"
-        android:layout_toRightOf="@id/view_horizontal"
-        android:layout_marginTop="10dp">
-
-        <View
-            android:id="@+id/view_vertical"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_centerVertical="true"/>
-
-        <ImageView
-            android:id="@+id/btn_browser"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/white"
-            android:scaleType="centerCrop"
-            android:layout_above="@id/view_vertical"
-            android:layout_marginBottom="10dp"/>
+            android:gravity="center"/>
 
         <TextView
+            android:id="@+id/tv_calendar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="浏览器"
+            android:layout_marginLeft="10dp"
+            android:text="2000年1月1日 星期一"
+            android:layout_toRightOf="@id/tv_time"
+            android:layout_marginBottom="20dp"
+            android:layout_alignBottom="@id/tv_time"/>
+
+        <ImageView
+            android:id="@+id/iv_picture"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/picture"
+            android:layout_toLeftOf="@id/et_source"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="20dp"
+            android:layout_alignBottom="@id/tv_time"/>
+
+        <EditText
+            android:id="@+id/et_source"
+            android:layout_width="150dp"
+            android:layout_height="30dp"
+            android:background="@drawable/selector_et_bg"
+            android:drawableLeft="@drawable/bg_home_et_source"
+            android:padding="8dp"
+            android:hint="你要搜索什么呢"
+            android:imeOptions="actionSearch|flagNoExtractUi"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textSize="12sp"
+            android:drawablePadding="5dp"
             android:layout_alignParentRight="true"
-            android:textSize="22sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"/>
+            android:layout_marginBottom="20dp"
+            android:layout_alignBottom="@id/tv_time"/>
 
         <View
-            android:id="@+id/view_horizontal_2"
+            android:id="@+id/view_horizontal"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_centerHorizontal="true"/>
 
         <ImageView
-            android:id="@+id/btn_projection_screen"
+            android:id="@+id/btn_picture"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_weight="1"
             android:background="@color/white"
             android:scaleType="centerCrop"
-            android:layout_below="@id/view_vertical"
-            android:layout_toLeftOf="@+id/view_horizontal_2"
-            android:layout_marginRight="10dp"/>
+            android:layout_below="@id/rl_music"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_toLeftOf="@id/view_horizontal"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="投屏"
-            android:layout_alignTop="@id/btn_projection_screen"
+            android:text="相册"
+            android:layout_alignTop="@id/btn_picture"
             android:textSize="22sp"
             android:textColor="@color/black"
             android:layout_marginTop="10dp"
             android:layout_marginLeft="10dp"/>
 
-        <ImageView
-            android:id="@+id/btn_alarm"
+        <RelativeLayout
+            android:id="@+id/rl_music"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/purple_200"
+            android:layout_below="@id/tv_time"
+            android:padding="5dp">
+
+            <com.example.launchproject.view.OvalImageView
+                android:id="@+id/iv_music"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:duplicateParentState="true"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher"
+                android:layout_marginRight="10dp" />
+
+            <TextView
+                android:id="@+id/tv_music_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/iv_music"
+                android:duplicateParentState="true"
+                android:layout_centerVertical="true"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="暂无歌曲信息"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/btn_previous"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/previous_music_32"
+                android:layout_toLeftOf="@id/btn_control"
+                android:layout_centerVertical="true"/>
+
+            <ImageView
+                android:id="@+id/btn_control"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/start_music"
+                android:layout_toLeftOf="@id/btn_next"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_centerVertical="true" />
+
+            <ImageView
+                android:id="@+id/btn_next"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/next_music"
+                android:layout_marginRight="10dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/white"
-            android:scaleType="centerCrop"
-            android:layout_below="@id/view_vertical"
-            android:layout_toRightOf="@id/view_horizontal_2"/>
+            android:layout_below="@id/rl_music"
+            android:layout_toRightOf="@id/view_horizontal"
+            android:layout_marginTop="10dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="时钟"
-            android:layout_alignTop="@id/btn_alarm"
-            android:layout_alignParentRight="true"
-            android:textSize="22sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"/>
+            <View
+                android:id="@+id/view_vertical"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerVertical="true"/>
 
-    </RelativeLayout>
+            <ImageView
+                android:id="@+id/btn_browser"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:layout_above="@id/view_vertical"
+                android:layout_marginBottom="10dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="浏览器"
+                android:layout_alignParentRight="true"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"/>
+
+            <View
+                android:id="@+id/view_horizontal_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerHorizontal="true"/>
+
+            <ImageView
+                android:id="@+id/btn_projection_screen"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:layout_below="@id/view_vertical"
+                android:layout_toLeftOf="@+id/view_horizontal_2"
+                android:layout_marginRight="10dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="投屏"
+                android:layout_alignTop="@id/btn_projection_screen"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="10dp"/>
+
+            <ImageView
+                android:id="@+id/btn_alarm"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:layout_below="@id/view_vertical"
+                android:layout_toRightOf="@id/view_horizontal_2"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="时钟"
+                android:layout_alignTop="@id/btn_alarm"
+                android:layout_alignParentRight="true"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"/>
+
+        </RelativeLayout>
+
+<!--    </RelativeLayout>-->
 
 </RelativeLayout>

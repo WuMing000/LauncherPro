@@ -78,7 +78,7 @@ public class MyGridViewAdapter extends BaseAdapter {
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context,"你点击了 "+listData.get(pos).getAppName(),Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context,"你点击了 "+listData.get(pos).getAppName(),Toast.LENGTH_SHORT).show();
             }
         });
         return convertView;

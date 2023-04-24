@@ -2,116 +2,124 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
+    android:padding="20dp"
+    android:id="@+id/rv_two">
 
-    <TextView
-        android:id="@+id/tv_free"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="36sp"
-        android:layout_marginTop="20dp"
-        android:text="自由生活"
-        android:textColor="@color/white" />
+<!--    <RelativeLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:visibility="gone">-->
 
-    <TextView
-        android:id="@+id/tv_live"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:text="更多精彩等你发现"
-        android:layout_below="@id/tv_free"
-        android:layout_marginTop="5dp" />
+        <TextView
+            android:id="@+id/tv_free"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="36sp"
+            android:layout_marginTop="20dp"
+            android:text="自由生活"
+            android:textColor="@color/white" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/tv_live"
-        android:layout_marginTop="10dp">
+        <TextView
+            android:id="@+id/tv_live"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:text="更多精彩等你发现"
+            android:layout_below="@id/tv_free"
+            android:layout_marginTop="5dp" />
 
-        <ImageView
-            android:id="@+id/ib_video"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/white"
-            android:scaleType="centerCrop"
+            android:layout_below="@id/tv_live"
+            android:layout_marginTop="10dp">
+
+            <ImageView
+                android:id="@+id/ib_video"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:layout_marginRight="10dp"/>
+
+            <ImageView
+                android:id="@+id/ib_music"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:layout_marginRight="10dp"/>
+
+            <ImageView
+                android:id="@+id/ib_tiktok"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:layout_marginRight="10dp"/>
+
+            <ImageView
+                android:id="@+id/ib_office"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@color/white"
+                android:scaleType="centerCrop" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/view_horizontal"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="影视"
+            android:layout_alignParentBottom="true"
+            android:textSize="22sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="音乐"
+            android:layout_alignParentBottom="true"
+            android:layout_alignRight="@id/view_horizontal"
+            android:textSize="22sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"
+            android:layout_marginRight="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="直播"
+            android:layout_alignParentBottom="true"
+            android:layout_alignLeft="@id/view_horizontal"
+            android:textSize="22sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="办公"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:textSize="22sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="10dp"
             android:layout_marginRight="10dp"/>
 
-        <ImageView
-            android:id="@+id/ib_music"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/white"
-            android:scaleType="centerCrop"
-            android:layout_marginRight="10dp"/>
-
-        <ImageView
-            android:id="@+id/ib_tiktok"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/white"
-            android:scaleType="centerCrop"
-            android:layout_marginRight="10dp"/>
-
-        <ImageView
-            android:id="@+id/ib_office"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/white"
-            android:scaleType="centerCrop" />
-
-    </LinearLayout>
-
-    <View
-        android:id="@+id/view_horizontal"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_centerHorizontal="true"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="影视"
-        android:layout_alignParentBottom="true"
-        android:textSize="22sp"
-        android:textColor="@color/black"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="10dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="音乐"
-        android:layout_alignParentBottom="true"
-        android:layout_alignRight="@id/view_horizontal"
-        android:textSize="22sp"
-        android:textColor="@color/black"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="20dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="直播"
-        android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@id/view_horizontal"
-        android:textSize="22sp"
-        android:textColor="@color/black"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="10dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="办公"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:textSize="22sp"
-        android:textColor="@color/black"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="10dp"/>
+<!--    </RelativeLayout>-->
 
 </RelativeLayout>

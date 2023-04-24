@@ -12,6 +12,8 @@ public class HandlerManager {
     public static final int REMOVED_APP_SUCCESS = 6;
     public static final int INSTALL_APP_SUCCESS = 7;
     public static final int CLEAR_RECYCLER_ANIMATION = 8;
+    public static final int SKIP_NEXT_PAGE = 9;
+    public static final int SKIP_PREVIOUS_PAGE = 10;
     public static ThreadLocal<Handler> threadLocal = new ThreadLocal<Handler>();
 
     public static Handler getHandler() {

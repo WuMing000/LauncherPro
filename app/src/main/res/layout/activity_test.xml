@@ -4,17 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.TestActivity"
-    android:background="@drawable/bg_app_home"
-    android:fitsSystemWindows="true"
-    android:clipChildren="false">
+    tools:context=".activity.TestActivity">
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:padding="30dp"
-        android:clipToPadding="false"/>
+        android:layout_height="match_parent" />
 
 </LinearLayout>

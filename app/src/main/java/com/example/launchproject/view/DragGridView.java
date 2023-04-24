@@ -24,12 +24,10 @@ import android.widget.LinearLayout;
 
 import com.example.launchproject.R;
 
-import androidx.recyclerview.widget.RecyclerView;
-
 /**
  * @explain 长按移动的recyclerView
  */
-public class DragGridView2 extends GridView {
+public class DragGridView extends GridView {
 
     private static final String TAG = "DragRecyclerView======>";
 
@@ -135,15 +133,15 @@ public class DragGridView2 extends GridView {
         }
     };
 
-    public DragGridView2(Context context) {
+    public DragGridView(Context context) {
         this(context, null);
     }
 
-    public DragGridView2(Context context, AttributeSet attrs) {
+    public DragGridView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public DragGridView2(Context context, AttributeSet attrs, int defStyleAttr) {
+    public DragGridView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
  
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);

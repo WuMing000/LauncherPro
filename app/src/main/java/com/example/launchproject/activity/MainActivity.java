@@ -18,9 +18,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -32,11 +30,8 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +40,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -52,25 +48,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.launchproject.R;
-import com.example.launchproject.adapter.LinearRecyclerViewAdapter;
-import com.example.launchproject.adapter.RecyclerViewAPPAdapter;
+import com.example.launchproject.adapter.MyGridViewAdapter;
 import com.example.launchproject.bean.APPBean;
-import com.example.launchproject.helper.PagingScrollHelper;
 import com.example.launchproject.manager.HandlerManager;
 import com.example.launchproject.recevier.MusicReceiver;
 import com.example.launchproject.recevier.MyInstalledReceiver;
 import com.example.launchproject.utils.CustomUtil;
 import com.example.launchproject.utils.DataUtil;
-import com.example.launchproject.view.DragRecyclerView;
+import com.example.launchproject.view.DragGridView;
 import com.example.launchproject.view.OvalImageView;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -81,29 +70,20 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import static android.content.pm.PackageManager.GET_URI_PERMISSION_PATTERNS;
 
 @SuppressLint("LongLogTag")
-public class MainActivity extends BaseActivity implements PagingScrollHelper.onPageChangeListener {
+public class MainActivity extends BaseActivity {
 
     private static final String TAG = "MainActivity==============>";
 
     private ViewPager mViewPager;
     private ArrayList<View> mPageView;
-    private ImageView ivFirst, ivSecond, ivThird;
-    private LinearLayout mImgLayout, llBgHome;
-    //    private ListView listViewAPP;
-    private DragRecyclerView rvAPPList;
-    private RecyclerView linearRecyclerView;
-    //    private ListViewAPPAdapter adapter;
-    private RecyclerViewAPPAdapter recyclerViewAPPAdapter;
-    private LinearRecyclerViewAdapter linearRecyclerViewAdapter;
+    private LinearLayout llBgHome;
+
     private List<APPBean> appBeanList;
     ImageView imageView;
 
@@ -128,17 +108,215 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     private String musicName, date, calendar;
 
     private SharedPreferences sp;
-    private SharedPreferences.Editor editor;
     private String spMusicName;
-    private int savePosition = -1;
+    private SharedPreferences.Editor editor;
+    private PagerAdapter pagerAdapter;
+
+    //app gridview
+    private int totalPage;//总的页数(仅代表app加载的页数)
+    private int mPageSize = 18;//每页显示的最大数量
     private APPBean saveFrontAPPContent;
-    private APPBean saveMoveAPPContent;
-    private boolean isDown;
     private int downPosition;
     private ScaleAnimation scaleAnimation;
     private boolean isScale;
-//    private int currentPage;
-    private PagerAdapter pagerAdapter;
+    private boolean isDown;
+    private int savePosition = 0;
+    private int copyPageSelectedPosition;
+    private boolean isGridView;
+
+    private ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+
+            copyPageSelectedPosition = position;
+
+            if (position == 0 || position == 1) {
+                return;
+            }
+
+            Log.e(TAG, position + ":onPageSelected");
+            savePosition = position - 2;
+//                Log.e(TAG, position + ":onPageScrolled");
+            View view = mPageView.get(position);
+            DragGridView gridView = (DragGridView) view;
+//            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
+            gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
+                @Override
+                public void onDown(int p, Handler handler, Runnable runnable) {
+                    Log.d("TAG", "onDown");
+//                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
+                    int newPosition = p + savePosition * mPageSize;
+                    if (appBeanList.get(newPosition).getPackageName().length() == 0) {
+                        handler.removeCallbacks(runnable);
+                    }
+                    gridView.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(newPosition).getPackageName()));
+                    Log.d("wu", "onDown====>" + newPosition + "");
+//                if (rvAPPList.isDrag()) {
+                    saveFrontAPPContent = new APPBean(appBeanList.get(newPosition).getAppName(), appBeanList.get(newPosition).getAppIcon(), appBeanList.get(newPosition).getPackageName());
+//                    Log.e(TAG, saveFrontAPPContent.toString());
+//                }
+                    downPosition = newPosition;
+//                recyclerViewAPPAdapter.isSetFrameVisible(true);
+//                recyclerViewAPPAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onMove(int x, int y, View v, boolean isMove) {
+
+                    Log.d("TAG", "onMove" + isMove);
+                    int widthPixels = getResources().getDisplayMetrics().widthPixels;
+
+                    Log.d("TAG", "widthPixels:" + widthPixels + ",x:" + x);
+                    Log.d("TAG", "childCount" + gridView.getChildCount());
+                    if (x >= (widthPixels - 200)) {
+//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() + 1) * 18 + 17);
+//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() + 1);
+                        Log.e(TAG, savePosition + ":savePosition");
+                        handler.postDelayed(nextRunnable, 1500);
+//                            viewPager.requestLayout();
+                    } else if (x <= 200) {
+//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() - 1) * 18);
+//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() - 1);
+//                            --savePosition;
+//                            viewPager.setCurrentItem(savePosition , true);
+                        handler.postDelayed(previousRunnable, 1500);
+                    } else {
+                        handler.removeCallbacks(nextRunnable);
+                        handler.removeCallbacks(previousRunnable);
+                    }
+                    if (isMove && !isScale) {
+
+
+
+                        isDown = true;
+                        isScale = true;
+                        mViewPager.setAlpha(0.8f);
+                        scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                        scaleAnimation.setDuration(100);//设置动画持续时间
+                        mViewPager.startAnimation(scaleAnimation);
+                        scaleAnimation.setFillAfter(true);
+                        for (int i = 0; i < mPageView.size(); i++) {
+                            if (i > 1) {
+                                DragGridView view2 = (DragGridView) mPageView.get(i);
+                                view2.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
+                            }
+                        }
+//                            viewPager.setPadding(150, 0, 150, 0);
+//                            viewPager.setClipChildren(false);
+
+//                            gridView.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
+//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//                            marginLayoutParams.setMargins(350, 0, 350, 0);
+//                            viewPager.setLayoutParams(marginLayoutParams);
+//                            viewPager.setClipChildren(false);
+                    }
+//                Log.e(TAG, "isCanDrag:" + isCanDrag);
+//                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
+//                if (movePosition != -1 && movePosition != downPosition) {
+//                    appBeanList.set(downPosition, appBeanList.get(movePosition));
+//                }
+//                else {
+//                    appBeanList.set(downPosition, saveFrontAPPContent);
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+                }
+
+                @Override
+                public void onUp(int p) {
+                    Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
+                    int newPosition = p + savePosition * mPageSize;
+                    Log.d("TAG", "onUp:downPosition:" + downPosition + ",position:" + newPosition + ",saveFrontAPPContent:" + saveFrontAPPContent + ",moveData:" + appBeanList.get(newPosition));
+                    if (isScale) {
+                        isScale = false;
+//                            gridView.setBackgroundColor(getResources().getColor(R.color.transparent));
+//                        mViewPager.setAlpha(1.0f);
+//                        scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+//                        scaleAnimation.setDuration(300);//设置动画持续时间
+//                        mViewPager.startAnimation(scaleAnimation);
+//                        scaleAnimation.setFillAfter(true);
+                        handler.postDelayed(clearAnimationRunnable, 1000);
+//                            viewPager.setClipToPadding(true);
+//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//                            marginLayoutParams.setMargins(0, 0, 0, 0);
+//                            viewPager.setLayoutParams(marginLayoutParams);
+                    }
+//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
+//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
+                    if (newPosition != downPosition && gridView.isDrag()) {
+                        Log.e("TAG", "我进来了");
+                        appBeanList.set(downPosition, appBeanList.get(newPosition));
+                        appBeanList.set(newPosition, saveFrontAPPContent);
+                        pagerAdapter.notifyDataSetChanged();
+                    }
+//                    viewPager.getAdapter().notifyDataSetChanged();
+
+//                    adapter.notifyDataSetChanged();
+                    if (isDown) {
+                        isDown = false;
+                    }
+//                Log.d(TAG, "onUp====>" + position + "");
+//                if (saveFrontAPPContent != null) {
+//                    Log.e(TAG, "我进来了");
+//                    appBeanList.set(position, saveFrontAPPContent);
+//                    recyclerViewAPPAdapter.notifyDataSetChanged();
+//                }
+//                appBeanList.set(position, appBeanList.get(movePosition));
+//                appBeanList.set(movePosition, appBeanList.get(position));
+//                recyclerViewAPPAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onItemClick(int p) {
+                    Log.e(TAG, "onItemClick: p:" + p + ",savePosition:" + savePosition + ",mPageSize:" + mPageSize);
+                    int newPosition = p + savePosition * mPageSize;
+                    if (appBeanList.get(newPosition).getPackageName().length() == 0 || p == -1) {
+                        return;
+                    }
+                    Log.d("TAG", "onItemClick====>" + newPosition + "");
+//                    Log.d("TAG", "click recyclerview item " + newPosition);
+                    //查询这个应用程序的入口activity。把他开启起来
+                    try {
+                        PackageManager pm = getPackageManager();
+                        Intent intent = pm.getLaunchIntentForPackage(appBeanList.get(newPosition).getPackageName());
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            DragGridView dragGridView = (DragGridView) mPageView.get(copyPageSelectedPosition);
+            dragGridView.setOnUninstallClick(new DragGridView.OnUninstallClick() {
+                @Override
+                public void OnClick() {
+                    Intent intent = new Intent();
+                    intent.setAction("android.intent.action.DELETE");
+                    intent.setData(Uri.parse("package:" + appBeanList.get(downPosition).getPackageName()));
+                    Toast.makeText(MainActivity.this, "卸载" + appBeanList.get(downPosition).getAppName(), Toast.LENGTH_LONG).show();
+                    startActivity(intent);
+                }
+            });
+
+            dragGridView.setOnInformationClick(new DragGridView.OnInformationClick() {
+                @Override
+                public void OnClick() {
+                    Log.e("onContextItemSelected", appBeanList.get(downPosition).getPackageName());
+                    gotoAppDetailIntent(MainActivity.this, appBeanList.get(downPosition).getPackageName());
+                }
+            });
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+
+        }
+    };
 
     Handler handler = new Handler(Looper.myLooper()) {
 
@@ -155,21 +333,26 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     Bitmap bitmap = BitmapFactory.decodeByteArray(appIcons, 0, appIcons.length);
                     Drawable drawable = new BitmapDrawable(getResources(), bitmap);
                     appBeanList.add(new APPBean(appName, bitmap, packageName));
-                    mImgLayout.removeAllViews();
-                    if (appBeanList.size() % 18 == 0) {
-                        setIndicatorLayout(appBeanList.size() / 18);
-                    } else {
-                        setIndicatorLayout((appBeanList.size() / 18) + 1);
-                    }
-                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                    adapter.notifyDataSetChanged();
                     break;
                 case HandlerManager.LOAD_APP_FINISH:
-//                    int allAPPNum = (int) msg.obj;
                     while (appBeanList.size() % 18 != 0) {
                         appBeanList.add(new APPBean());
                     }
                     Log.e(TAG, "加载应用完成" + appBeanList.size());
+
+                    //add app list gridview
+                    //总的页数，取整（这里有三种类型：Math.ceil(3.5)=4:向上取整，只要有小数都+1  Math.floor(3.5)=3：向下取整  Math.round(3.5)=4:四舍五入）
+                    totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
+                    LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+                    for(int i = 0; i < totalPage; i++){
+                        //每个页面都是inflate出一个新实例
+                        DragGridView gridView = (DragGridView) inflater.inflate(R.layout.grid_view_app_list, null);
+                        MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, i, mPageSize);
+                        gridView.setAdapter(myGridViewAdapter);
+                        //每一个GridView作为一个View对象添加到ViewPager集合中
+                        mPageView.add(gridView);
+                        pagerAdapter.notifyDataSetChanged();
+                    }
                     break;
                 case HandlerManager.GET_SYSTEM_TIME:
                     handler.postDelayed(updateTimeThread, 1000);
@@ -200,6 +383,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                 case HandlerManager.REMOVED_APP_SUCCESS:
                     try {
                         int i = -1;
+                        boolean isLastALLNone = true;
                         String obj = (String) msg.obj;
                         String removePkg = obj.split(":")[1];
                         for (APPBean appBean : appBeanList) {
@@ -210,17 +394,26 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                             }
                         }
                         if (i != -1) {
-//                            appBeanList.remove(i);
                             appBeanList.set(i, new APPBean());
                         }
-//                        if ((appBeanList.size() + 1) % 18 == 0) {
-//                            for (APPBean appBean : appBeanList) {
-//                                if (appBean.getPackageName().length() == 0) {
-//                                    appBeanList.remove(appBean);
-//                                }
-//                            }
-//                        }
-                        recyclerViewAPPAdapter.notifyDataSetChanged();
+                        for (int j = appBeanList.size() - 18; j < appBeanList.size(); j++) {
+                            if(appBeanList.get(j).getPackageName().length() != 0) {
+                                isLastALLNone = false;
+                            }
+                        }
+                        Log.e(TAG, "remove:" + appBeanList.size() + ",isLastALLNone:" + isLastALLNone);
+                        if (isLastALLNone) {
+                            int totalSize = appBeanList.size() - 18;
+                            for (int j = appBeanList.size() - 1; j >= totalSize; j--) {
+                                Log.e(TAG, "j: " + j);
+                                appBeanList.remove(j);
+                            }
+//                            mViewPager.removeView(mPageView.get(copyPageSelectedPosition));
+                            mPageView.remove(copyPageSelectedPosition);
+                        }
+                        Log.e(TAG, "mPageRemove:" + mPageView.size());
+//                        onPageChangeListener.onPageSelected(copyPageSelectedPosition);
+                        pagerAdapter.notifyDataSetChanged();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -240,7 +433,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                                 Drawable key = entry.getKey();
                                 name = entry.getValue();
                                 Log.d(TAG, "appName:" + name);
-                                icon = drawableToBitmap(key);
+                                icon = CustomUtil.drawableToBitmap(key);
                             }
                         }
                         APPBean installAPPBean = new APPBean(name, icon, installPkg);
@@ -263,20 +456,46 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                         while (appBeanList.size() % 18 != 0) {
                             appBeanList.add(new APPBean());
                         }
-                        recyclerViewAPPAdapter.notifyDataSetChanged();
-//                        Toast.makeText(MainActivity.this, name + " 安装成功", Toast.LENGTH_SHORT).show();
+                        if (firstNullPosition == -1) {
+                            Log.e(TAG, "appList:" + appBeanList.size());
+                            totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
+                            DragGridView gridView = (DragGridView) LayoutInflater.from(MainActivity.this).inflate(R.layout.grid_view_app_list, null);
+                            MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, totalPage - 1, mPageSize);
+                            gridView.setAdapter(myGridViewAdapter);
+                            //每一个GridView作为一个View对象添加到ViewPager集合中
+                            mPageView.add(gridView);
+                        }
+                        pagerAdapter.notifyDataSetChanged();
+                        mViewPager.setCurrentItem(mPageView.size() - 1);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
                 case HandlerManager.CLEAR_RECYCLER_ANIMATION:
-//                    rvAPPList.clearAnimation();
-                    scaleAnimation = new ScaleAnimation(0.95f, 1.0f, 0.95f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    for (int i = 0; i < mPageView.size(); i++) {
+                        if (i > 1) {
+                            DragGridView view2 = (DragGridView) mPageView.get(i);
+                            view2.setBackgroundColor(getResources().getColor(R.color.transparent));
+                        }
+                    }
+                    scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
                     scaleAnimation.setDuration(100);//设置动画持续时间
-                    rvAPPList.startAnimation(scaleAnimation);
                     scaleAnimation.setFillAfter(true);
-                    rvAPPList.setBackgroundColor(getResources().getColor(R.color.transparent));
-                    rvAPPList.setAlpha(1.0f);
+                    mViewPager.startAnimation(scaleAnimation);
+                    mViewPager.setAlpha(1.0f);
+                    break;
+                case HandlerManager.SKIP_NEXT_PAGE:
+                    mViewPager.setCurrentItem(copyPageSelectedPosition + 1, true);
+                    handler.removeCallbacks(nextRunnable);
+                    break;
+                case HandlerManager.SKIP_PREVIOUS_PAGE:
+                    if (copyPageSelectedPosition > 2) {
+                        mViewPager.setCurrentItem(copyPageSelectedPosition - 1, true);
+                        handler.removeCallbacks(previousRunnable);
+                    }
+                    break;
+                default:
+                    Log.e(TAG, "It's not send handler message.");
                     break;
             }
         }
@@ -308,6 +527,47 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         }
     };
 
+    Runnable nextRunnable = new Runnable() {
+        @Override
+        public void run() {
+            handler.sendEmptyMessageAtTime(HandlerManager.SKIP_NEXT_PAGE, 100);
+        }
+    };
+
+    Runnable previousRunnable = new Runnable() {
+        @Override
+        public void run() {
+            handler.sendEmptyMessageAtTime(HandlerManager.SKIP_PREVIOUS_PAGE, 100);
+        }
+    };
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSaveInstanceState");
+        outState.putString("musicName", musicName);
+        outState.putString("date", date);
+        outState.putString("calendar", calendar);
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.e(TAG, "onConfigurationChanged");
+        LayoutInflater layoutInflater = getLayoutInflater();
+        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
+        int ori = mConfiguration.orientation; //获取屏幕方向
+        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+//            //横屏
+            view1 = layoutInflater.inflate(R.layout.one_view_pager_landscape, null);
+            view2 = layoutInflater.inflate(R.layout.two_view_pager_landscape, null);
+        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+//            //竖屏
+            view1 = layoutInflater.inflate(R.layout.one_view_pager_portrait, null);
+            view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -316,6 +576,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 //        View decorView = getWindow().getDecorView();
 //        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
 //        decorView.setSystemUiVisibility(uiOptions);
+        CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
         HandlerManager.putHandler(handler);
         sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
@@ -334,87 +595,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         spMusicName = sp.getString("musicName", "暂无歌曲信息");
         tvMusicName.setText(spMusicName);
         setBackground();
-        pagerAdapter = new PagerAdapter() {
 
-            //获取当前窗体界面数
-            @Override
-            public int getCount() {
-                return mPageView.size();
-            }
-
-            //判断是否由对象生成界面
-            @Override
-            public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
-                return view == object;
-            }
-
-            //使从ViewGroup移除当前View
-            @Override
-            public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
-                container.removeView(mPageView.get(position));
-            }
-
-            //返回一个对象，这个对象表明了PagerAdapter适配器选择哪个对象放在当前的ViewPager中
-            @NonNull
-            @Override
-            public Object instantiateItem(@NonNull ViewGroup container, int position) {
-                container.addView(mPageView.get(position));
-                return mPageView.get(position);
-            }
-        };
-
-        mViewPager.setAdapter(pagerAdapter);
-        mViewPager.setCurrentItem(0);
-        mViewPager.addOnPageChangeListener(new MyOnPageChangeListener());
-    }
-
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Log.d(TAG, "onSaveInstanceState");
-        outState.putString("musicName", musicName);
-        outState.putString("date", date);
-        outState.putString("calendar", calendar);
-    }
-
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        Log.e(TAG, "onConfigurationChanged");
-        PagingScrollHelper scrollHelper = new PagingScrollHelper();//初始化横向管理器
-        scrollHelper.setUpRecycleView(rvAPPList);//将横向布局管理器和recycler view绑定到一起
-        LayoutInflater layoutInflater = getLayoutInflater();
-        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
-//        HorizontalPageLayoutManager horizontalPageLayoutManager = null;
-        int ori = mConfiguration.orientation; //获取屏幕方向
-        GridLayoutManager gridLayoutManager = null;
-        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
-            //横屏
-            view1 = layoutInflater.inflate(R.layout.one_view_pager_landscape, null);
-            view2 = layoutInflater.inflate(R.layout.two_view_pager_landscape, null);
-//            mPageView.set(0, view1);
-//            mPageView.set(1, view2);
-//            horizontalPageLayoutManager = new HorizontalPageLayoutManager(3, 6);
-            gridLayoutManager = new GridLayoutManager(this, 3, LinearLayoutManager.HORIZONTAL, false);
-        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
-            //竖屏
-            view1 = layoutInflater.inflate(R.layout.one_view_pager_portrait, null);
-            view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
-//            mPageView.set(0, view1);
-//            mPageView.set(1, view2);
-//            horizontalPageLayoutManager = new HorizontalPageLayoutManager(6, 3);
-            gridLayoutManager = new GridLayoutManager(this, 6, LinearLayoutManager.HORIZONTAL, false);
-        }
-//        rvAPPList.setLayoutManager(horizontalPageLayoutManager);
-//        recyclerViewAPPAdapter.notifyDataSetChanged();
-        rvAPPList.setLayoutManager(gridLayoutManager);
-        scrollHelper.updateLayoutManger();
-        scrollHelper.scrollToPosition(0);//默认滑动到第一页
-        rvAPPList.setHorizontalScrollBarEnabled(true);
-        scrollHelper.setOnPageChangeListener(this);//设置滑动监听
-//        mViewPager.setAdapter(pagerAdapter);
-//        mViewPager.setCurrentItem(0);
-//        pagerAdapter.notifyDataSetChanged();
     }
 
     private void initData() {
@@ -424,9 +605,6 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         appBeanList = new ArrayList<>();
         llBgHome = findViewById(R.id.ll_bg_home);
         mViewPager = findViewById(R.id.view_pager);
-        ivFirst = findViewById(R.id.iv_first);
-        ivSecond = findViewById(R.id.iv_second);
-        ivThird = findViewById(R.id.iv_third);
         LayoutInflater layoutInflater = getLayoutInflater();
 
         Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
@@ -460,66 +638,13 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         ibMusic = view2.findViewById(R.id.ib_music);
         ibTiktok = view2.findViewById(R.id.ib_tiktok);
         ibOffice = view2.findViewById(R.id.ib_office);
-        initFirstView();
-        View view3 = layoutInflater.inflate(R.layout.three_view_pager, null);
-//        listViewAPP = view1.findViewById(R.id.list_view_app);
-        rvAPPList = view3.findViewById(R.id.rv_app_list);
-        mImgLayout = view3.findViewById(R.id.indicator_layout);
-//        adapter = new ListViewAPPAdapter(this, appBeanList);
-        recyclerViewAPPAdapter = new RecyclerViewAPPAdapter(this, appBeanList);
-//        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 6, RecyclerView.VERTICAL, false);
-        PagingScrollHelper scrollHelper = new PagingScrollHelper();//初始化横向管理器
-        scrollHelper.setUpRecycleView(rvAPPList);//将横向布局管理器和recycler view绑定到一起
-//        HorizontalPageLayoutManager horizontalPageLayoutManager = null;
-//        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
-//            //横屏
-//            horizontalPageLayoutManager = new HorizontalPageLayoutManager(3, 6);
-//        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
-//            //竖屏
-//            horizontalPageLayoutManager = new HorizontalPageLayoutManager(6, 3);
-//        }
-//        HorizontalPageLayoutManager horizontalPageLayoutManager2 = null;
-//        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
-//            //横屏
-//            horizontalPageLayoutManager2 = new HorizontalPageLayoutManager(3, 6);
-//        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
-//            //竖屏
-//            horizontalPageLayoutManager2 = new HorizontalPageLayoutManager(6, 3);
-//        }
-        //横向列表 3行
-        GridLayoutManager gridLayoutManager = null;
+        initClickListener();
         if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
-            //横屏
-            gridLayoutManager = new GridLayoutManager(this, 3, LinearLayoutManager.HORIZONTAL, false);
+//            //横屏
         } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
-            //竖屏
-            gridLayoutManager = new GridLayoutManager(this, 6, LinearLayoutManager.HORIZONTAL, false);
+//            //竖屏
         }
-        rvAPPList.setLayoutManager(gridLayoutManager);
-//        new GridSnapHelper(3, 6, this).attachToRecycleView(rvAPPList);
-//        ViewPagerSnapHelper viewPagerSnapHelper = new ViewPagerSnapHelper(18);
-//        viewPagerSnapHelper.attachToRecyclerView(rvAPPList);
-//        viewPagerSnapHelper.setPageListener(new ViewPagerSnapHelper.PageListener() {
-//            @Override
-//            public void onPageSelector(int position) {
-//                Log.e(TAG, position + "");
-//                currentPage = position;
-//            }
-//        });
 
-//        rvAPPList.setLayoutManager(horizontalPageLayoutManager);
-//        PagerSnapHelper pagerSnapHelper = new PagerSnapHelper();
-//        pagerSnapHelper.attachToRecyclerView(rvAPPList);
-        scrollHelper.updateLayoutManger();
-        scrollHelper.scrollToPosition(0);//默认滑动到第一页
-//        rvAPPList.setHorizontalScrollBarEnabled(false);
-        scrollHelper.setOnPageChangeListener(this);//设置滑动监听
-        rvAPPList.setAdapter(recyclerViewAPPAdapter);
-//        listViewAPP.setAdapter(adapter);
-        mPageView = new ArrayList<>();
-        mPageView.add(view1);
-        mPageView.add(view2);
-        mPageView.add(view3);
         new Thread() {
             @Override
             public void run() {
@@ -527,128 +652,64 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                 getAllAppNames();
             }
         }.start();
-//        recyclerViewAPPAdapter.setOnClickListener(new RecyclerViewAPPAdapter.OnClickListener() {
-//            @Override
-//            public void OnClick(int position) {
-//                Log.d(TAG, "click recyclerview item " + position);
-//                //查询这个应用程序的入口activity。把他开启起来
-//                PackageManager pm = getPackageManager();
-//                Intent intent = pm.getLaunchIntentForPackage(appBeanList.get(position).getPackageName());
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                startActivity(intent);
-//            }
-//        });
-//        recyclerViewAPPAdapter.setOnTouchListener(new RecyclerViewAPPAdapter.OnTouchListener() {
-//            @Override
-//            public void OnTouch(View view, MotionEvent motionEvent, int position) {
-//                firstPosition = position;
-//            }
-//        });
 
-        rvAPPList.setOnItemMoveListener(new DragRecyclerView.OnItemMoveListener() {
+        mPageView = new ArrayList<>();
+        mPageView.add(view1);
+        mPageView.add(view2);
+
+        //app gridview
+//        initGridView();
+
+//        mPageView.add(view3);
+
+        pagerAdapter = new PagerAdapter() {
+
+            //获取当前窗体界面数
             @Override
-            public void onDown(int position, Handler handler, Runnable runnable) {
-                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
-                if (appBeanList.get(position).getPackageName().length() == 0) {
-                    handler.removeCallbacks(runnable);
-                }
-                rvAPPList.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(position).getPackageName()));
-                Log.d(TAG, "onDown====>" + position + "");
-//                if (rvAPPList.isDrag()) {
-                saveFrontAPPContent = new APPBean(appBeanList.get(position).getAppName(), appBeanList.get(position).getAppIcon(), appBeanList.get(position).getPackageName());
-//                    Log.e(TAG, saveFrontAPPContent.toString());
-//                }
-                downPosition = position;
-//                recyclerViewAPPAdapter.isSetFrameVisible(true);
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
+            public int getCount() {
+                return mPageView.size();
+            }
+
+            //判断是否由对象生成界面
+            @Override
+            public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
+                return view == object;
+            }
+
+            //使从ViewGroup移除当前View
+            @Override
+            public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+//                Log.e(TAG, "destroyItem:" + position);
+                container.removeView((View) object);
+            }
+
+            //返回一个对象，这个对象表明了PagerAdapter适配器选择哪个对象放在当前的ViewPager中
+            @NonNull
+            @Override
+            public Object instantiateItem(@NonNull ViewGroup container, int position) {
+                container.addView(mPageView.get(position));
+                return mPageView.get(position);
             }
 
             @Override
-            public void onMove(int x, int y, View v, boolean isMove) {
-                int widthPixels = getResources().getDisplayMetrics().widthPixels;
-
-                Log.d(TAG, "widthPixels:" + widthPixels + ",x:" + (x + 100) + "currentPage:" + scrollHelper.getPageIndex());
-                Log.d(TAG, "childCount" + rvAPPList.getChildCount());
-                if (x >= widthPixels - 200) {
-//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() + 1) * 18 + 17);
-                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() + 1);
-                }
-                if (x <= 200) {
-//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() - 1) * 18);
-                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() - 1);
-                }
-                if (isMove && !isScale) {
-                    rvAPPList.setAlpha(0.8f);
-                    isDown = true;
-                    scaleAnimation = new ScaleAnimation(1.0f, 0.95f, 1.0f, 0.95f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    scaleAnimation.setDuration(100);//设置动画持续时间
-                    rvAPPList.startAnimation(scaleAnimation);
-                    scaleAnimation.setFillAfter(true);
-                    rvAPPList.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
-                    isScale = true;
-                }
-//                Log.e(TAG, "isCanDrag:" + isCanDrag);
-//                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
-//                if (movePosition != -1 && movePosition != downPosition) {
-//                    appBeanList.set(downPosition, appBeanList.get(movePosition));
-//                }
-//                else {
-//                    appBeanList.set(downPosition, saveFrontAPPContent);
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                }
+            public int getItemPosition(Object object) {
+                return POSITION_NONE;
             }
+        };
 
-            @Override
-            public void onUp(int position) {
-                isScale = false;
-//                scaleAnimation = new ScaleAnimation(0.95f, 1.0f, 0.95f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-//                scaleAnimation.setDuration(100);//设置动画持续时间
-//                rvAPPList.startAnimation(scaleAnimation);
-//                scaleAnimation.setFillAfter(true);
-//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
-//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
-                if (position != downPosition && rvAPPList.isDrag()) {
-                    appBeanList.set(downPosition, appBeanList.get(position));
-                    appBeanList.set(position, saveFrontAPPContent);
-                }
-                recyclerViewAPPAdapter.notifyDataSetChanged();
-                if (isDown) {
-                    handler.postDelayed(clearAnimationRunnable, 800);
-                    isDown = false;
-                }
-//                Log.d(TAG, "onUp====>" + position + "");
-//                if (saveFrontAPPContent != null) {
-//                    Log.e(TAG, "我进来了");
-//                    appBeanList.set(position, saveFrontAPPContent);
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                }
-//                appBeanList.set(position, appBeanList.get(movePosition));
-//                appBeanList.set(movePosition, appBeanList.get(position));
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onItemClick(int position) {
-                if (appBeanList.get(position).getPackageName().length() == 0) {
-                    return;
-                }
-                Log.d(TAG, "onItemClick====>" + position + "");
-                Log.d(TAG, "click recyclerview item " + position);
-                //查询这个应用程序的入口activity。把他开启起来
-                try {
-                    PackageManager pm = getPackageManager();
-                    Intent intent = pm.getLaunchIntentForPackage(appBeanList.get(position).getPackageName());
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        mViewPager.setPageMargin(15);
+        mViewPager.setOffscreenPageLimit(3);
+        mViewPager.setAdapter(pagerAdapter);
+        mViewPager.addOnPageChangeListener(onPageChangeListener);
+        onPageChangeListener.onPageSelected(0);
     }
 
+//    private void initGridView() {
+//
+//    }
+
     @SuppressLint("ClickableViewAccessibility")
-    private void initFirstView() {
+    private void initClickListener() {
         //View1 listener
         ivPicture.setOnClickListener(view -> {
             Log.e("ivPicture=====>", "onClick");
@@ -791,18 +852,6 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             }
             return true;
         });
-
-//        llBgHome.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View view, MotionEvent motionEvent) {
-//                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-//                    handler.postDelayed(updateWallpaper, 500);
-//                } else if (motionEvent.getAction() == MotionEvent.ACTION_UP || motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
-//                    handler.removeCallbacks(updateWallpaper);
-//                }
-//                return true;
-//            }
-//        });
 
         btnControl.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -971,28 +1020,18 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
             ivMusic.clearAnimation();
         }
-
-        rvAPPList.setOnUninstallClick(new DragRecyclerView.OnUninstallClick() {
-            @Override
-            public void OnClick() {
-                Intent intent = new Intent();
-                intent.setAction("android.intent.action.DELETE");
-                intent.setData(Uri.parse("package:" + appBeanList.get(downPosition).getPackageName()));
-                Toast.makeText(MainActivity.this, "卸载" + appBeanList.get(downPosition).getAppName(), Toast.LENGTH_LONG).show();
-                savePosition = downPosition;
-                startActivity(intent);
-            }
-        });
-
-        rvAPPList.setOnInformationClick(new DragRecyclerView.OnInformationClick() {
-            @Override
-            public void OnClick() {
-                Log.e("onContextItemSelected", appBeanList.get(downPosition).getPackageName());
-                gotoAppDetailIntent(MainActivity.this, appBeanList.get(downPosition).getPackageName());
-            }
-        });
-
     }
+
+    /**
+     * 跳转到应用详情界面
+     */
+    public static void gotoAppDetailIntent(Activity activity, String packageName) {
+        Intent intent = new Intent();
+        intent.setAction(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + packageName));
+        activity.startActivity(intent);
+    }
+
     private void receive(){
         myReceiver = new MusicReceiver(new MusicReceiver.DataCallBack() {
             @Override
@@ -1043,10 +1082,16 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 //            }
 
             Log.e(TAG, "rawX " + rawX + "rawY " + rawY);
-            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY)) {
-                rvAPPList.removeLongClick();
-            }
+//            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY)) {
+//                rvAPPList.removeLongClick();
+//            }
 
+            Log.e(TAG, "copyPageSelectedPosition:dispatch:" + copyPageSelectedPosition);
+            if (copyPageSelectedPosition > 1) {
+                GridView gridView = (GridView) mPageView.get(copyPageSelectedPosition);
+                isGridView = CustomUtil.isTouchPointInView(gridView, rawX, rawY);
+                Log.e(TAG, "gridview:" + isGridView);
+            }
             if (!(CustomUtil.isTouchPointInView(etSource, rawX, rawY) || CustomUtil.isTouchPointInView(rlMusic, rawX, rawY)
                     || CustomUtil.isTouchPointInView(tvTime, rawX, rawY)
                     || CustomUtil.isTouchPointInView(tvCalendar, rawX, rawY)
@@ -1059,7 +1104,7 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
                     || CustomUtil.isTouchPointInView(ibOffice, rawX, rawY)
                     || CustomUtil.isTouchPointInView(ibTiktok, rawX, rawY)
                     || CustomUtil.isTouchPointInView(ibVideo, rawX, rawY)
-                    || CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY))) {
+                    || isGridView)) {
                 handler.postDelayed(updateWallpaper, 500);
             }
             if (CustomUtil.isShouldHideInput(v, ev)) {
@@ -1082,7 +1127,6 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
     }
 
     public void getAllAppNames() {
-//        runCommand();
         PackageManager pm = getPackageManager();
         //获取到所有安装了的应用程序的信息，包括那些卸载了的，但没有清除数据的应用程序
         List<PackageInfo> list2 = pm.getInstalledPackages(GET_URI_PERMISSION_PATTERNS);
@@ -1108,9 +1152,9 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
 //            Log.e("=======aaa", "应用的名字:" + appName);
 //            Log.e("=======bbb", "应用的包名字:" + packageName);
 //            APPBean appBean = new APPBean(packageName, drawable);
-            byte[] appIconBytes = bitmap2Bytes(drawableToBitmap(drawable));
+            byte[] appIconBytes = CustomUtil.bitmap2Bytes(CustomUtil.drawableToBitmap(drawable));
 
-            if (NotActiveApp(this, packageName)) {
+            if (CustomUtil.NotActiveApp(this, packageName)) {
                 continue;
             }
 
@@ -1131,166 +1175,55 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         handler.sendMessageAtTime(message, 100);
     }
 
-    @Override
-    public void onPageChange(int index) {
-        //这里是配合圆点指示器实现的，可以忽略
-        for (int i = 0; i < dotViews.length; i++) {
-            if (index == i) {
-                dotViews[i].setSelected(true);
-                dotViews[i].setImageResource(R.drawable.light_oval);
-            } else {
-                dotViews[i].setSelected(false);
-                dotViews[i].setImageResource(R.drawable.oval);
-            }
-        }
+//    /**
+//     * 设置菜单列表项
+//     * @param menu
+//     * @param v
+//     * @param menuInfo
+//     */
+//    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+//        super.onCreateContextMenu(menu, v, menuInfo);
+//        setIconEnable(menu, true);
+//        getMenuInflater().inflate(R.menu.rv_content_menu, menu);
+//    }
 
-    }
-
-    private ImageView[] dotViews;//创建图片集合
-
-    /*
-        page 是页数 需要自己算 比如我是三行四列 就是每页12个item
-        用我们数据的size%12 如不不等于0 就是 （size/12）+1
-        如果等于0 就是 size/12
-     */
-    private void setIndicatorLayout(int page) {
-        //生成相应数量的导航小圆点
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        //设置小圆点左右之间的间隔
-        params.setMargins(10, 0, 10, 0);
-        //得到页面个数
-        dotViews = new ImageView[page];//此处传进来的6是页面数，通常要遍历得到页面的数量来创建图片集合
-        for (int i = 0; i < page; i++) {//这里也是循环页面数量
-            imageView = new ImageView(this);
-            imageView.setLayoutParams(params);
-            imageView.setImageResource(R.drawable.oval);//设置默认没有选中时所有图片为灰色
-            if (i == 0) {
-                //默认启动时，选中第一个小圆点
-                imageView.setSelected(true);
-            } else {
-                imageView.setSelected(false);
-            }
-            //得到每个小圆点的引用，用于滑动页面时，更改它们的状态。
-            dotViews[i] = imageView;
-            dotViews[0].setImageResource(R.drawable.light_oval);//设置第一个页面选择为黑色
-            //添加到布局里面显示
-            mImgLayout.addView(imageView);
-        }
-    }
-
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-        super.onPointerCaptureChanged(hasCapture);
-    }
-
-    private class MyOnPageChangeListener implements ViewPager.OnPageChangeListener {
-        @Override
-        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-        }
-
-        @Override
-        public void onPageSelected(int position) {
-            switch (position) {
-                case 0:
-                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.light_oval));
-                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
-                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
-                    break;
-                case 1:
-                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
-                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.light_oval));
-                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
-                    break;
-                case 2:
-                    ivFirst.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
-                    ivSecond.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.oval));
-                    ivThird.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.light_oval));
-                    break;
-            }
-        }
-
-        @Override
-        public void onPageScrollStateChanged(int state) {
-
-        }
-    }
-
-    /**
-     * 设置菜单列表项
-     * @param menu
-     * @param v
-     * @param menuInfo
-     */
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        setIconEnable(menu, true);
-        getMenuInflater().inflate(R.menu.rv_content_menu, menu);
-    }
-
-    /**
-     * 处理不同的菜单项
-     * @param item
-     * @return
-     */
-    @SuppressLint("NonConstantResourceId")
-    public boolean onContextItemSelected(MenuItem item) {
-        //获取被选择的菜单位置
-        int position = recyclerViewAPPAdapter.getPosition();
-        Log.e("position", position + "");
-
-        switch (item.getItemId()) {
-            case R.id.menu_uninstall://卸载选中项
-                //TODO
-                Intent intent = new Intent();
-                intent.setAction("android.intent.action.DELETE");
-                intent.setData(Uri.parse("package:" + appBeanList.get(position).getPackageName()));
-                Toast.makeText(MainActivity.this, "卸载" + appBeanList.get(position).getAppName(), Toast.LENGTH_LONG).show();
-                savePosition = position;
-                startActivity(intent);
+//    /**
+//     * 处理不同的菜单项
+//     * @param item
+//     * @return
+//     */
+//    @SuppressLint("NonConstantResourceId")
+//    public boolean onContextItemSelected(MenuItem item) {
+//        //获取被选择的菜单位置
+//        int position = recyclerViewAPPAdapter.getPosition();
+//        Log.e("position", position + "");
+//
+//        switch (item.getItemId()) {
+//            case R.id.menu_uninstall://卸载选中项
+//                //TODO
+//                Intent intent = new Intent();
+//                intent.setAction("android.intent.action.DELETE");
+//                intent.setData(Uri.parse("package:" + appBeanList.get(position).getPackageName()));
+//                Toast.makeText(MainActivity.this, "卸载" + appBeanList.get(position).getAppName(), Toast.LENGTH_LONG).show();
+//                savePosition = position;
 //                startActivity(intent);
-//                appBeanList.remove(position);
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
-                break;
-            case R.id.menu_information://应用信息选中项
-                //TODO
-                Log.e("onContextItemSelected", appBeanList.get(position).getPackageName());
-                gotoAppDetailIntent(MainActivity.this, appBeanList.get(position).getPackageName());
-                break;
-            default:
-                break;
-        }
-        return super.onContextItemSelected(item);
-    }
-
-    //enable为true时，菜单添加图标有效，enable为false时无效。4.0系统默认无效
-    private void setIconEnable(Menu menu, boolean enable) {
-
-        try {
-            Class<?> clazz = Class.forName("com.android.internal.view.menu.MenuBuilder");
-            Method m = clazz.getDeclaredMethod("setOptionalIconsVisible", boolean.class);
-            m.setAccessible(true);
-            //MenuBuilder实现Menu接口，创建菜单时，传进来的menu其实就是MenuBuilder对象(java的多态特征)
-            m.invoke(menu, enable);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 跳转到应用详情界面
-     */
-    public static void gotoAppDetailIntent(Activity activity, String packageName) {
-        Intent intent = new Intent();
-        intent.setAction(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + packageName));
-        activity.startActivity(intent);
-    }
+////                startActivity(intent);
+////                appBeanList.remove(position);
+////                recyclerViewAPPAdapter.notifyDataSetChanged();
+//                break;
+//            case R.id.menu_information://应用信息选中项
+//                //TODO
+//                Log.e("onContextItemSelected", appBeanList.get(position).getPackageName());
+//                gotoAppDetailIntent(MainActivity.this, appBeanList.get(position).getPackageName());
+//                break;
+//            default:
+//                break;
+//        }
+//        return super.onContextItemSelected(item);
+//    }
 
     public void onSetWallpaper() {
         //生成一个设置壁纸的请求
-//        final Intent pickWallpaper = new Intent(Intent.ACTION_SET_WALLPAPER);
-//        Intent chooser = Intent.createChooser(pickWallpaper, "chooser_wallpaper");
         try {
             Intent intent = new Intent();
             ComponentName componentName = new ComponentName("com.android.wallpaper", "com.android.wallpaper.picker.TopLevelPickerActivity");
@@ -1308,7 +1241,6 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case 1001 :
-                    // Log.e("1111111111111", data.getData() + "");
                     setBackground();
                     break;
             }
@@ -1341,58 +1273,6 @@ public class MainActivity extends BaseActivity implements PagingScrollHelper.onP
         } catch(Exception e) {
 //            android.util.Log.d(TAG,"set Background fail");
         }
-    }
-
-
-    private void runCommand() {
-        try {
-            Process process = Runtime.getRuntime().exec("pm list package -3");
-            BufferedReader bis = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = null;
-            while ((line = bis.readLine()) != null) {
-                System.out.println("MainActivity.runCommand, line=" + line);
-            }
-        } catch (IOException e) {
-            System.out.println("MainActivity.runCommand,e=" + e);
-        }
-    }
-
-    /**
-     * 判断app能不能主动启动 否就隐藏
-     * */
-    public static boolean NotActiveApp(Context context, String packageName){
-        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-        if (intent == null)
-            return true;
-        return false;
-    }
-
-    /**
-     * drawable转化成bitmap的方法
-     * @param drawable 需要转换的Drawable
-     */
-    public static Bitmap drawableToBitmap(Drawable drawable) {
-        int w = drawable.getIntrinsicWidth();
-        int h = drawable.getIntrinsicHeight();
-//        System.out.println("Drawable转Bitmap");
-        Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        Bitmap bitmap = Bitmap.createBitmap(w,h,config);
-        //注意，下面三行代码要用到，否在在View或者surfaceView里的canvas.drawBitmap会看不到图
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, w, h);
-        drawable.draw(canvas);
-        return bitmap;
-    }
-
-    /**
-     * bitmap转化成byte数组
-     * @param bm 需要转换的Bitmap
-     * @return
-     */
-    public static byte[] bitmap2Bytes(Bitmap bm){
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        return baos.toByteArray();
     }
 
     @Override
