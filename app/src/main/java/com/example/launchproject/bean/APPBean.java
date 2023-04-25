@@ -3,6 +3,7 @@ package com.example.launchproject.bean;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class APPBean {
@@ -12,11 +13,13 @@ public class APPBean {
     private Bitmap appIcon;
     private String packageName;
     private Drawable appIconDrawable;
+    private byte[] appIconBytes;
 
     public APPBean() {
         appName = "";
         appIcon = null;
         packageName = "";
+        appIconBytes = null;
     }
 
     public APPBean(String appName, Bitmap appIcon, String packageName) {
@@ -28,6 +31,12 @@ public class APPBean {
     public APPBean(String appName, Drawable appIconDrawable, String packageName) {
         this.appName = appName;
         this.appIconDrawable = appIconDrawable;
+        this.packageName = packageName;
+    }
+
+    public APPBean(String appName, byte[] appIconBytes, String packageName) {
+        this.appName = appName;
+        this.appIconBytes = appIconBytes;
         this.packageName = packageName;
     }
 
@@ -63,6 +72,14 @@ public class APPBean {
         this.appIconDrawable = appIconDrawable;
     }
 
+    public byte[] getAppIconBytes() {
+        return appIconBytes;
+    }
+
+    public void setAppIconBytes(byte[] appIconBytes) {
+        this.appIconBytes = appIconBytes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -78,6 +95,7 @@ public class APPBean {
                 ", appIcon=" + appIcon +
                 ", packageName='" + packageName + '\'' +
                 ", appIconDrawable=" + appIconDrawable +
+                ", appIconBytes=" + Arrays.toString(appIconBytes) +
                 '}';
     }
 }

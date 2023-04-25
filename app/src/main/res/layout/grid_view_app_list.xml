@@ -2,7 +2,6 @@
 <com.example.launchproject.view.DragGridView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/gv_app_list"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:numColumns="6">
+    android:layout_height="wrap_content">
 
 </com.example.launchproject.view.DragGridView>

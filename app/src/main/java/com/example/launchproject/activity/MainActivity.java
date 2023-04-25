@@ -47,12 +47,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.launchproject.MyApplication;
 import com.example.launchproject.R;
 import com.example.launchproject.adapter.MyGridViewAdapter;
 import com.example.launchproject.bean.APPBean;
 import com.example.launchproject.manager.HandlerManager;
 import com.example.launchproject.recevier.MusicReceiver;
 import com.example.launchproject.recevier.MyInstalledReceiver;
+import com.example.launchproject.utils.APPListDataSaveUtils;
 import com.example.launchproject.utils.CustomUtil;
 import com.example.launchproject.utils.DataUtil;
 import com.example.launchproject.view.DragGridView;
@@ -123,6 +125,10 @@ public class MainActivity extends BaseActivity {
     private int savePosition = 0;
     private int copyPageSelectedPosition;
     private boolean isGridView;
+    private boolean isCreateLastView;
+
+    private APPListDataSaveUtils appListDataSaveUtils;
+    private List<APPBean> appList;
 
     private ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
         @Override
@@ -148,6 +154,19 @@ public class MainActivity extends BaseActivity {
             gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
                 @Override
                 public void onDown(int p, Handler handler, Runnable runnable) {
+//                    if (!isCreateLastView) {
+//                        for (int i = 0; i < mPageSize; i++) {
+//                            appBeanList.add(new APPBean());
+//                        }
+//                        totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
+//                        DragGridView gridView = (DragGridView) LayoutInflater.from(MainActivity.this).inflate(R.layout.grid_view_app_list, null);
+//                        MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, totalPage - 1, mPageSize);
+//                        gridView.setAdapter(myGridViewAdapter);
+//                        //每一个GridView作为一个View对象添加到ViewPager集合中
+//                        mPageView.add(gridView);
+//                        pagerAdapter.notifyDataSetChanged();
+//                        isCreateLastView = true;
+//                    }
                     Log.d("TAG", "onDown");
 //                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
                     int newPosition = p + savePosition * mPageSize;
@@ -157,7 +176,7 @@ public class MainActivity extends BaseActivity {
                     gridView.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(newPosition).getPackageName()));
                     Log.d("wu", "onDown====>" + newPosition + "");
 //                if (rvAPPList.isDrag()) {
-                    saveFrontAPPContent = new APPBean(appBeanList.get(newPosition).getAppName(), appBeanList.get(newPosition).getAppIcon(), appBeanList.get(newPosition).getPackageName());
+                    saveFrontAPPContent = new APPBean(appBeanList.get(newPosition).getAppName(), appBeanList.get(newPosition).getAppIconBytes(), appBeanList.get(newPosition).getPackageName());
 //                    Log.e(TAG, saveFrontAPPContent.toString());
 //                }
                     downPosition = newPosition;
@@ -191,8 +210,20 @@ public class MainActivity extends BaseActivity {
                     }
                     if (isMove && !isScale) {
 
-
-
+//                        if (!isCreateLastView) {
+//                            for (int i = 0; i < mPageSize; i++) {
+//                                appBeanList.add(new APPBean());
+//                            }
+//                            totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
+//                            DragGridView gridView = (DragGridView) LayoutInflater.from(MainActivity.this).inflate(R.layout.grid_view_app_list, null);
+//                            MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, totalPage - 1, mPageSize);
+//                            gridView.setAdapter(myGridViewAdapter);
+//                            //每一个GridView作为一个View对象添加到ViewPager集合中
+//                            mPageView.add(gridView);
+//                            pagerAdapter.notifyDataSetChanged();
+//                            mViewPager.setCurrentItem(position);
+//                            isCreateLastView = true;
+//                        }
                         isDown = true;
                         isScale = true;
                         mViewPager.setAlpha(0.8f);
@@ -226,6 +257,15 @@ public class MainActivity extends BaseActivity {
 //                }
                 }
 
+//                @Override
+//                public void onCancel() {
+//                    if (isCreateLastView) {
+//                        mPageView.remove(mPageView.size() - 1);
+//                        pagerAdapter.notifyDataSetChanged();
+//                        isCreateLastView = false;
+//                    }
+//                }
+
                 @Override
                 public void onUp(int p) {
                     Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
@@ -252,6 +292,7 @@ public class MainActivity extends BaseActivity {
                         appBeanList.set(downPosition, appBeanList.get(newPosition));
                         appBeanList.set(newPosition, saveFrontAPPContent);
                         pagerAdapter.notifyDataSetChanged();
+                        appListDataSaveUtils.setDataList("appList", appBeanList);
                     }
 //                    viewPager.getAdapter().notifyDataSetChanged();
 
@@ -326,20 +367,31 @@ public class MainActivity extends BaseActivity {
             super.dispatchMessage(msg);
             switch (msg.what) {
                 case HandlerManager.GET_APP_LIST:
-                    Bundle data = msg.getData();
-                    byte[] appIcons = data.getByteArray("appIcon");
-                    String appName = data.getString("appName");
-                    String packageName = data.getString("packageName");
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(appIcons, 0, appIcons.length);
-                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-                    appBeanList.add(new APPBean(appName, bitmap, packageName));
+                    if (appList.size() == 0) {
+                        Bundle data = msg.getData();
+                        byte[] appIcons = data.getByteArray("appIcon");
+                        String appName = data.getString("appName");
+                        String packageName = data.getString("packageName");
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(appIcons, 0, appIcons.length);
+                        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+//                        appBeanList.add(new APPBean(appName, bitmap, packageName));
+                        appBeanList.add(new APPBean(appName, appIcons, packageName));
+                    }
                     break;
                 case HandlerManager.LOAD_APP_FINISH:
-                    while (appBeanList.size() % 18 != 0) {
-                        appBeanList.add(new APPBean());
+                    if (appList.size() == 0) {
+                        while (appBeanList.size() % 18 != 0) {
+                            appBeanList.add(new APPBean());
+                        }
+                        Log.e(TAG, "加载应用完成" + appBeanList.size());
+                        handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
+                        appListDataSaveUtils.setDataList("appList", appBeanList);
                     }
-                    Log.e(TAG, "加载应用完成" + appBeanList.size());
-
+                    break;
+                case HandlerManager.SHOW_APP_LIST:
+                    if (appList.size() != 0) {
+                        appBeanList = appList;
+                    }
                     //add app list gridview
                     //总的页数，取整（这里有三种类型：Math.ceil(3.5)=4:向上取整，只要有小数都+1  Math.floor(3.5)=3：向下取整  Math.round(3.5)=4:四舍五入）
                     totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
@@ -348,6 +400,13 @@ public class MainActivity extends BaseActivity {
                         //每个页面都是inflate出一个新实例
                         DragGridView gridView = (DragGridView) inflater.inflate(R.layout.grid_view_app_list, null);
                         MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, i, mPageSize);
+                        Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+                        int ori = mConfiguration.orientation; //获取屏幕方向
+                        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                            gridView.setNumColumns(6);
+                        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                            gridView.setNumColumns(3);
+                        }
                         gridView.setAdapter(myGridViewAdapter);
                         //每一个GridView作为一个View对象添加到ViewPager集合中
                         mPageView.add(gridView);
@@ -414,14 +473,16 @@ public class MainActivity extends BaseActivity {
                         Log.e(TAG, "mPageRemove:" + mPageView.size());
 //                        onPageChangeListener.onPageSelected(copyPageSelectedPosition);
                         pagerAdapter.notifyDataSetChanged();
+                        appListDataSaveUtils.setDataList("appList", appBeanList);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
                 case HandlerManager.INSTALL_APP_SUCCESS:
                     try {
-                        Bitmap icon = null;
+                        byte[] iconBytes = null;
                         String name = null;
+                        int installPosition = -1;
                         String obj1 = (String) msg.obj;
                         String installPkg = obj1.split(":")[1];
                         int firstNullPosition = -1;
@@ -433,10 +494,11 @@ public class MainActivity extends BaseActivity {
                                 Drawable key = entry.getKey();
                                 name = entry.getValue();
                                 Log.d(TAG, "appName:" + name);
-                                icon = CustomUtil.drawableToBitmap(key);
+                                Bitmap bitmap = CustomUtil.drawableToBitmap(key);
+                                iconBytes = CustomUtil.bitmap2Bytes(bitmap);
                             }
                         }
-                        APPBean installAPPBean = new APPBean(name, icon, installPkg);
+                        APPBean installAPPBean = new APPBean(name, iconBytes, installPkg);
                         boolean isAdd = appBeanList.contains(installAPPBean);
                         for (int i = 0; i < appBeanList.size(); i++) {
                             if (appBeanList.get(i).getPackageName().length() == 0) {
@@ -444,12 +506,14 @@ public class MainActivity extends BaseActivity {
                                 break;
                             }
                         }
-                        Log.e(TAG, "isADD" + isAdd);
+                        Log.e(TAG, "isADD:" + isAdd);
                         if (!isAdd) {
                             if (firstNullPosition != -1) {
                                 appBeanList.set(firstNullPosition, installAPPBean);
+                                installPosition = (firstNullPosition / 18 + 1) + 1;
                             } else {
                                 appBeanList.add(installAPPBean);
+                                installPosition = mPageView.size() - 1;
                             }
                             Toast.makeText(MainActivity.this, name + " 安装成功", Toast.LENGTH_SHORT).show();
                         }
@@ -466,7 +530,8 @@ public class MainActivity extends BaseActivity {
                             mPageView.add(gridView);
                         }
                         pagerAdapter.notifyDataSetChanged();
-                        mViewPager.setCurrentItem(mPageView.size() - 1);
+                        appListDataSaveUtils.setDataList("appList", appBeanList);
+                        mViewPager.setCurrentItem(installPosition);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -548,6 +613,7 @@ public class MainActivity extends BaseActivity {
         outState.putString("musicName", musicName);
         outState.putString("date", date);
         outState.putString("calendar", calendar);
+//        outState.putParcelable("appList", appBeanList);
     }
 
     @Override
@@ -580,6 +646,12 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
         HandlerManager.putHandler(handler);
         sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
+        appListDataSaveUtils = new APPListDataSaveUtils(this, "app_list_data");
+        appList = appListDataSaveUtils.getDataList("appList");
+        if (appList.size() != 0) {
+            handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
+            Log.e(TAG, appList.toString());
+        }
         initData();
         if (savedInstanceState != null) {
             String musicNameSave = savedInstanceState.getString("musicName");
@@ -1119,8 +1191,22 @@ public class MainActivity extends BaseActivity {
                 }
             }
             return super.dispatchTouchEvent(ev);
-        } else if (ev.getAction() == MotionEvent.ACTION_UP || ev.getAction() == MotionEvent.ACTION_CANCEL) {
-             handler.removeCallbacks(updateWallpaper);
+        } else if (ev.getAction() == MotionEvent.ACTION_UP) {
+            Log.e(TAG, "ACTION_UP");
+            handler.removeCallbacks(updateWallpaper);
+//            if (isCreateLastView) {
+//                int totalSize = appBeanList.size() - 18;
+//                for (int j = appBeanList.size() - 1; j >= totalSize; j--) {
+//                    Log.e(TAG, "j: " + j);
+//                    appBeanList.remove(j);
+//                }
+//                mPageView.remove(mPageView.size() - 1);
+//                pagerAdapter.notifyDataSetChanged();
+//                isCreateLastView = false;
+//            }
+        } else if (ev.getAction() == MotionEvent.ACTION_CANCEL) {
+            Log.e(TAG, "ACTION_CANCEL");
+            handler.removeCallbacks(updateWallpaper);
         }
         // 必不可少，否则所有的组件都不会有TouchEvent了
         return getWindow().superDispatchTouchEvent(ev) || onTouchEvent(ev);

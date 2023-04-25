@@ -1,17 +1,23 @@
 package com.example.launchproject.adapter;
 
 import android.content.Context;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.launchproject.MyApplication;
 import com.example.launchproject.R;
 import com.example.launchproject.bean.APPBean;
+import com.example.launchproject.utils.CustomUtil;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -66,14 +72,32 @@ public class MyGridViewAdapter extends BaseAdapter {
         }else{
             holder = (ViewHolder) convertView.getTag();
         }
-        int parentWidth = parent.getHeight();
-        ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
-        layoutParams.height = parentWidth / 3;
+        Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+        int ori = mConfiguration.orientation; //获取屏幕方向
+        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+            int parentHeight = parent.getHeight();
+//        int parentWidth = parent.getWidth();
+            ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
+            layoutParams.height = parentHeight / 3;
+//        layoutParams.width = parentWidth / 6;
+        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+            int parentHeight = parent.getHeight();
+//        int parentWidth = parent.getWidth();
+            ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
+            layoutParams.height = parentHeight / 6;
+//        layoutParams.width = parentWidth / 6;
+        }
+
         //重新确定position（因为拿到的是总的数据源，数据源是分页加载到每页的GridView上的，为了确保能正确的点对不同页上的item）
-        final int pos = position + mIndex*mPagerSize;//假设mPagerSize=8，假如点击的是第二页（即mIndex=1）上的第二个位置item(position=1),那么这个item的实际位置就是pos=9
+        final int pos = position + mIndex * mPagerSize;//假设mPagerSize=8，假如点击的是第二页（即mIndex=1）上的第二个位置item(position=1),那么这个item的实际位置就是pos=9
         APPBean bean = listData.get(pos);
+//        Log.e("qqqqqqqqqqqqq", bean.getAppIconBytes().length + "");
         holder.proName.setText(bean.getAppName());
-        holder.imgUrl.setImageBitmap(bean.getAppIcon());
+        Bitmap bitmap = null;
+        if (bean.getAppIconBytes() != null) {
+            bitmap = BitmapFactory.decodeByteArray(bean.getAppIconBytes(), 0, bean.getAppIconBytes().length);
+        }
+        holder.imgUrl.setImageBitmap(bitmap);
         //添加item监听
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
