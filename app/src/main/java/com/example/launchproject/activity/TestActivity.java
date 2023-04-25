@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import com.example.launchproject.MyApplication;
@@ -58,7 +59,7 @@ public class TestActivity extends AppCompatActivity {
     private boolean isScale;
     private boolean isDown;
     int savePosition = 0;
-    private RelativeLayout rvOne, rvTwo, rvFive, rvSix;
+    private LinearLayout rvOne, rvTwo, rvThird, rvFourth, rvFive, rvSix;
 
 //    ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
 //        @Override
@@ -288,17 +289,21 @@ public class TestActivity extends AppCompatActivity {
         viewPagerList = new ArrayList<>();
         viewPager = findViewById(R.id.view_pager);
         View view1 = LayoutInflater.from(this).inflate(R.layout.one_view_pager_landscape, null);
+        rvOne = view1.findViewById(R.id.rv_one);
         View view2 = LayoutInflater.from(this).inflate(R.layout.two_view_pager_landscape, null);
+        rvTwo = view2.findViewById(R.id.rv_two);
         View view3 = LayoutInflater.from(this).inflate(R.layout.one_view_pager_landscape, null);
-        rvOne = view3.findViewById(R.id.rv_one);
+        rvThird = view3.findViewById(R.id.rv_one);
         View view4 = LayoutInflater.from(this).inflate(R.layout.two_view_pager_landscape, null);
-        rvTwo = view4.findViewById(R.id.rv_two);
+        rvFourth = view4.findViewById(R.id.rv_two);
         View view5 = LayoutInflater.from(this).inflate(R.layout.one_view_pager_landscape, null);
         rvFive = view5.findViewById(R.id.rv_one);
         View view6 = LayoutInflater.from(this).inflate(R.layout.two_view_pager_landscape, null);
         rvSix = view6.findViewById(R.id.rv_two);
-        rvOne.setBackground(getResources().getDrawable(R.drawable.first_bg_2));
-        rvTwo.setBackground(getResources().getDrawable(R.drawable.second_bg_2));
+        rvOne.setBackground(getResources().getDrawable(R.drawable.first_bg_1));
+        rvTwo.setBackground(getResources().getDrawable(R.drawable.second_bg_1));
+        rvThird.setBackground(getResources().getDrawable(R.drawable.first_bg_2));
+        rvFourth.setBackground(getResources().getDrawable(R.drawable.second_bg_2));
         rvFive.setBackground(getResources().getDrawable(R.drawable.first_bg_3));
         rvSix.setBackground(getResources().getDrawable(R.drawable.second_bg_3));
         viewPagerList.add(view1);
