@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,6 +11,10 @@
 <!--        android:layout_width="wrap_content"-->
 <!--        android:layout_height="wrap_content"-->
 <!--        android:visibility="gone">-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <TextView
             android:id="@+id/tv_time"
@@ -58,174 +62,141 @@
             android:layout_marginBottom="20dp"
             android:layout_alignBottom="@id/tv_time"/>
 
-        <View
-            android:id="@+id/view_horizontal"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="20dp">
 
         <ImageView
             android:id="@+id/btn_picture"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@color/white"
             android:scaleType="centerCrop"
             android:layout_below="@id/rl_music"
             android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_toLeftOf="@id/view_horizontal"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="相册"
-            android:layout_alignTop="@id/btn_picture"
-            android:textSize="22sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="10dp"/>
+            android:layout_marginRight="10dp" />
 
         <RelativeLayout
             android:id="@+id/rl_music"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:layout_marginTop="10dp"
             android:background="@color/purple_200"
             android:layout_below="@id/tv_time"
             android:padding="5dp">
 
+            <View
+                android:id="@+id/view_horizontal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"/>
+
             <com.example.launchproject.view.OvalImageView
                 android:id="@+id/iv_music"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:duplicateParentState="true"
                 android:scaleType="centerCrop"
                 android:src="@mipmap/ic_launcher"
-                android:layout_marginRight="10dp" />
+                android:layout_toLeftOf="@id/view_horizontal"
+                android:layout_centerInParent="true"/>
 
             <TextView
                 android:id="@+id/tv_music_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toRightOf="@id/iv_music"
+                android:layout_toRightOf="@id/view_horizontal"
                 android:duplicateParentState="true"
-                android:layout_centerVertical="true"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="暂无歌曲信息"
                 android:textColor="@color/white"
-                android:textSize="18sp" />
+                android:layout_marginTop="10dp"
+                android:textSize="18sp"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="30dp"/>
 
             <ImageView
                 android:id="@+id/btn_previous"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/previous_music_32"
-                android:layout_toLeftOf="@id/btn_control"
-                android:layout_centerVertical="true"/>
+                android:background="@drawable/previous_music_32"
+                android:layout_below="@id/tv_music_name"
+                android:layout_toRightOf="@id/iv_music"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="15dp" />
 
             <ImageView
                 android:id="@+id/btn_control"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/start_music"
-                android:layout_toLeftOf="@id/btn_next"
+                android:background="@drawable/start_music"
+                android:layout_toRightOf="@id/btn_previous"
+                android:layout_below="@id/tv_music_name"
+                android:layout_marginTop="10dp"
                 android:layout_marginRight="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_centerVertical="true" />
+                android:layout_marginLeft="10dp" />
 
             <ImageView
                 android:id="@+id/btn_next"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/next_music"
-                android:layout_marginRight="10dp"
-                android:layout_centerVertical="true"
-                android:layout_alignParentRight="true"/>
+                android:background="@drawable/next_music"
+                android:layout_below="@id/tv_music_name"
+                android:layout_toRightOf="@id/btn_control"
+                android:layout_marginTop="15dp" />
 
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp">
+
+        <ImageView
+            android:id="@+id/btn_browser"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_below="@id/rl_music"
-            android:layout_toRightOf="@id/view_horizontal"
-            android:layout_marginTop="10dp">
+            android:layout_weight="1"
+            android:background="@color/white"
+            android:scaleType="centerCrop"
+            android:layout_marginRight="10dp"/>
 
-            <View
-                android:id="@+id/view_vertical"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_centerVertical="true"/>
-
-            <ImageView
-                android:id="@+id/btn_browser"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/white"
-                android:scaleType="centerCrop"
-                android:layout_above="@id/view_vertical"
-                android:layout_marginBottom="10dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="浏览器"
-                android:layout_alignParentRight="true"
-                android:textSize="22sp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"
-                android:layout_marginRight="10dp"/>
-
-            <View
-                android:id="@+id/view_horizontal_2"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_centerHorizontal="true"/>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
 
             <ImageView
                 android:id="@+id/btn_projection_screen"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="@color/white"
                 android:scaleType="centerCrop"
-                android:layout_below="@id/view_vertical"
-                android:layout_toLeftOf="@+id/view_horizontal_2"
                 android:layout_marginRight="10dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="投屏"
-                android:layout_alignTop="@id/btn_projection_screen"
-                android:textSize="22sp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"
-                android:layout_marginLeft="10dp"/>
 
             <ImageView
                 android:id="@+id/btn_alarm"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="@color/white"
-                android:scaleType="centerCrop"
-                android:layout_below="@id/view_vertical"
-                android:layout_toRightOf="@id/view_horizontal_2"/>
+                android:scaleType="centerCrop" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="时钟"
-                android:layout_alignTop="@id/btn_alarm"
-                android:layout_alignParentRight="true"
-                android:textSize="22sp"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"
-                android:layout_marginRight="10dp"/>
+        </LinearLayout>
 
-        </RelativeLayout>
+    </LinearLayout>
 
 <!--    </RelativeLayout>-->
 
-</RelativeLayout>
+</LinearLayout>
