@@ -54,6 +54,7 @@ import com.example.launchproject.bean.APPBean;
 import com.example.launchproject.manager.HandlerManager;
 import com.example.launchproject.recevier.MusicReceiver;
 import com.example.launchproject.recevier.MyInstalledReceiver;
+import com.example.launchproject.service.MyService;
 import com.example.launchproject.utils.APPListDataSaveUtils;
 import com.example.launchproject.utils.CustomUtil;
 import com.example.launchproject.utils.DataUtil;
@@ -123,14 +124,21 @@ public class MainActivity extends BaseActivity {
     private boolean isScale;
     private boolean isDown;
     private int savePosition = 0;
-    private int copyPageSelectedPosition;
+    private int copyPageSelectedPosition = -1;
     private boolean isGridView;
     private boolean isCreateLastView;
 
     private APPListDataSaveUtils appListDataSaveUtils;
     private List<APPBean> appList;
 
-    private ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
+    //设置底部圆点
+    private LinearLayout llPoint;
+    private List<View> pointViews;
+
+    private int parentDownX, parentDownY, parentMoveX, parentMoveY;
+    private int onDownGridPage;
+
+    private final ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
@@ -138,6 +146,15 @@ public class MainActivity extends BaseActivity {
 
         @Override
         public void onPageSelected(int position) {
+            Log.e(TAG, ":::" + position);
+            try {
+                if (copyPageSelectedPosition != -1 && llPoint != null) {
+                    llPoint.getChildAt(copyPageSelectedPosition).setEnabled(false);
+                    llPoint.getChildAt(position).setEnabled(true);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             copyPageSelectedPosition = position;
 
@@ -167,7 +184,7 @@ public class MainActivity extends BaseActivity {
 //                        pagerAdapter.notifyDataSetChanged();
 //                        isCreateLastView = true;
 //                    }
-                    Log.d("TAG", "onDown");
+                    Log.d("TAG", "onDown:" + savePosition);
 //                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
                     int newPosition = p + savePosition * mPageSize;
                     if (appBeanList.get(newPosition).getPackageName().length() == 0) {
@@ -180,6 +197,7 @@ public class MainActivity extends BaseActivity {
 //                    Log.e(TAG, saveFrontAPPContent.toString());
 //                }
                     downPosition = newPosition;
+                    onDownGridPage = savePosition;
 //                recyclerViewAPPAdapter.isSetFrameVisible(true);
 //                recyclerViewAPPAdapter.notifyDataSetChanged();
                 }
@@ -268,9 +286,30 @@ public class MainActivity extends BaseActivity {
 
                 @Override
                 public void onUp(int p) {
+                    Log.e(TAG, "11111111111111====" + p);
                     Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
                     int newPosition = p + savePosition * mPageSize;
                     Log.d("TAG", "onUp:downPosition:" + downPosition + ",position:" + newPosition + ",saveFrontAPPContent:" + saveFrontAPPContent + ",moveData:" + appBeanList.get(newPosition));
+//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
+//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
+                    boolean isScreenAPPFull = true;
+                    if (newPosition != downPosition && gridView.isDrag()) {
+                        for (int j = savePosition * mPageSize; j < (savePosition + 1) * mPageSize; j++) {
+                            if (appBeanList.get(j).getPackageName().length() == 0) {
+                                isScreenAPPFull = false;
+                            }
+                        }
+                        if (isScreenAPPFull && onDownGridPage != savePosition) {
+                            Toast.makeText(MainActivity.this, "当前屏幕APP个数已满", Toast.LENGTH_SHORT).show();
+                            appBeanList.set(downPosition, saveFrontAPPContent);
+                        } else {
+                            Log.e("TAG", "我进来了");
+                            appBeanList.set(downPosition, appBeanList.get(newPosition));
+                            appBeanList.set(newPosition, saveFrontAPPContent);
+                            pagerAdapter.notifyDataSetChanged();
+                            appListDataSaveUtils.setDataList("appList", appBeanList);
+                        }
+                    }
                     if (isScale) {
                         isScale = false;
 //                            gridView.setBackgroundColor(getResources().getColor(R.color.transparent));
@@ -284,15 +323,6 @@ public class MainActivity extends BaseActivity {
 //                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 //                            marginLayoutParams.setMargins(0, 0, 0, 0);
 //                            viewPager.setLayoutParams(marginLayoutParams);
-                    }
-//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
-//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
-                    if (newPosition != downPosition && gridView.isDrag()) {
-                        Log.e("TAG", "我进来了");
-                        appBeanList.set(downPosition, appBeanList.get(newPosition));
-                        appBeanList.set(newPosition, saveFrontAPPContent);
-                        pagerAdapter.notifyDataSetChanged();
-                        appListDataSaveUtils.setDataList("appList", appBeanList);
                     }
 //                    viewPager.getAdapter().notifyDataSetChanged();
 
@@ -412,6 +442,10 @@ public class MainActivity extends BaseActivity {
                         mPageView.add(gridView);
                         pagerAdapter.notifyDataSetChanged();
                     }
+                    getPointData();
+                    //第一次显示小白点
+                    llPoint.getChildAt(0).setEnabled(true);
+                    mViewPager.setCurrentItem(0);
                     break;
                 case HandlerManager.GET_SYSTEM_TIME:
                     handler.postDelayed(updateTimeThread, 1000);
@@ -438,6 +472,16 @@ public class MainActivity extends BaseActivity {
                     break;
                 case HandlerManager.MUSIC_PAUSE_UI :
                     btnControl.setBackground(getResources().getDrawable(R.drawable.pause_music));
+                    break;
+                case HandlerManager.MUSIC_INFORMATION_UPDATE:
+                    Bundle bundle = (Bundle) msg.obj;
+                    String trackName = bundle.getString("trackName");
+                    String artist = bundle.getString("artist");
+                    musicName = trackName + " - " + artist;
+                    tvMusicName.setText(musicName);
+                    editor = sp.edit();
+                    editor.putString("musicName", musicName);
+                    editor.commit();
                     break;
                 case HandlerManager.REMOVED_APP_SUCCESS:
                     try {
@@ -473,6 +517,9 @@ public class MainActivity extends BaseActivity {
                         Log.e(TAG, "mPageRemove:" + mPageView.size());
 //                        onPageChangeListener.onPageSelected(copyPageSelectedPosition);
                         pagerAdapter.notifyDataSetChanged();
+                        if (isLastALLNone) {
+                            llPoint.removeView(pointViews.get(mPageView.size()));
+                        }
                         appListDataSaveUtils.setDataList("appList", appBeanList);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -511,9 +558,11 @@ public class MainActivity extends BaseActivity {
                             if (firstNullPosition != -1) {
                                 appBeanList.set(firstNullPosition, installAPPBean);
                                 installPosition = (firstNullPosition / 18 + 1) + 1;
+                                Log.e(TAG, "setInstallAPP:" + installPosition);
                             } else {
                                 appBeanList.add(installAPPBean);
-                                installPosition = mPageView.size() - 1;
+                                installPosition = mPageView.size();
+                                Log.e(TAG, "addInstallAPP:" + installPosition);
                             }
                             Toast.makeText(MainActivity.this, name + " 安装成功", Toast.LENGTH_SHORT).show();
                         }
@@ -525,11 +574,19 @@ public class MainActivity extends BaseActivity {
                             totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
                             DragGridView gridView = (DragGridView) LayoutInflater.from(MainActivity.this).inflate(R.layout.grid_view_app_list, null);
                             MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, totalPage - 1, mPageSize);
+                            Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+                            int ori = mConfiguration.orientation; //获取屏幕方向
+                            if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                                gridView.setNumColumns(6);
+                            } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                                gridView.setNumColumns(3);
+                            }
                             gridView.setAdapter(myGridViewAdapter);
                             //每一个GridView作为一个View对象添加到ViewPager集合中
                             mPageView.add(gridView);
                         }
                         pagerAdapter.notifyDataSetChanged();
+                        getPointData();
                         appListDataSaveUtils.setDataList("appList", appBeanList);
                         mViewPager.setCurrentItem(installPosition);
                     } catch (Exception e) {
@@ -644,6 +701,7 @@ public class MainActivity extends BaseActivity {
 //        decorView.setSystemUiVisibility(uiOptions);
         CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
+        startService(new Intent(this, MyService.class));
         HandlerManager.putHandler(handler);
         sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
         appListDataSaveUtils = new APPListDataSaveUtils(this, "app_list_data");
@@ -677,15 +735,16 @@ public class MainActivity extends BaseActivity {
         appBeanList = new ArrayList<>();
         llBgHome = findViewById(R.id.ll_bg_home);
         mViewPager = findViewById(R.id.view_pager);
+        llPoint = findViewById(R.id.ll_point);
         LayoutInflater layoutInflater = getLayoutInflater();
 
         Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
         int ori = mConfiguration.orientation; //获取屏幕方向
-        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
+        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
             //横屏
             view1 = layoutInflater.inflate(R.layout.one_view_pager_landscape, null);
             view2 = layoutInflater.inflate(R.layout.two_view_pager_landscape, null);
-        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
+        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
             //竖屏
             view1 = layoutInflater.inflate(R.layout.one_view_pager_portrait, null);
             view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
@@ -711,11 +770,6 @@ public class MainActivity extends BaseActivity {
         ibTiktok = view2.findViewById(R.id.ib_tiktok);
         ibOffice = view2.findViewById(R.id.ib_office);
         initClickListener();
-        if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
-//            //横屏
-        } else if (ori == mConfiguration.ORIENTATION_PORTRAIT) {
-//            //竖屏
-        }
 
         new Thread() {
             @Override
@@ -1079,7 +1133,7 @@ public class MainActivity extends BaseActivity {
         super.onStart();
         etSource.setText("");
 //        registerForContextMenu(rvAPPList);//为RecyclerviewView注册上下文菜单
-        receive();
+//        receive();
     }
 
     @Override
@@ -1091,6 +1145,36 @@ public class MainActivity extends BaseActivity {
         } else {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
             ivMusic.clearAnimation();
+        }
+    }
+
+    /**
+     * 获取数据
+     */
+    private void getPointData() {
+        pointViews = new ArrayList<>();
+        //设置图片
+        ImageView imageView;
+        View view;
+        if (llPoint != null) {
+            llPoint.removeAllViews();
+        }
+        pointViews.clear();
+        for (View view1 : mPageView) {
+
+            //创建底部指示器(小圆点)
+            view = new View(MainActivity.this);
+            view.setBackgroundResource(R.drawable.background_point);
+            view.setEnabled(false);
+            //设置宽高
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(10, 10);
+            //设置间隔
+//            if (pic != mPics[0]) {
+                layoutParams.leftMargin = 10;
+//            }
+            //添加到LinearLayout
+            llPoint.addView(view, layoutParams);
+            pointViews.add(view);
         }
     }
 
@@ -1119,13 +1203,13 @@ public class MainActivity extends BaseActivity {
         iF.addAction("com.android.music.metachanged");
         registerReceiver(myReceiver, iF);
 
-        //动态注册应用安装和卸载广播
-        myInstalledReceiver = new MyInstalledReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addDataScheme("package");
-        intentFilter.addAction("android.intent.action.PACKAGE_ADDED");
-        intentFilter.addAction("android.intent.action.PACKAGE_REMOVED");
-        registerReceiver(myInstalledReceiver, intentFilter);
+//        //动态注册应用安装和卸载广播
+//        myInstalledReceiver = new MyInstalledReceiver();
+//        IntentFilter intentFilter = new IntentFilter();
+//        intentFilter.addDataScheme("package");
+//        intentFilter.addAction("android.intent.action.PACKAGE_ADDED");
+//        intentFilter.addAction("android.intent.action.PACKAGE_REMOVED");
+//        registerReceiver(myInstalledReceiver, intentFilter);
     }
 
     @Override
@@ -1147,6 +1231,10 @@ public class MainActivity extends BaseActivity {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             int rawX = (int) ev.getRawX();
             int rawY = (int) ev.getRawY();
+
+            parentDownX = rawX;
+            parentDownY = rawY;
+
             View v = getCurrentFocus();
 
 //            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY) && appBeanList.get(CustomUtil.findItem(rvAPPList, rawX, rawY)).getPackageName().length() == 0) {
@@ -1177,7 +1265,7 @@ public class MainActivity extends BaseActivity {
                     || CustomUtil.isTouchPointInView(ibTiktok, rawX, rawY)
                     || CustomUtil.isTouchPointInView(ibVideo, rawX, rawY)
                     || isGridView)) {
-                handler.postDelayed(updateWallpaper, 500);
+                handler.postDelayed(updateWallpaper, 800);
             }
             if (CustomUtil.isShouldHideInput(v, ev)) {
                 //点击editText控件外部
@@ -1191,6 +1279,22 @@ public class MainActivity extends BaseActivity {
                 }
             }
             return super.dispatchTouchEvent(ev);
+        } else if (ev.getAction() == MotionEvent.ACTION_MOVE) {
+            int rawX = (int) ev.getRawX();
+            int rawY = (int) ev.getRawY();
+
+            parentMoveX = rawX;
+            parentMoveY = rawY;
+
+            int disX = Math.abs(parentMoveX - parentDownX);
+            int disY = Math.abs(parentMoveY - parentDownY);
+
+            if (disX == 0 && disY == 0) {
+            } else {
+                handler.removeCallbacks(updateWallpaper);
+                CustomUtil.hideBottomUIMenu(this);
+            }
+
         } else if (ev.getAction() == MotionEvent.ACTION_UP) {
             Log.e(TAG, "ACTION_UP");
             handler.removeCallbacks(updateWallpaper);
@@ -1364,8 +1468,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        unregisterReceiver(myReceiver);
-        unregisterReceiver(myInstalledReceiver);
+//        unregisterReceiver(myReceiver);
+//        unregisterReceiver(myInstalledReceiver);
     }
 
     @Override

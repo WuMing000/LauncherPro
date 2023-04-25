@@ -17,5 +17,11 @@
         android:padding="30dp"
         android:clipToPadding="false" />
 
+    <LinearLayout
+        android:id="@+id/ll_point"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:orientation="horizontal" />
 
 </LinearLayout>

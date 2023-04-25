@@ -76,16 +76,12 @@ public class MyGridViewAdapter extends BaseAdapter {
         int ori = mConfiguration.orientation; //获取屏幕方向
         if (ori == Configuration.ORIENTATION_LANDSCAPE) {
             int parentHeight = parent.getHeight();
-//        int parentWidth = parent.getWidth();
             ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
             layoutParams.height = parentHeight / 3;
-//        layoutParams.width = parentWidth / 6;
         } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
             int parentHeight = parent.getHeight();
-//        int parentWidth = parent.getWidth();
             ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
             layoutParams.height = parentHeight / 6;
-//        layoutParams.width = parentWidth / 6;
         }
 
         //重新确定position（因为拿到的是总的数据源，数据源是分页加载到每页的GridView上的，为了确保能正确的点对不同页上的item）

@@ -157,7 +157,7 @@ public class DragGridView extends GridView {
                 Log.e(TAG, "onActionDown");
                 getParent().requestDisallowInterceptTouchEvent(true);//告诉viewGroup不要去拦截我
                 mDownX = (int) ev.getRawX();
-                mDownY = (int) ev.getRawY();
+                mDownY = (int) ev.getRawY() - mStatusHeight;
  
 //                mDragView = findChildViewUnder(mDownX, mDownY);
                 mDragPosition = pointToPosition(mDownX, mDownY);
@@ -204,7 +204,7 @@ public class DragGridView extends GridView {
 
                 Log.e(TAG, "onActionMove");
                 mMoveX = (int) ev.getRawX();
-                mMoveY = (int) ev.getRawY();
+                mMoveY = (int) ev.getRawY() - mStatusHeight;
 
                 int disX = Math.abs(mMoveX - mDownX);
                 int disY = Math.abs(mMoveY - mDownY);
@@ -233,7 +233,7 @@ public class DragGridView extends GridView {
                 }
 
 //                mMoveView = findChildViewUnder(mMoveX, mMoveY);
-                mMovePosition = pointToPosition(mMoveX, mMoveY);
+                mMovePosition = pointToPosition(mMoveX - mPoint2ItemLeft / 4, mMoveY);
                 if(mMovePosition == AdapterView.INVALID_POSITION){
                     return super.dispatchTouchEvent(ev);
                 }
@@ -309,6 +309,9 @@ public class DragGridView extends GridView {
                 break;
             case MotionEvent.ACTION_CANCEL:
                     Log.e(TAG, "onActionCANCEL");
+//                    if (itemMoveListener != null) {
+//                        itemMoveListener.onCancel();
+//                    }
                     getParent().requestDisallowInterceptTouchEvent(true);
                     mHandler.removeCallbacks(mLongClickRunnable);
                     break;
@@ -533,10 +536,10 @@ public class DragGridView extends GridView {
         mLayoutParams.format = PixelFormat.TRANSLUCENT; //图片之外其他地方透明
         mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT; //左 上
         //指定位置 其实就是 该 item 对应的 rawX rawY 因为Window 添加View是需要知道 raw x ,y的
-        mLayoutParams.x = mOffset2Left + downX;
+        mLayoutParams.x = mOffset2Left + downX - mPoint2ItemLeft;
 //        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop) + mStatusHeight;
 //        mLayoutParams.y = mOffset2Top + (downY - 2 * mPoint2ItemTop);
-        mLayoutParams.y = downY;
+        mLayoutParams.y = downY - mPoint2ItemTop;
         //指定布局大小
         mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -618,6 +621,7 @@ public class DragGridView extends GridView {
     public interface OnItemMoveListener {
         void onDown(int position, Handler handler, Runnable runnable);
         void onMove(int x, int y, View view, boolean isMove);
+//        void onCancel();
         void onUp(int position);
         void onItemClick(int position);
     }
