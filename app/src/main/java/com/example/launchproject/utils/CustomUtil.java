@@ -126,6 +126,7 @@ public class CustomUtil {
         return null;
     }
 
+    /** 判断是否是系统应用 */
     public static boolean isSystemApplication(Context context, String packageName){
         PackageManager mPackageManager = context.getPackageManager();
         try {
