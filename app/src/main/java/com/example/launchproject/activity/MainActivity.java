@@ -11,14 +11,15 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -29,6 +30,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -52,8 +54,6 @@ import com.example.launchproject.R;
 import com.example.launchproject.adapter.MyGridViewAdapter;
 import com.example.launchproject.bean.APPBean;
 import com.example.launchproject.manager.HandlerManager;
-import com.example.launchproject.recevier.MusicReceiver;
-import com.example.launchproject.recevier.MyInstalledReceiver;
 import com.example.launchproject.service.MyService;
 import com.example.launchproject.utils.APPListDataSaveUtils;
 import com.example.launchproject.utils.CustomUtil;
@@ -85,33 +85,33 @@ public class MainActivity extends BaseActivity {
 
     private ViewPager mViewPager;
     private ArrayList<View> mPageView;
-    private LinearLayout llBgHome;
+    private RelativeLayout llBgHome;
 
     private List<APPBean> appBeanList;
     ImageView imageView;
 
     View view1, view2;
     //View1 control
-    private TextView tvTime, tvCalendar;
+    private TextView tvTime, tvCalendar, tvWeek;
     private ImageView ivPicture;
     private EditText etSource;
     private RelativeLayout rlMusic;
-    private OvalImageView ivMusic;
-    private TextView tvMusicName;
+    private ImageView ivMusic;
+    private TextView tvMusicName, tvMusicSinger;
     private ImageView btnControl, btnPrevious, btnNext;
-    private ImageView btnPicture, btnProjectionScreen, btnAlarm, btnBrowser;
+    private LinearLayout btnPicture, btnBrowser, btnProjectionScreen, btnAlarm;
 
     //View2 control
-    private ImageView ibVideo, ibMusic, ibTiktok, ibOffice;
+    private RelativeLayout ibVideo, ibMusic, ibTiktok, ibOffice;
     private AudioManager audioManager;
     private Animation animation;
 
-    private MusicReceiver myReceiver;
-    private MyInstalledReceiver myInstalledReceiver;
-    private String musicName, date, calendar;
+//    private MusicReceiver myReceiver;
+//    private MyInstalledReceiver myInstalledReceiver;
+    private String musicName, musicSinger, date, calendar, week;
 
     private SharedPreferences sp;
-    private String spMusicName;
+    private String spMusicName, spMusicSinger;
     private SharedPreferences.Editor editor;
     private PagerAdapter pagerAdapter;
 
@@ -119,6 +119,7 @@ public class MainActivity extends BaseActivity {
     private int totalPage;//总的页数(仅代表app加载的页数)
     private int mPageSize = 18;//每页显示的最大数量
     private APPBean saveFrontAPPContent;
+    private int downX, downY;
     private int downPosition;
     private ScaleAnimation scaleAnimation;
     private boolean isScale;
@@ -137,6 +138,8 @@ public class MainActivity extends BaseActivity {
 
     private int parentDownX, parentDownY, parentMoveX, parentMoveY;
     private int onDownGridPage;
+
+    private boolean isMoving = true;
 
     private final ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
         @Override
@@ -158,6 +161,10 @@ public class MainActivity extends BaseActivity {
 
             copyPageSelectedPosition = position;
 
+            if (position == 0) {
+                ivMusic.startAnimation(animation);//開始动画
+            }
+
             if (position == 0 || position == 1) {
                 return;
             }
@@ -170,7 +177,7 @@ public class MainActivity extends BaseActivity {
 //            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
             gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
                 @Override
-                public void onDown(int p, Handler handler, Runnable runnable) {
+                public void onDown(int x, int y, int p, Handler handler, Runnable runnable) {
 //                    if (!isCreateLastView) {
 //                        for (int i = 0; i < mPageSize; i++) {
 //                            appBeanList.add(new APPBean());
@@ -190,7 +197,9 @@ public class MainActivity extends BaseActivity {
                     if (appBeanList.get(newPosition).getPackageName().length() == 0) {
                         handler.removeCallbacks(runnable);
                     }
-                    gridView.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(newPosition).getPackageName()));
+                    if (appBeanList.get(newPosition).getPackageName().length() != 0) {
+                        gridView.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(newPosition).getPackageName()));
+                    }
                     Log.d("wu", "onDown====>" + newPosition + "");
 //                if (rvAPPList.isDrag()) {
                     saveFrontAPPContent = new APPBean(appBeanList.get(newPosition).getAppName(), appBeanList.get(newPosition).getAppIconBytes(), appBeanList.get(newPosition).getPackageName());
@@ -203,30 +212,55 @@ public class MainActivity extends BaseActivity {
                 }
 
                 @Override
-                public void onMove(int x, int y, View v, boolean isMove) {
+                public void onMove(int x, int y, View v, boolean isMove, int p) {
+//                    int newPosition = p + savePosition * mPageSize;
+//                    DragGridView view3 = (DragGridView) mPageView.get(copyPageSelectedPosition);
+//                    if (view3 != null) {
+//                        view3.getChildAt(newPosition);
+//                        Log.e(TAG, view3.toString() + "");
+//                    }
+//                    if (v != null) {
+//                        Log.e(TAG, v.toString());
+//                        ImageView viewById = v.findViewById(R.id.iv_app_icon);
+//                        viewById.setVisibility(View.VISIBLE);
+//
+//                    }
 
                     Log.d("TAG", "onMove" + isMove);
                     int widthPixels = getResources().getDisplayMetrics().widthPixels;
 
                     Log.d("TAG", "widthPixels:" + widthPixels + ",x:" + x);
                     Log.d("TAG", "childCount" + gridView.getChildCount());
-                    if (x >= (widthPixels - 200)) {
+                    if (x >= (widthPixels - 80)) {
 //                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() + 1) * 18 + 17);
 //                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() + 1);
                         Log.e(TAG, savePosition + ":savePosition");
-                        handler.postDelayed(nextRunnable, 1500);
+                        if (copyPageSelectedPosition < mPageView.size() - 1) {
+                            mPageView.get(copyPageSelectedPosition + 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_solid));
+                        }
+                        handler.postDelayed(nextRunnable, 1000);
 //                            viewPager.requestLayout();
-                    } else if (x <= 200) {
+                    } else if (x <= 80) {
 //                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() - 1) * 18);
 //                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() - 1);
 //                            --savePosition;
 //                            viewPager.setCurrentItem(savePosition , true);
-                        handler.postDelayed(previousRunnable, 1500);
+                        if (copyPageSelectedPosition > 2) {
+                            mPageView.get(copyPageSelectedPosition - 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_solid));
+                        }
+                        handler.postDelayed(previousRunnable, 1000);
                     } else {
+                        for (int i = 0; i < mPageView.size(); i++) {
+                            if (i > 1) {
+                                DragGridView view2 = (DragGridView) mPageView.get(i);
+                                view2.setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
+                            }
+                        }
                         handler.removeCallbacks(nextRunnable);
                         handler.removeCallbacks(previousRunnable);
                     }
-                    if (isMove && !isScale) {
+
+                    if (isMove && !isScale && isMoving) {
 
 //                        if (!isCreateLastView) {
 //                            for (int i = 0; i < mPageSize; i++) {
@@ -242,27 +276,32 @@ public class MainActivity extends BaseActivity {
 //                            mViewPager.setCurrentItem(position);
 //                            isCreateLastView = true;
 //                        }
+//                        mViewPager.setPageTransformer(true, new MyTranslationTransformer());
                         isDown = true;
                         isScale = true;
                         mViewPager.setAlpha(0.8f);
-                        scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                        scaleAnimation.setDuration(100);//设置动画持续时间
-                        mViewPager.startAnimation(scaleAnimation);
-                        scaleAnimation.setFillAfter(true);
+//                        scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+//                        scaleAnimation.setDuration(100);//设置动画持续时间
+//                        mViewPager.startAnimation(scaleAnimation);
+//                        scaleAnimation.setFillAfter(true);
                         for (int i = 0; i < mPageView.size(); i++) {
                             if (i > 1) {
                                 DragGridView view2 = (DragGridView) mPageView.get(i);
-                                view2.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
+                                view2.setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
                             }
                         }
 //                            viewPager.setPadding(150, 0, 150, 0);
 //                            viewPager.setClipChildren(false);
 
 //                            gridView.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
-//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-//                            marginLayoutParams.setMargins(350, 0, 350, 0);
-//                            viewPager.setLayoutParams(marginLayoutParams);
-//                            viewPager.setClipChildren(false);
+                        RelativeLayout.LayoutParams marginLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                        marginLayoutParams.setMargins(0, 100, 0, 100);
+                        mViewPager.setLayoutParams(marginLayoutParams);
+                        mViewPager.setClipToPadding(false);
+
+                        isMoving = false;
+
+//                        view.setVisibility(View.VISIBLE);
                     }
 //                Log.e(TAG, "isCanDrag:" + isCanDrag);
 //                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
@@ -285,7 +324,10 @@ public class MainActivity extends BaseActivity {
 //                }
 
                 @Override
-                public void onUp(int p) {
+                public void onUp(int p, Animation transAnimation) {
+                    if (transAnimation != null) {
+                        transAnimation.cancel();
+                    }
                     Log.e(TAG, "11111111111111====" + p);
                     Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
                     int newPosition = p + savePosition * mPageSize;
@@ -299,11 +341,37 @@ public class MainActivity extends BaseActivity {
                                 isScreenAPPFull = false;
                             }
                         }
-                        if (isScreenAPPFull && onDownGridPage != savePosition) {
-                            Toast.makeText(MainActivity.this, "当前屏幕APP个数已满", Toast.LENGTH_SHORT).show();
-                            appBeanList.set(downPosition, saveFrontAPPContent);
+                        if (onDownGridPage != savePosition) {
+                            if (isScreenAPPFull) {
+                                Toast.makeText(MainActivity.this, "当前屏幕APP个数已满", Toast.LENGTH_SHORT).show();
+                                appBeanList.set(downPosition, saveFrontAPPContent);
+                            } else {
+                                if (appBeanList.get(newPosition).getAppName().length() != 0) {
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                                    builder.setMessage(saveFrontAPPContent.getAppName() + " 将和 " + appBeanList.get(newPosition).getAppName() + " 位置进行对换，是否继续？")
+                                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    appBeanList.set(downPosition, appBeanList.get(newPosition));
+                                                    appBeanList.set(newPosition, saveFrontAPPContent);
+                                                    pagerAdapter.notifyDataSetChanged();
+                                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                                }
+                                            })
+                                            .setNegativeButton("否", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    dialogInterface.dismiss();
+                                                }
+                                            }).show();
+                                } else {
+                                    appBeanList.set(downPosition, appBeanList.get(newPosition));
+                                    appBeanList.set(newPosition, saveFrontAPPContent);
+                                    pagerAdapter.notifyDataSetChanged();
+                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                }
+                            }
                         } else {
-                            Log.e("TAG", "我进来了");
                             appBeanList.set(downPosition, appBeanList.get(newPosition));
                             appBeanList.set(newPosition, saveFrontAPPContent);
                             pagerAdapter.notifyDataSetChanged();
@@ -311,14 +379,26 @@ public class MainActivity extends BaseActivity {
                         }
                     }
                     if (isScale) {
+                        handler.removeCallbacks(nextRunnable);
+                        handler.removeCallbacks(previousRunnable);
+                        for (int i = 0; i < mPageView.size(); i++) {
+                            if (i > 1) {
+                                Log.e(TAG, "i:" + i);
+                                DragGridView view2 = (DragGridView) mPageView.get(i);
+                                view2.setBackgroundColor(getResources().getColor(R.color.transparent));
+                            }
+                        }
+//                        mViewPager.setPageTransformer(true, new MyGalleyPageTransformer());
                         isScale = false;
+                        isMoving = true;
 //                            gridView.setBackgroundColor(getResources().getColor(R.color.transparent));
 //                        mViewPager.setAlpha(1.0f);
 //                        scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
 //                        scaleAnimation.setDuration(300);//设置动画持续时间
 //                        mViewPager.startAnimation(scaleAnimation);
 //                        scaleAnimation.setFillAfter(true);
-                        handler.postDelayed(clearAnimationRunnable, 1000);
+                        handler.postDelayed(clearAnimationRunnable, 500);
+                        mViewPager.setClipToPadding(true);
 //                            viewPager.setClipToPadding(true);
 //                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 //                            marginLayoutParams.setMargins(0, 0, 0, 0);
@@ -381,6 +461,8 @@ public class MainActivity extends BaseActivity {
                     gotoAppDetailIntent(MainActivity.this, appBeanList.get(downPosition).getPackageName());
                 }
             });
+
+            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
         }
 
         @Override
@@ -422,6 +504,11 @@ public class MainActivity extends BaseActivity {
                     if (appList.size() != 0) {
                         appBeanList = appList;
                     }
+//                    for (APPBean appBean : appBeanList) {
+//                        if (appBean.getPackageName().length() == 0) {
+//                            appBean.setAppIcon();
+//                        }
+//                    }
                     //add app list gridview
                     //总的页数，取整（这里有三种类型：Math.ceil(3.5)=4:向上取整，只要有小数都+1  Math.floor(3.5)=3：向下取整  Math.round(3.5)=4:四舍五入）
                     totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
@@ -468,19 +555,22 @@ public class MainActivity extends BaseActivity {
                             .show();
                     break;
                 case HandlerManager.MUSIC_PLAY_UI :
-                    btnControl.setBackground(getResources().getDrawable(R.drawable.start_music));
+                    btnControl.setBackground(getResources().getDrawable(R.drawable.btn_player_play_normal));
                     break;
                 case HandlerManager.MUSIC_PAUSE_UI :
-                    btnControl.setBackground(getResources().getDrawable(R.drawable.pause_music));
+                    btnControl.setBackground(getResources().getDrawable(R.drawable.btn_player_pause_normal));
                     break;
                 case HandlerManager.MUSIC_INFORMATION_UPDATE:
                     Bundle bundle = (Bundle) msg.obj;
                     String trackName = bundle.getString("trackName");
                     String artist = bundle.getString("artist");
-                    musicName = trackName + " - " + artist;
+                    musicName = trackName;
+                    musicSinger = artist;
                     tvMusicName.setText(musicName);
+                    tvMusicSinger.setText(artist);
                     editor = sp.edit();
                     editor.putString("musicName", musicName);
+                    editor.putString("musicSinger", musicSinger);
                     editor.commit();
                     break;
                 case HandlerManager.REMOVED_APP_SUCCESS:
@@ -594,24 +684,26 @@ public class MainActivity extends BaseActivity {
                     }
                     break;
                 case HandlerManager.CLEAR_RECYCLER_ANIMATION:
-                    for (int i = 0; i < mPageView.size(); i++) {
-                        if (i > 1) {
-                            DragGridView view2 = (DragGridView) mPageView.get(i);
-                            view2.setBackgroundColor(getResources().getColor(R.color.transparent));
-                        }
-                    }
-                    scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    scaleAnimation.setDuration(100);//设置动画持续时间
-                    scaleAnimation.setFillAfter(true);
-                    mViewPager.startAnimation(scaleAnimation);
+//                    scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+//                    scaleAnimation.setDuration(100);//设置动画持续时间
+//                    scaleAnimation.setFillAfter(true);
+//                    mViewPager.startAnimation(scaleAnimation);
+                    RelativeLayout.LayoutParams marginLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                    marginLayoutParams.setMargins(0, 0, 0, 0);
+                    mViewPager.setLayoutParams(marginLayoutParams);
+                    mViewPager.setClipChildren(false);
                     mViewPager.setAlpha(1.0f);
                     break;
                 case HandlerManager.SKIP_NEXT_PAGE:
+                    if (copyPageSelectedPosition < mPageView.size() - 1) {
+                        mPageView.get(copyPageSelectedPosition + 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
+                    }
                     mViewPager.setCurrentItem(copyPageSelectedPosition + 1, true);
                     handler.removeCallbacks(nextRunnable);
                     break;
                 case HandlerManager.SKIP_PREVIOUS_PAGE:
                     if (copyPageSelectedPosition > 2) {
+                        mPageView.get(copyPageSelectedPosition - 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
                         mViewPager.setCurrentItem(copyPageSelectedPosition - 1, true);
                         handler.removeCallbacks(previousRunnable);
                     }
@@ -630,8 +722,10 @@ public class MainActivity extends BaseActivity {
             SimpleDateFormat df = new SimpleDateFormat("HH:mm");
             date = df.format(new java.util.Date());
             tvTime.setText(date);
-            calendar = DataUtil.StringData();
+            calendar = DataUtil.StringCalendar();
             tvCalendar.setText(calendar);
+            week = DataUtil.StringWeek();
+            tvWeek.setText(week);
         }
     };
 
@@ -668,8 +762,10 @@ public class MainActivity extends BaseActivity {
         super.onSaveInstanceState(outState);
         Log.d(TAG, "onSaveInstanceState");
         outState.putString("musicName", musicName);
+        outState.putString("musicSinger", musicSinger);
         outState.putString("date", date);
         outState.putString("calendar", calendar);
+        outState.putString("week", week);
 //        outState.putParcelable("appList", appBeanList);
     }
 
@@ -702,6 +798,9 @@ public class MainActivity extends BaseActivity {
         CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
         startService(new Intent(this, MyService.class));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            startService(new Intent(this, MusicNotificationListenerService.class));
+        }
         HandlerManager.putHandler(handler);
         sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
         appListDataSaveUtils = new APPListDataSaveUtils(this, "app_list_data");
@@ -713,17 +812,25 @@ public class MainActivity extends BaseActivity {
         initData();
         if (savedInstanceState != null) {
             String musicNameSave = savedInstanceState.getString("musicName");
+            String musicSingerSave = savedInstanceState.getString("musicSinger");
             String dateSave = savedInstanceState.getString("date");
             String calendarSave = savedInstanceState.getString("calendar");
+            String weekSave = savedInstanceState.getString("week");
             musicName = musicNameSave;
+            musicSinger = musicSingerSave;
             date = dateSave;
             calendar = calendarSave;
+            week = weekSave;
             tvMusicName.setText(musicNameSave);
+            tvMusicSinger.setText(musicSingerSave);
             tvTime.setText(dateSave);
             tvCalendar.setText(calendarSave);
+            tvWeek.setText(weekSave);
         }
-        spMusicName = sp.getString("musicName", "暂无歌曲信息");
+        spMusicName = sp.getString("musicName", "暂无歌名");
         tvMusicName.setText(spMusicName);
+        spMusicSinger = sp.getString("musicSinger", "暂无歌手");
+        tvMusicSinger.setText(spMusicSinger);
         setBackground();
 
     }
@@ -752,12 +859,14 @@ public class MainActivity extends BaseActivity {
 
         tvTime = view1.findViewById(R.id.tv_time);
         tvCalendar = view1.findViewById(R.id.tv_calendar);
+        tvWeek = view1.findViewById(R.id.tv_week);
         handler.sendEmptyMessageAtTime(HandlerManager.GET_SYSTEM_TIME, 1000);
         ivPicture = view1.findViewById(R.id.iv_picture);
         etSource = view1.findViewById(R.id.et_source);
         rlMusic = view1.findViewById(R.id.rl_music);
         ivMusic = view1.findViewById(R.id.iv_music);
         tvMusicName = view1.findViewById(R.id.tv_music_name);
+        tvMusicSinger = view1.findViewById(R.id.tv_music_singer);
         btnControl = view1.findViewById(R.id.btn_control);
         btnPrevious = view1.findViewById(R.id.btn_previous);
         btnNext = view1.findViewById(R.id.btn_next);
@@ -770,6 +879,10 @@ public class MainActivity extends BaseActivity {
         ibTiktok = view2.findViewById(R.id.ib_tiktok);
         ibOffice = view2.findViewById(R.id.ib_office);
         initClickListener();
+
+        AssetManager mgr = getAssets();
+        Typeface tf = Typeface.createFromAsset(mgr, "fonts/Gilroy-Thin-13.otf");
+        tvTime.setTypeface(tf);
 
         new Thread() {
             @Override
@@ -827,6 +940,7 @@ public class MainActivity extends BaseActivity {
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setAdapter(pagerAdapter);
         mViewPager.addOnPageChangeListener(onPageChangeListener);
+//        mViewPager.setPageTransformer(true, new MyGalleyPageTransformer());
         onPageChangeListener.onPageSelected(0);
     }
 
@@ -877,7 +991,8 @@ public class MainActivity extends BaseActivity {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 btnPicture.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(btnPicture, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:ACTION_UP");
                 btnPicture.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -890,15 +1005,19 @@ public class MainActivity extends BaseActivity {
                     Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
+                Log.e(TAG, "picture:ACTION_CANCEL");
+                btnPicture.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(btnPicture, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
                 btnPicture.clearAnimation();
             }
-            return true;
+            return false;
         });
         rlMusic.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 rlMusic.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(rlMusic, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 rlMusic.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -912,18 +1031,21 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 rlMusic.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(rlMusic, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                rlMusic.clearAnimation();
             }
-            return true;
+            return false;
         });
         btnProjectionScreen.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 btnProjectionScreen.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(btnProjectionScreen, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 btnProjectionScreen.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.hpplay.happyplay.aw", "com.hpplay.happyplay.main.app.MainActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.hpplay.happyplay.aw", "com.hpplay.happyplay.aw.app.MainActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -933,14 +1055,17 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 btnProjectionScreen.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(btnProjectionScreen, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                btnProjectionScreen.clearAnimation();
             }
-            return true;
+            return false;
         });
         btnAlarm.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 btnAlarm.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(btnAlarm, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 btnAlarm.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -954,14 +1079,17 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 btnAlarm.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(btnAlarm, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                btnAlarm.clearAnimation();
             }
-            return true;
+            return false;
         });
         btnBrowser.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 btnBrowser.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(btnBrowser, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 btnBrowser.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -975,8 +1103,11 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 btnBrowser.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(btnBrowser, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                btnBrowser.clearAnimation();
             }
-            return true;
+            return false;
         });
 
         btnControl.setOnClickListener(new View.OnClickListener() {
@@ -1034,15 +1165,15 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        ivMusic.setStrokeWidth(20);
-        ivMusic.setStrokeColor(Color.BLACK);
+//        ivMusic.setStrokeWidth(20);
+//        ivMusic.setStrokeColor(Color.BLACK);
 
         //View2 listener
         ibVideo.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 ibVideo.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(ibVideo, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 ibVideo.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -1056,15 +1187,18 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibVideo.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(ibVideo, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                ibVideo.clearAnimation();
             }
-            return true;
+            return false;
         });
 
         ibMusic.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 ibMusic.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(ibMusic, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 ibMusic.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -1078,15 +1212,18 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibMusic.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(ibMusic, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                ibMusic.clearAnimation();
             }
-            return true;
+            return false;
         });
 
         ibTiktok.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 ibTiktok.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(ibTiktok, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 ibTiktok.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -1100,15 +1237,18 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibTiktok.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(ibTiktok, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                ibTiktok.clearAnimation();
             }
-            return true;
+            return false;
         });
 
         ibOffice.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
                 ibOffice.startAnimation(animation);
-            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            } else if (motionEvent.getAction() == MotionEvent.ACTION_UP && CustomUtil.isTouchPointInView(ibOffice, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
                 ibOffice.clearAnimation();
                 try {
                     Intent intent = new Intent();
@@ -1122,10 +1262,96 @@ public class MainActivity extends BaseActivity {
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibOffice.clearAnimation();
+            } else if (!CustomUtil.isTouchPointInView(ibOffice, (int) motionEvent.getRawX(), (int) motionEvent.getRawY())) {
+                Log.e(TAG, "picture:x:" + motionEvent.getX());
+                ibOffice.clearAnimation();
             }
-            return true;
+            return false;
         });
 
+    }
+
+    public static class MyTranslationTransformer implements ViewPager.PageTransformer {
+
+        @Override
+        public void transformPage(@NonNull View page, float position) {
+            Log.e("111111111", position + "");
+            if (position < 0 && position >= -1) {
+                page.setScaleX(1.0f);
+                page.setScaleY(1.0f);
+            } else if (position == 0) {
+                page.setScaleX(1.0f);
+                page.setScaleY(1.0f);
+            } else if (position <= 1 && position > 0) {
+                page.setScaleX(1.0f);
+                page.setScaleY(1.0f);
+            } else {
+                page.setScaleX(1.0f);
+                page.setScaleY(1.0f);
+            }
+        }
+    }
+
+    public static class MyGalleyPageTransformer implements ViewPager.PageTransformer {
+        public static final float DEFAULT_MAX_ROTATION = 60f;
+        public static final float DEF_MIN_SCALE = 0.86f;
+
+        /**
+         * 最大旋转角度
+         */
+        private float mMaxRotation = DEFAULT_MAX_ROTATION;
+
+        /**
+         * 最小缩放
+         */
+        private float mMinScale = DEF_MIN_SCALE;
+
+        @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+        @Override
+        public void transformPage(@NonNull View page, float position) {
+            page.setPivotY(page.getHeight() / 2f);
+
+            float distance = getCameraDistance();
+            page.setCameraDistance(distance);//设置 View 的镜头距离，可以防止旋转大角度时出现图像失真或不显示。
+            if (position < -1) { // [-Infinity,-1)
+                page.setRotationY(-mMaxRotation);
+                page.setPivotX(page.getWidth());
+            } else if (position <= 1) { // [-1,1]
+
+                page.setRotationY(position * mMaxRotation);
+                if (position < 0) {//[0,-1]
+                    page.setPivotX(page.getWidth());
+                    float scale = DEF_MIN_SCALE + 4f * (1f - DEF_MIN_SCALE) * (position + 0.5f) * (position + 0.5f);
+                    page.setScaleX(scale);
+                    page.setScaleY(scale);
+                } else {//[1,0]
+                    page.setPivotX(0);
+                    float scale = DEF_MIN_SCALE + 4f * (1f - DEF_MIN_SCALE) * (position - 0.5f) * (position - 0.5f);
+                    page.setScaleX(scale);
+                    page.setScaleY(scale);
+                }
+            } else { // (1,+Infinity]
+                page.setRotationY(mMaxRotation);
+                page.setPivotX(0);
+            }
+        }
+
+        /**
+         * 获得镜头距离（图像与屏幕距离）。参考{@link View#setCameraDistance(float)}，小距离表示小视角，
+         * 大距离表示大视角。这个距离较小时，在 3D 变换（如围绕X和Y轴的旋转）时，会导致更大的失真。
+         * 如果改变 rotationX 或 rotationY 属性，使得此 View 很大 （超过屏幕尺寸的一半），则建议始终使用
+         * 大于此时图高度 （X 轴旋转）或 宽度（Y 轴旋转）的镜头距离。
+         * @return  镜头距离 distance
+         *
+         * @see {@link View#setCameraDistance(float)}
+         */
+        private float getCameraDistance() {
+            DisplayMetrics displayMetrics = MyApplication.getContext().getResources().getDisplayMetrics();
+            float density = displayMetrics.density;
+            int widthPixels = displayMetrics.widthPixels;
+            int heightPixels = displayMetrics.heightPixels;
+            return 1.5f * Math.max(widthPixels, heightPixels) * density;
+        }
     }
 
     @Override
@@ -1167,7 +1393,7 @@ public class MainActivity extends BaseActivity {
             view.setBackgroundResource(R.drawable.background_point);
             view.setEnabled(false);
             //设置宽高
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(10, 10);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(20, 20);
             //设置间隔
 //            if (pic != mPics[0]) {
                 layoutParams.leftMargin = 10;
@@ -1186,30 +1412,6 @@ public class MainActivity extends BaseActivity {
         intent.setAction(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         intent.setData(Uri.parse("package:" + packageName));
         activity.startActivity(intent);
-    }
-
-    private void receive(){
-        myReceiver = new MusicReceiver(new MusicReceiver.DataCallBack() {
-            @Override
-            public void onDataChanged(String trackName, String artist, String albumName) {
-                musicName = trackName + " - " + artist;
-                tvMusicName.setText(musicName);
-                editor = sp.edit();
-                editor.putString("musicName", musicName);
-                editor.commit();
-            }
-        });
-        IntentFilter iF = new IntentFilter();
-        iF.addAction("com.android.music.metachanged");
-        registerReceiver(myReceiver, iF);
-
-//        //动态注册应用安装和卸载广播
-//        myInstalledReceiver = new MyInstalledReceiver();
-//        IntentFilter intentFilter = new IntentFilter();
-//        intentFilter.addDataScheme("package");
-//        intentFilter.addAction("android.intent.action.PACKAGE_ADDED");
-//        intentFilter.addAction("android.intent.action.PACKAGE_REMOVED");
-//        registerReceiver(myInstalledReceiver, intentFilter);
     }
 
     @Override

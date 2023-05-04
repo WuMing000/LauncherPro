@@ -3,28 +3,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="30dp"
     android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="56dp">
 
         <TextView
             android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="00:00"
-            android:textSize="90sp"
-            android:textColor="@color/white" />
+            android:textSize="85sp"
+            android:textColor="@color/white"
+            android:gravity="center"/>
 
         <TextView
             android:id="@+id/tv_calendar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:text="2000年1月1日 星期一"
-            android:layout_below="@id/tv_time" />
+            android:text="2000年1月1日"
+            android:textSize="24sp"
+            android:layout_below="@id/tv_time"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/tv_week"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="星期一"
+            android:textSize="24sp"
+            android:layout_below="@id/tv_time"
+            android:layout_toRightOf="@id/tv_calendar"
+            android:textColor="@color/white" />
 
         <ImageView
             android:id="@+id/iv_picture"
@@ -56,77 +68,145 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2"
-        android:layout_marginTop="20dp">
+        android:layout_marginTop="50dp">
 
-        <ImageView
+        <LinearLayout
             android:id="@+id/btn_picture"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/white"
-            android:layout_marginRight="10dp"/>
+            android:clickable="true"
+            android:background="@drawable/selector_rl_music_bg"
+            android:layout_marginRight="10dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/icon_album"
+                android:layout_marginTop="50dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="相册"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:layout_marginTop="32dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="记录美好时光"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:layout_marginTop="25dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="前往查看"
+                android:textColor="@color/my_light_white"
+                android:textSize="16sp"
+                android:layout_marginTop="2dp"/>
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/icon_enter"
+                android:layout_marginTop="10dp"/>
+
+        </LinearLayout>
 
         <RelativeLayout
             android:id="@+id/rl_music"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/purple_200"
-            android:layout_below="@+id/tv_calendar"
-            android:padding="5dp">
+            android:clickable="true"
+            android:background="@drawable/selector_rl_music_bg"
+            android:layout_below="@id/tv_time">
 
-            <com.example.launchproject.view.OvalImageView
+<!--            <View-->
+<!--                android:id="@+id/view_horizontal"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_centerHorizontal="true"/>-->
+
+            <ImageView
                 android:id="@+id/iv_music"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:duplicateParentState="true"
-                android:scaleType="centerCrop"
-                android:src="@mipmap/ic_launcher"
-                android:layout_marginRight="10dp"
-                android:layout_above="@id/tv_music_name"
-                android:layout_centerHorizontal="true"/>
-
-            <TextView
-                android:id="@+id/tv_music_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="30dp"
                 android:duplicateParentState="true"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="暂无歌曲信息"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:layout_centerInParent="true"
-                android:layout_marginTop="20dp"/>
+                android:scaleType="fitCenter"
+                android:src="@drawable/png_cdplayer" />
 
-            <ImageView
-                android:id="@+id/btn_previous"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/previous_music"
-                android:layout_below="@id/tv_music_name"
-                android:layout_toLeftOf="@id/btn_control"
-                android:layout_marginTop="15dp" />
-
-            <ImageView
-                android:id="@+id/btn_control"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/ll_music_name"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/start_music"
-                android:layout_marginRight="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_below="@id/tv_music_name"
-                android:layout_marginTop="10dp"
-                android:layout_centerHorizontal="true"/>
+                android:layout_below="@id/iv_music"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
 
-            <ImageView
-                android:id="@+id/btn_next"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/next_music"
-                android:layout_marginTop="15dp"
-                android:layout_toRightOf="@id/btn_control"
-                android:layout_below="@id/tv_music_name"/>
+                <TextView
+                    android:id="@+id/tv_music_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:duplicateParentState="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="暂无歌名"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:layout_marginTop="33dp"
+                    android:textSize="32sp" />
+
+                <TextView
+                    android:id="@+id/tv_music_singer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_music_name"
+                    android:duplicateParentState="true"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="暂无歌手"
+                    android:textColor="@color/my_light_white"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/ll_music_name"
+                android:gravity="center"
+                android:layout_marginTop="5dp">
+
+                <ImageView
+                    android:id="@+id/btn_previous"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/btn_player_previous_normal" />
+
+                <ImageView
+                    android:id="@+id/btn_control"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/btn_player_play_normal" />
+
+                <ImageView
+                    android:id="@+id/btn_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/btn_player_next_normal" />
+
+            </LinearLayout>
 
         </RelativeLayout>
 
@@ -136,24 +216,88 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="20dp">
 
-        <ImageView
+        <LinearLayout
             android:id="@+id/btn_projection_screen"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="2"
-            android:background="@color/white"
-            android:scaleType="centerCrop"
-            android:layout_marginRight="10dp"/>
+            android:layout_weight="1"
+            android:clickable="true"
+            android:background="@drawable/selector_ll_share_bg"
+            android:layout_marginRight="10dp"
+            android:orientation="vertical">
 
-        <ImageView
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="投屏"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:layout_marginLeft="38dp"
+                android:layout_marginTop="56dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="多屏互动"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:layout_marginLeft="36dp"
+                android:layout_marginTop="20dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="分享更多精彩"
+                android:textColor="@color/my_light_white"
+                android:textSize="16sp"
+                android:layout_marginLeft="36dp"
+                android:layout_marginTop="6dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/btn_alarm"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/white"
-            android:scaleType="centerCrop"/>
+            android:clickable="true"
+            android:background="@drawable/selector_ll_time_bg"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="时钟"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:layout_marginLeft="38dp"
+                android:layout_marginTop="56dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="每时每刻"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:layout_marginLeft="36dp"
+                android:layout_marginTop="20dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="前往设置"
+                android:textColor="@color/my_light_white"
+                android:textSize="16sp"
+                android:layout_marginLeft="36dp"
+                android:layout_marginTop="6dp"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -162,14 +306,47 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="20dp">
 
-        <ImageView
+        <LinearLayout
             android:id="@+id/btn_browser"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:background="@color/white"
-            android:scaleType="centerCrop" />
+            android:layout_weight="1"
+            android:clickable="true"
+            android:background="@drawable/selector_ll_browser_bg"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="浏览器"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:layout_marginLeft="135dp"
+                android:layout_marginTop="56dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="探索精彩"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:layout_marginLeft="133dp"
+                android:layout_marginTop="20dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="探知更广视界"
+                android:textColor="@color/my_light_white"
+                android:textSize="16sp"
+                android:layout_marginLeft="133dp"
+                android:layout_marginTop="6dp"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 

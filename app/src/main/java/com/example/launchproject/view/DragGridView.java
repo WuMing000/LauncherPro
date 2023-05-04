@@ -160,7 +160,7 @@ public class DragGridView extends GridView {
                 mDownY = (int) ev.getRawY() - mStatusHeight;
  
 //                mDragView = findChildViewUnder(mDownX, mDownY);
-                mDragPosition = pointToPosition(mDownX, mDownY);
+                mDragPosition = pointToPosition(mDownX, mDownY - 100);
 //                if (mDragView == null) {
 //                    return super.dispatchTouchEvent(ev);
 //                }
@@ -174,6 +174,7 @@ public class DragGridView extends GridView {
                     return super.dispatchTouchEvent(ev);
                 }
 
+                removeLongClick();
                 //延时长按执行mLongClickRunnable
                 mHandler.postDelayed(mLongClickRunnable, mDragResponseMs);
 
@@ -196,7 +197,7 @@ public class DragGridView extends GridView {
                 Log.e(TAG, "view:left " + mDragView.getLeft() + ", right " + mDragView.getRight());
                 Log.e(TAG, "view:top " + mDragView.getTop() + ",bottom " + mDragView.getBottom());
                 if (itemMoveListener != null) {
-                    itemMoveListener.onDown(mDragPosition, mHandler, mLongClickRunnable);
+                    itemMoveListener.onDown(mDownX, mDownY, mDragPosition, mHandler, mLongClickRunnable);
                 }
 
                 break;
@@ -224,7 +225,7 @@ public class DragGridView extends GridView {
 //                        mVibrator.vibrate(200);
                         if (!isMove) {
                             //隐藏该item
-                            mDragView.setVisibility(INVISIBLE);
+                            mDragView.setVisibility(GONE);
                             //在点击的地方创建并显示item镜像
                             createDragView(mDragBitmap, mDownX, mDownY);
                         }
@@ -233,7 +234,7 @@ public class DragGridView extends GridView {
                 }
 
 //                mMoveView = findChildViewUnder(mMoveX, mMoveY);
-                mMovePosition = pointToPosition(mMoveX - mPoint2ItemLeft / 4, mMoveY);
+                mMovePosition = pointToPosition(mMoveX, mMoveY - 100);
                 if(mMovePosition == AdapterView.INVALID_POSITION){
                     return super.dispatchTouchEvent(ev);
                 }
@@ -327,7 +328,7 @@ public class DragGridView extends GridView {
                     itemMoveListener.onItemClick(mDragPosition);
                 }
                 if (itemMoveListener != null) {
-                    itemMoveListener.onUp(actionUpPosition);
+                    itemMoveListener.onUp(actionUpPosition, translateAnimation);
                 }
 //                isCanDrag = false;
                 if (isDrag) {
@@ -514,8 +515,8 @@ public class DragGridView extends GridView {
         getLocationOnScreen(location);
         int pY = location[1];
         if (itemMoveListener != null){
-            View childViewUnder = getChildAt(pointToPosition(x, y + pY) - getFirstVisiblePosition());
-            itemMoveListener.onMove(x,y + pY, childViewUnder, isMove);
+            View childViewUnder = getChildAt(pointToPosition(x, y - 100) - getFirstVisiblePosition());
+            itemMoveListener.onMove(x,y + pY, childViewUnder, isMove, mMovePosition);
         }
 //        Log.e(TAG, "view:onDragItem:mDownX " + x + ", mDownY " + y);
 //        Log.e(TAG, "view:onDragItem:mDragMirrorViewX left " + mDragMirrorView.getLeft() + ", mDragMirrorViewX right " + mDragMirrorView.getRight());
@@ -619,10 +620,10 @@ public class DragGridView extends GridView {
      * item 交换时的回调接口
      */
     public interface OnItemMoveListener {
-        void onDown(int position, Handler handler, Runnable runnable);
-        void onMove(int x, int y, View view, boolean isMove);
+        void onDown(int x, int y, int position, Handler handler, Runnable runnable);
+        void onMove(int x, int y, View view, boolean isMove, int position);
 //        void onCancel();
-        void onUp(int position);
+        void onUp(int position, Animation translateAnimation);
         void onItemClick(int position);
     }
 

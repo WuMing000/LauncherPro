@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -87,6 +88,10 @@ public class MyGridViewAdapter extends BaseAdapter {
         //重新确定position（因为拿到的是总的数据源，数据源是分页加载到每页的GridView上的，为了确保能正确的点对不同页上的item）
         final int pos = position + mIndex * mPagerSize;//假设mPagerSize=8，假如点击的是第二页（即mIndex=1）上的第二个位置item(position=1),那么这个item的实际位置就是pos=9
         APPBean bean = listData.get(pos);
+//        if (bean.getPackageName().length() == 0) {
+//            holder.imgUrl.setBackgroundColor(MyApplication.getContext().getResources().getColor(R.color.teal_700));
+//            holder.imgUrl.setVisibility(View.INVISIBLE);
+//        }
 //        Log.e("qqqqqqqqqqqqq", bean.getAppIconBytes().length + "");
         holder.proName.setText(bean.getAppName());
         Bitmap bitmap = null;
