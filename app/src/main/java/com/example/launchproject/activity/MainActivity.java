@@ -176,8 +176,14 @@ public class MainActivity extends BaseActivity {
             copyPageSelectedPosition = position;
 
             // 避免viewPager移动到最后一页，再移动回第一页时，唱片动画消失
-            if (position == 0 && audioManager.isMusicActive()) {
-                ivMusic.startAnimation(animation);//開始动画
+            if (position == 0) {
+                if (audioManager.isMusicActive()) {
+                    handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+                    ivMusic.startAnimation(animation);//開始动画
+                } else {
+                    handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
+                    ivMusic.clearAnimation();
+                }
             }
 
             // 当是第一页和第二页时，不执行下面内容
@@ -851,8 +857,6 @@ public class MainActivity extends BaseActivity {
         // 隐藏底部导航栏
         CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
-        // 运行后台，用于监听应用安装卸载和音乐变化
-        startService(new Intent(this, MyService.class));
         // 设置全局handler
         HandlerManager.putHandler(handler);
         // 使用数据库获取APP信息
@@ -1010,7 +1014,7 @@ public class MainActivity extends BaseActivity {
             Log.e("ivPicture=====>", "onClick");
             try {
                 Intent intent = new Intent();
-                ComponentName componentNameGallery = new ComponentName("com.android.gallery3d", "com.android.gallery3d.app.GalleryActivity");
+                ComponentName componentNameGallery = new ComponentName("com.atomicadd.fotos", "com.atomicadd.fotos.moments.MomentsActivity");
                 intent.setComponent(componentNameGallery);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
@@ -1050,7 +1054,7 @@ public class MainActivity extends BaseActivity {
                 btnPicture.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.android.gallery3d", "com.android.gallery3d.app.GalleryActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.atomicadd.fotos", "com.atomicadd.fotos.moments.MomentsActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1101,7 +1105,7 @@ public class MainActivity extends BaseActivity {
                 btnProjectionScreen.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.hpplay.happyplay.aw", "com.hpplay.happyplay.aw.app.MainActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.apowersoft.mirror.tv", "com.apowersoft.mirror.tv.ui.activity.WelcomeActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1673,8 +1677,8 @@ public class MainActivity extends BaseActivity {
 
     private void setBackground(){ //获取壁纸后设置为view的背景
         try {
-            Drawable drawable =new BitmapDrawable(getLockWallpaper());//将Bitmap类型转换为Drawable类型
-            llBgHome.setBackgroundDrawable(drawable);//设置背景
+            Drawable drawable =new BitmapDrawable(getResources(), getLockWallpaper());//将Bitmap类型转换为Drawable类型
+            llBgHome.setBackground(drawable);//设置背景
 //            drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);//设置背景灰度
         } catch(Exception e) {
 //            android.util.Log.d(TAG,"set Background fail");

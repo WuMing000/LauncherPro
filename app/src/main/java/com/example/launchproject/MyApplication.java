@@ -3,6 +3,9 @@ package com.example.launchproject;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
+
+import com.example.launchproject.service.MyService;
 
 @SuppressLint("StaticFieldLeak")
 public class MyApplication extends Application {
@@ -19,6 +22,8 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        // 运行后台，用于监听应用安装卸载和音乐变化
+        startService(new Intent(this, MyService.class));
         singleton = this;
         context = getApplicationContext();
     }

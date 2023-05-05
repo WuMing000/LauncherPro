@@ -39,13 +39,13 @@ public class MyService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.e(TAG, "onCreate");
-        receive();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.e(TAG, "onStartCommand");
-        return super.onStartCommand(intent, flags, startId);
+        receive();
+        return super.onStartCommand(intent, Service.START_FLAG_REDELIVERY, startId);
     }
 
     @Override
