@@ -10,9 +10,14 @@ import com.google.gson.reflect.TypeToken;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 用于保存APP信息的工具类，使用SharedPreferences数据库保存
+ * 应用开机或者重启不用重新通用方法获取
+ * 节省时间和实现记录APP移动的位置
+ * */
 public class APPListDataSaveUtils {
-    private SharedPreferences preferences;
-    private SharedPreferences.Editor editor;
+    private final SharedPreferences preferences;
+    private final SharedPreferences.Editor editor;
 
     public APPListDataSaveUtils(Context mContext, String preferenceName) {
         preferences = mContext.getSharedPreferences(preferenceName, Context.MODE_PRIVATE);

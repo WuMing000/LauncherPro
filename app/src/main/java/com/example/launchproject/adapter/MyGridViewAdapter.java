@@ -57,12 +57,12 @@ public class MyGridViewAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return position + mIndex * mPagerSize;
+        return position + (long) mIndex * mPagerSize;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder = null;
+        ViewHolder holder;
         if(convertView == null){
             convertView = inflater.inflate(R.layout.item_list_view_app,parent,false);
             holder = new ViewHolder();
@@ -70,29 +70,30 @@ public class MyGridViewAdapter extends BaseAdapter {
             holder.imgUrl = convertView.findViewById(R.id.iv_app_icon);
 
             convertView.setTag(holder);
-        }else{
+        }else {
             holder = (ViewHolder) convertView.getTag();
         }
-        Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+        Configuration mConfiguration = MyApplication.getInstance().getContext().getResources().getConfiguration(); //获取设置的配置信息
         int ori = mConfiguration.orientation; //获取屏幕方向
         if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+            // 横屏时，高度显示三个item
             int parentHeight = parent.getHeight();
             ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
             layoutParams.height = parentHeight / 3;
         } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+            // 竖屏时，高度显示六个item
             int parentHeight = parent.getHeight();
             ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
             layoutParams.height = parentHeight / 6;
         }
 
         //重新确定position（因为拿到的是总的数据源，数据源是分页加载到每页的GridView上的，为了确保能正确的点对不同页上的item）
-        final int pos = position + mIndex * mPagerSize;//假设mPagerSize=8，假如点击的是第二页（即mIndex=1）上的第二个位置item(position=1),那么这个item的实际位置就是pos=9
+        final int pos = position + mIndex * mPagerSize;//假设mPagerSize=18，假如点击的是第二页（即mIndex=1）上的第二个位置item(position=1),那么这个item的实际位置就是pos=19
         APPBean bean = listData.get(pos);
 //        if (bean.getPackageName().length() == 0) {
 //            holder.imgUrl.setBackgroundColor(MyApplication.getContext().getResources().getColor(R.color.teal_700));
 //            holder.imgUrl.setVisibility(View.INVISIBLE);
 //        }
-//        Log.e("qqqqqqqqqqqqq", bean.getAppIconBytes().length + "");
         holder.proName.setText(bean.getAppName());
         Bitmap bitmap = null;
         if (bean.getAppIconBytes() != null) {

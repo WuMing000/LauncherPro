@@ -18,7 +18,6 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -39,7 +38,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -59,7 +57,6 @@ import com.example.launchproject.utils.APPListDataSaveUtils;
 import com.example.launchproject.utils.CustomUtil;
 import com.example.launchproject.utils.DataUtil;
 import com.example.launchproject.view.DragGridView;
-import com.example.launchproject.view.OvalImageView;
 
 import java.io.FileDescriptor;
 import java.io.UnsupportedEncodingException;
@@ -73,6 +70,7 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
@@ -83,13 +81,15 @@ public class MainActivity extends BaseActivity {
 
     private static final String TAG = "MainActivity==============>";
 
+    // 滑动控件
     private ViewPager mViewPager;
+    // 用于保存viewPager拥有的子view
     private ArrayList<View> mPageView;
+    // 用于更新主背景，实现壁纸功能
     private RelativeLayout llBgHome;
-
+    // 保存APP列表
     private List<APPBean> appBeanList;
-    ImageView imageView;
-
+    // launcher前两页内容
     View view1, view2;
     //View1 control
     private TextView tvTime, tvCalendar, tvWeek;
@@ -103,44 +103,56 @@ public class MainActivity extends BaseActivity {
 
     //View2 control
     private RelativeLayout ibVideo, ibMusic, ibTiktok, ibOffice;
+
+    // 用于获取音乐是否正在播放
     private AudioManager audioManager;
+    // 用于实现音乐唱片旋转动画
     private Animation animation;
 
-//    private MusicReceiver myReceiver;
-//    private MyInstalledReceiver myInstalledReceiver;
     private String musicName, musicSinger, date, calendar, week;
 
     private SharedPreferences sp;
     private String spMusicName, spMusicSinger;
     private SharedPreferences.Editor editor;
+    // viewPager适配器
     private PagerAdapter pagerAdapter;
 
     //app gridview
     private int totalPage;//总的页数(仅代表app加载的页数)
     private int mPageSize = 18;//每页显示的最大数量
+    // 记录按下的APP信息
     private APPBean saveFrontAPPContent;
-    private int downX, downY;
+    // 记录按下的position
     private int downPosition;
-    private ScaleAnimation scaleAnimation;
+    // 记录是否缩放动画
     private boolean isScale;
-    private boolean isDown;
-    private int savePosition = 0;
+    // 记录去除前两页的当前页数
+    private static int savePosition = 0;
+    // 记录当前页数
     private int copyPageSelectedPosition = -1;
+    // 记录是否是gridview
     private boolean isGridView;
-    private boolean isCreateLastView;
-
+    // 数据库工具类，用于保存和获取APP列表
     private APPListDataSaveUtils appListDataSaveUtils;
+    // 记录获取数据库的APP列表
     private List<APPBean> appList;
 
-    //设置底部圆点
+    // 设置底部圆点
     private LinearLayout llPoint;
     private List<View> pointViews;
 
+    // 用于清除壁纸
     private int parentDownX, parentDownY, parentMoveX, parentMoveY;
+    // 获取按下的页数
     private int onDownGridPage;
 
+    // 用于设置判断拖动时背景
     private boolean isMoving = true;
 
+    private boolean isRemoveBg = false;
+    private View removeBgView;
+
+    // viewPager页面滑动时回调
     private final ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -151,6 +163,7 @@ public class MainActivity extends BaseActivity {
         public void onPageSelected(int position) {
             Log.e(TAG, ":::" + position);
             try {
+                // 页面移动时，底部圆点跟着切换
                 if (copyPageSelectedPosition != -1 && llPoint != null) {
                     llPoint.getChildAt(copyPageSelectedPosition).setEnabled(false);
                     llPoint.getChildAt(position).setEnabled(true);
@@ -159,22 +172,26 @@ public class MainActivity extends BaseActivity {
                 e.printStackTrace();
             }
 
+            // 记录当前页数
             copyPageSelectedPosition = position;
 
-            if (position == 0) {
+            // 避免viewPager移动到最后一页，再移动回第一页时，唱片动画消失
+            if (position == 0 && audioManager.isMusicActive()) {
                 ivMusic.startAnimation(animation);//開始动画
             }
 
+            // 当是第一页和第二页时，不执行下面内容
             if (position == 0 || position == 1) {
                 return;
             }
 
             Log.e(TAG, position + ":onPageSelected");
+            // 赋值去除第一页和第二页的页数
             savePosition = position - 2;
-//                Log.e(TAG, position + ":onPageScrolled");
+            // 获取当前gridview
             View view = mPageView.get(position);
             DragGridView gridView = (DragGridView) view;
-//            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
+            // 回调按下、移动、抬起等方法
             gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
                 @Override
                 public void onDown(int x, int y, int p, Handler handler, Runnable runnable) {
@@ -191,196 +208,109 @@ public class MainActivity extends BaseActivity {
 //                        pagerAdapter.notifyDataSetChanged();
 //                        isCreateLastView = true;
 //                    }
-                    Log.d("TAG", "onDown:" + savePosition);
-//                Log.e(TAG, "childCount:" + rvAPPList.getChildCount());
+                    // 重新赋值position，因为固定了一个gridview显示18个条目，需要结合页数进行更新
                     int newPosition = p + savePosition * mPageSize;
+                    Log.d("TAG", "onDown:" + newPosition);
+                    // 包名为空的位置，不展示长按窗口
                     if (appBeanList.get(newPosition).getPackageName().length() == 0) {
                         handler.removeCallbacks(runnable);
                     }
+                    // 包名不为空时，判断是否是系统应用
                     if (appBeanList.get(newPosition).getPackageName().length() != 0) {
                         gridView.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(newPosition).getPackageName()));
                     }
-                    Log.d("wu", "onDown====>" + newPosition + "");
-//                if (rvAPPList.isDrag()) {
+                    // 保存按下的APP信息
                     saveFrontAPPContent = new APPBean(appBeanList.get(newPosition).getAppName(), appBeanList.get(newPosition).getAppIconBytes(), appBeanList.get(newPosition).getPackageName());
-//                    Log.e(TAG, saveFrontAPPContent.toString());
-//                }
+                    // 保存按下的position
                     downPosition = newPosition;
+                    // 保存按下的页数
                     onDownGridPage = savePosition;
-//                recyclerViewAPPAdapter.isSetFrameVisible(true);
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
                 }
 
                 @Override
-                public void onMove(int x, int y, View v, boolean isMove, int p) {
-//                    int newPosition = p + savePosition * mPageSize;
-//                    DragGridView view3 = (DragGridView) mPageView.get(copyPageSelectedPosition);
-//                    if (view3 != null) {
-//                        view3.getChildAt(newPosition);
-//                        Log.e(TAG, view3.toString() + "");
-//                    }
-//                    if (v != null) {
-//                        Log.e(TAG, v.toString());
-//                        ImageView viewById = v.findViewById(R.id.iv_app_icon);
-//                        viewById.setVisibility(View.VISIBLE);
-//
-//                    }
+                public void onMove(int x, int y, boolean isMove, int p) {
 
-                    Log.d("TAG", "onMove" + isMove);
+//                    Log.d("TAG", "onMove" + isMove);
+                    // 获取屏幕宽度
                     int widthPixels = getResources().getDisplayMetrics().widthPixels;
 
-                    Log.d("TAG", "widthPixels:" + widthPixels + ",x:" + x);
-                    Log.d("TAG", "childCount" + gridView.getChildCount());
+//                    Log.d("TAG", "widthPixels:" + widthPixels + ",x:" + x);
+//                    Log.d("TAG", "childCount：" + gridView.getChildCount());
                     if (x >= (widthPixels - 80)) {
-//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() + 1) * 18 + 17);
-//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() + 1);
-                        Log.e(TAG, savePosition + ":savePosition");
+//                        Log.e(TAG, savePosition + ":savePosition");
+                        // 手指移动到右边缘，右边缘窗口设置灰色背景
                         if (copyPageSelectedPosition < mPageView.size() - 1) {
-                            mPageView.get(copyPageSelectedPosition + 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_solid));
+                            mPageView.get(copyPageSelectedPosition + 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_solid));
+                            // 记录变色背景
+                            removeBgView = mPageView.get(copyPageSelectedPosition + 1);
                         }
+                        // 记录是否变色
+                        isRemoveBg = true;
+                        // 1s后发送切换下一页handler
                         handler.postDelayed(nextRunnable, 1000);
-//                            viewPager.requestLayout();
                     } else if (x <= 80) {
-//                    rvAPPList.scrollToPosition((scrollHelper.getPageIndex() - 1) * 18);
-//                    scrollHelper.scrollToPosition(scrollHelper.getPageIndex() - 1);
-//                            --savePosition;
-//                            viewPager.setCurrentItem(savePosition , true);
+                        // 手指移动到左边缘，左边缘窗口设置灰色背景
                         if (copyPageSelectedPosition > 2) {
-                            mPageView.get(copyPageSelectedPosition - 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_solid));
+                            mPageView.get(copyPageSelectedPosition - 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_solid));
+                            // 记录变色背景
+                            removeBgView = mPageView.get(copyPageSelectedPosition - 1);
                         }
+                        // 记录是否变色
+                        isRemoveBg = true;
+                        // 1s后发送切换上一页handler
                         handler.postDelayed(previousRunnable, 1000);
                     } else {
-                        for (int i = 0; i < mPageView.size(); i++) {
-                            if (i > 1) {
-                                DragGridView view2 = (DragGridView) mPageView.get(i);
-                                view2.setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
-                            }
+                        if (isRemoveBg && removeBgView != null) {
+                            // 还原背景，手指不在边缘时，去除跳转下一页或者上一页
+                            removeBgView.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                            isRemoveBg = false;
+                            handler.removeCallbacks(nextRunnable);
+                            handler.removeCallbacks(previousRunnable);
                         }
-                        handler.removeCallbacks(nextRunnable);
-                        handler.removeCallbacks(previousRunnable);
                     }
 
                     if (isMove && !isScale && isMoving) {
 
-//                        if (!isCreateLastView) {
-//                            for (int i = 0; i < mPageSize; i++) {
-//                                appBeanList.add(new APPBean());
-//                            }
-//                            totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
-//                            DragGridView gridView = (DragGridView) LayoutInflater.from(MainActivity.this).inflate(R.layout.grid_view_app_list, null);
-//                            MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, totalPage - 1, mPageSize);
-//                            gridView.setAdapter(myGridViewAdapter);
-//                            //每一个GridView作为一个View对象添加到ViewPager集合中
-//                            mPageView.add(gridView);
-//                            pagerAdapter.notifyDataSetChanged();
-//                            mViewPager.setCurrentItem(position);
-//                            isCreateLastView = true;
-//                        }
-//                        mViewPager.setPageTransformer(true, new MyTranslationTransformer());
-                        isDown = true;
-                        isScale = true;
+                        // 设置viewPager透明度80%
                         mViewPager.setAlpha(0.8f);
-//                        scaleAnimation = new ScaleAnimation(1.0f, 0.8f, 1.0f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-//                        scaleAnimation.setDuration(100);//设置动画持续时间
-//                        mViewPager.startAnimation(scaleAnimation);
-//                        scaleAnimation.setFillAfter(true);
-                        for (int i = 0; i < mPageView.size(); i++) {
-                            if (i > 1) {
-                                DragGridView view2 = (DragGridView) mPageView.get(i);
-                                view2.setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
-                            }
-                        }
-//                            viewPager.setPadding(150, 0, 150, 0);
-//                            viewPager.setClipChildren(false);
 
-//                            gridView.setBackground(getResources().getDrawable(R.drawable.selector_recyclerview_bg));
+//                        for (int i = 0; i < mPageView.size(); i++) {
+//                            if (i > 1) {
+//                                DragGridView view2 = (DragGridView) mPageView.get(i);
+//                                view2.setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
+//                            }
+//                        }
+
+                        // 优化设置背景
+                        if (copyPageSelectedPosition > 2 && copyPageSelectedPosition < mPageView.size() - 1) {
+                            mPageView.get(copyPageSelectedPosition - 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                            mPageView.get(copyPageSelectedPosition).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                            mPageView.get(copyPageSelectedPosition + 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                        } else if (copyPageSelectedPosition == 2) {
+                            mPageView.get(copyPageSelectedPosition).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                            mPageView.get(copyPageSelectedPosition + 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                        } else if (copyPageSelectedPosition == mPageView.size() - 1) {
+                            mPageView.get(copyPageSelectedPosition - 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                            mPageView.get(copyPageSelectedPosition).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                        }
+
+                        // 设置viewPager外边距
                         RelativeLayout.LayoutParams marginLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                         marginLayoutParams.setMargins(0, 100, 0, 100);
                         mViewPager.setLayoutParams(marginLayoutParams);
+                        // 设置允许子view跨越另一个子view
                         mViewPager.setClipToPadding(false);
 
+                        // 标记动画，拖动时只执行一次
+                        isScale = true;
                         isMoving = false;
-
-//                        view.setVisibility(View.VISIBLE);
                     }
-//                Log.e(TAG, "isCanDrag:" + isCanDrag);
-//                int movePosition = CustomUtil.findItem(rvAPPList, x, y);
-//                if (movePosition != -1 && movePosition != downPosition) {
-//                    appBeanList.set(downPosition, appBeanList.get(movePosition));
-//                }
-//                else {
-//                    appBeanList.set(downPosition, saveFrontAPPContent);
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                }
                 }
 
-//                @Override
-//                public void onCancel() {
-//                    if (isCreateLastView) {
-//                        mPageView.remove(mPageView.size() - 1);
-//                        pagerAdapter.notifyDataSetChanged();
-//                        isCreateLastView = false;
-//                    }
-//                }
-
                 @Override
-                public void onUp(int p, Animation transAnimation) {
-                    if (transAnimation != null) {
-                        transAnimation.cancel();
-                    }
-                    Log.e(TAG, "11111111111111====" + p);
-                    Log.e(TAG, "1111111111111111111111111111111111111111:" + savePosition);
-                    int newPosition = p + savePosition * mPageSize;
-                    Log.d("TAG", "onUp:downPosition:" + downPosition + ",position:" + newPosition + ",saveFrontAPPContent:" + saveFrontAPPContent + ",moveData:" + appBeanList.get(newPosition));
-//                Log.e(TAG, "getStartPageIndex:" + scrollHelper.getStartPageIndex());
-//                scrollHelper.scrollToPosition(scrollHelper.getStartPageIndex() + 1);
-                    boolean isScreenAPPFull = true;
-                    if (newPosition != downPosition && gridView.isDrag()) {
-                        for (int j = savePosition * mPageSize; j < (savePosition + 1) * mPageSize; j++) {
-                            if (appBeanList.get(j).getPackageName().length() == 0) {
-                                isScreenAPPFull = false;
-                            }
-                        }
-                        if (onDownGridPage != savePosition) {
-                            if (isScreenAPPFull) {
-                                Toast.makeText(MainActivity.this, "当前屏幕APP个数已满", Toast.LENGTH_SHORT).show();
-                                appBeanList.set(downPosition, saveFrontAPPContent);
-                            } else {
-                                if (appBeanList.get(newPosition).getAppName().length() != 0) {
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                                    builder.setMessage(saveFrontAPPContent.getAppName() + " 将和 " + appBeanList.get(newPosition).getAppName() + " 位置进行对换，是否继续？")
-                                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    appBeanList.set(downPosition, appBeanList.get(newPosition));
-                                                    appBeanList.set(newPosition, saveFrontAPPContent);
-                                                    pagerAdapter.notifyDataSetChanged();
-                                                    appListDataSaveUtils.setDataList("appList", appBeanList);
-                                                }
-                                            })
-                                            .setNegativeButton("否", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialogInterface, int i) {
-                                                    dialogInterface.dismiss();
-                                                }
-                                            }).show();
-                                } else {
-                                    appBeanList.set(downPosition, appBeanList.get(newPosition));
-                                    appBeanList.set(newPosition, saveFrontAPPContent);
-                                    pagerAdapter.notifyDataSetChanged();
-                                    appListDataSaveUtils.setDataList("appList", appBeanList);
-                                }
-                            }
-                        } else {
-                            appBeanList.set(downPosition, appBeanList.get(newPosition));
-                            appBeanList.set(newPosition, saveFrontAPPContent);
-                            pagerAdapter.notifyDataSetChanged();
-                            appListDataSaveUtils.setDataList("appList", appBeanList);
-                        }
-                    }
-                    if (isScale) {
-                        handler.removeCallbacks(nextRunnable);
-                        handler.removeCallbacks(previousRunnable);
+                public void onCancel() {
+                    // 拖动异常时，还原背景
+                    if (isScale && !isMoving) {
                         for (int i = 0; i < mPageView.size(); i++) {
                             if (i > 1) {
                                 Log.e(TAG, "i:" + i);
@@ -388,48 +318,121 @@ public class MainActivity extends BaseActivity {
                                 view2.setBackgroundColor(getResources().getColor(R.color.transparent));
                             }
                         }
-//                        mViewPager.setPageTransformer(true, new MyGalleyPageTransformer());
                         isScale = false;
                         isMoving = true;
-//                            gridView.setBackgroundColor(getResources().getColor(R.color.transparent));
-//                        mViewPager.setAlpha(1.0f);
-//                        scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-//                        scaleAnimation.setDuration(300);//设置动画持续时间
-//                        mViewPager.startAnimation(scaleAnimation);
-//                        scaleAnimation.setFillAfter(true);
                         handler.postDelayed(clearAnimationRunnable, 500);
                         mViewPager.setClipToPadding(true);
-//                            viewPager.setClipToPadding(true);
-//                            LinearLayout.LayoutParams marginLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-//                            marginLayoutParams.setMargins(0, 0, 0, 0);
-//                            viewPager.setLayoutParams(marginLayoutParams);
                     }
-//                    viewPager.getAdapter().notifyDataSetChanged();
+                }
 
-//                    adapter.notifyDataSetChanged();
-                    if (isDown) {
-                        isDown = false;
+                @Override
+                public void onUp(int p, Animation transAnimation) {
+                    // 手指抬起时，去除平移动画
+                    if (transAnimation != null) {
+                        transAnimation.cancel();
                     }
-//                Log.d(TAG, "onUp====>" + position + "");
-//                if (saveFrontAPPContent != null) {
-//                    Log.e(TAG, "我进来了");
-//                    appBeanList.set(position, saveFrontAPPContent);
-//                    recyclerViewAPPAdapter.notifyDataSetChanged();
-//                }
-//                appBeanList.set(position, appBeanList.get(movePosition));
-//                appBeanList.set(movePosition, appBeanList.get(position));
-//                recyclerViewAPPAdapter.notifyDataSetChanged();
+                    // 更新手指抬起时position，根据页数和页个数更新
+                    int newPosition = p + savePosition * mPageSize;
+                    Log.d("TAG", "onUp:downPosition:" + downPosition + ",position:" + newPosition + ",saveFrontAPPContent:" + saveFrontAPPContent + ",moveData:" + appBeanList.get(newPosition));
+                    // 标记当前页APP个数是否已满
+                    boolean isScreenAPPFull = true;
+                    Log.d(TAG, "=================newPosition:" + newPosition + ",downPosition:" + downPosition);
+                    // 点击和抬起position不一致和已拖动执行
+                    if (newPosition != downPosition && gridView.isDrag()) {
+                        if (onDownGridPage == savePosition) {
+                            // 按下和抬起页数一致情况
+
+                            // item位置互换
+                            appBeanList.set(downPosition, appBeanList.get(newPosition));
+                            appBeanList.set(newPosition, saveFrontAPPContent);
+                            // 刷新界面
+                            pagerAdapter.notifyDataSetChanged();
+                            // 更新数据库
+                            appListDataSaveUtils.setDataList("appList", appBeanList);
+                        } else {
+                            // 按下和抬起页数不一致情况
+
+                            // 遍历当前页APP个数是否已满
+                            for (int j = savePosition * mPageSize; j < (savePosition + 1) * mPageSize; j++) {
+                                if (appBeanList.get(j).getPackageName().length() == 0) {
+                                    // 不满设置false
+                                    isScreenAPPFull = false;
+                                }
+                            }
+                            if (isScreenAPPFull) {
+                                // 当前页APP个数已满
+                                Toast.makeText(MainActivity.this, "当前屏幕APP个数已满", Toast.LENGTH_SHORT).show();
+                                // 把点击时保存的APP信息设置回原来位置
+                                appBeanList.set(downPosition, saveFrontAPPContent);
+                            } else {
+                                if (appBeanList.get(newPosition).getPackageName().length() != 0) {
+                                    // 替换的item位置数据不为空
+                                    // 用弹出框提示是否替换
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                                    builder.setMessage(saveFrontAPPContent.getAppName() + " 将和 " + appBeanList.get(newPosition).getAppName() + " 位置进行对换，是否继续？")
+                                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    // item位置互换
+                                                    appBeanList.set(downPosition, appBeanList.get(newPosition));
+                                                    appBeanList.set(newPosition, saveFrontAPPContent);
+                                                    // 刷新页面
+                                                    pagerAdapter.notifyDataSetChanged();
+                                                    // 更新数据库
+                                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                                }
+                                            })
+                                            .setNegativeButton("否", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    // 取消弹出框
+                                                    dialogInterface.dismiss();
+                                                }
+                                            }).show();
+                                } else {
+                                    // 替换的item位置数据为空，直接替换
+                                    // item位置互换
+                                    appBeanList.set(downPosition, appBeanList.get(newPosition));
+                                    appBeanList.set(newPosition, saveFrontAPPContent);
+                                    // 刷新页面
+                                    pagerAdapter.notifyDataSetChanged();
+                                    // 更新数据库
+                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                }
+                            }
+                        }
+                    }
+                    // 抬起时发现已有动画变化
+                    if (isScale) {
+                        // remove下一页和上一页的runnable，避免抬起时还是会触发跳转
+                        handler.removeCallbacks(nextRunnable);
+                        handler.removeCallbacks(previousRunnable);
+                        // 把背景还原
+                        for (int i = 0; i < mPageView.size(); i++) {
+                            if (i > 1) {
+                                DragGridView view2 = (DragGridView) mPageView.get(i);
+                                view2.setBackgroundColor(getResources().getColor(R.color.transparent));
+                            }
+                        }
+                        // 发送handler，清除动画
+                        handler.postDelayed(clearAnimationRunnable, 500);
+                        // 不允许子view跨越
+                        mViewPager.setClipToPadding(true);
+                        // 标记没发生动画，给下次拖动继续沿用
+                        isScale = false;
+                        isMoving = true;
+                    }
                 }
 
                 @Override
                 public void onItemClick(int p) {
-                    Log.e(TAG, "onItemClick: p:" + p + ",savePosition:" + savePosition + ",mPageSize:" + mPageSize);
+                    // 更新手指点击时position，根据页数和页个数更新
                     int newPosition = p + savePosition * mPageSize;
-                    if (appBeanList.get(newPosition).getPackageName().length() == 0 || p == -1) {
+                    // 当position为-1或者item中无数据不执行下面内容
+                    if (p == -1 || appBeanList.get(newPosition).getPackageName().length() == 0) {
                         return;
                     }
                     Log.d("TAG", "onItemClick====>" + newPosition + "");
-//                    Log.d("TAG", "click recyclerview item " + newPosition);
                     //查询这个应用程序的入口activity。把他开启起来
                     try {
                         PackageManager pm = getPackageManager();
@@ -442,7 +445,9 @@ public class MainActivity extends BaseActivity {
                 }
             });
 
+            // 根据当前页获取当前gridview
             DragGridView dragGridView = (DragGridView) mPageView.get(copyPageSelectedPosition);
+            // 卸载点击事件
             dragGridView.setOnUninstallClick(new DragGridView.OnUninstallClick() {
                 @Override
                 public void OnClick() {
@@ -453,7 +458,7 @@ public class MainActivity extends BaseActivity {
                     startActivity(intent);
                 }
             });
-
+            // 应用信息点击事件
             dragGridView.setOnInformationClick(new DragGridView.OnInformationClick() {
                 @Override
                 public void OnClick() {
@@ -462,7 +467,6 @@ public class MainActivity extends BaseActivity {
                 }
             });
 
-            MyGridViewAdapter adapter = (MyGridViewAdapter) gridView.getAdapter();
         }
 
         @Override
@@ -479,65 +483,75 @@ public class MainActivity extends BaseActivity {
             super.dispatchMessage(msg);
             switch (msg.what) {
                 case HandlerManager.GET_APP_LIST:
+                    // 首次启动launcher，加载数据
                     if (appList.size() == 0) {
                         Bundle data = msg.getData();
                         byte[] appIcons = data.getByteArray("appIcon");
                         String appName = data.getString("appName");
                         String packageName = data.getString("packageName");
                         Bitmap bitmap = BitmapFactory.decodeByteArray(appIcons, 0, appIcons.length);
-                        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+//                        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
 //                        appBeanList.add(new APPBean(appName, bitmap, packageName));
+                        // 把获取到的APP数据添加进集合
                         appBeanList.add(new APPBean(appName, appIcons, packageName));
                     }
                     break;
                 case HandlerManager.LOAD_APP_FINISH:
+                    // 首次启动launcher，加载数据
                     if (appList.size() == 0) {
+                        // 最后页不满18个数，增加空数据填充，用于应用移动
                         while (appBeanList.size() % 18 != 0) {
                             appBeanList.add(new APPBean());
                         }
-                        Log.e(TAG, "加载应用完成" + appBeanList.size());
+                        Log.d(TAG, "加载应用完成" + appBeanList.size());
                         handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
+                        // 把所有APP添加进数据库
                         appListDataSaveUtils.setDataList("appList", appBeanList);
                     }
                     break;
                 case HandlerManager.SHOW_APP_LIST:
+                    // 数据库有值时，直接赋值
                     if (appList.size() != 0) {
                         appBeanList = appList;
                     }
-//                    for (APPBean appBean : appBeanList) {
-//                        if (appBean.getPackageName().length() == 0) {
-//                            appBean.setAppIcon();
-//                        }
-//                    }
-                    //add app list gridview
-                    //总的页数，取整（这里有三种类型：Math.ceil(3.5)=4:向上取整，只要有小数都+1  Math.floor(3.5)=3：向下取整  Math.round(3.5)=4:四舍五入）
+                    // add app list gridview
+                    // 总的页数，取整（这里有三种类型：Math.ceil(3.5)=4:向上取整，只要有小数都+1  Math.floor(3.5)=3：向下取整  Math.round(3.5)=4:四舍五入）
                     totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
                     LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
                     for(int i = 0; i < totalPage; i++){
-                        //每个页面都是inflate出一个新实例
+                        // 每个页面都是inflate出一个新实例
+                        // 将集合数据分在gridview上，每个gridview显示18条数据
                         DragGridView gridView = (DragGridView) inflater.inflate(R.layout.grid_view_app_list, null);
                         MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, i, mPageSize);
-                        Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+                        Configuration mConfiguration = MyApplication.getInstance().getContext().getResources().getConfiguration(); //获取设置的配置信息
                         int ori = mConfiguration.orientation; //获取屏幕方向
                         if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                            // 横屏时，设置六列
                             gridView.setNumColumns(6);
                         } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                            // 竖屏时，设置三列
                             gridView.setNumColumns(3);
                         }
+                        // 设置gridview适配器
                         gridView.setAdapter(myGridViewAdapter);
                         //每一个GridView作为一个View对象添加到ViewPager集合中
                         mPageView.add(gridView);
+                        // 刷新viewPager
                         pagerAdapter.notifyDataSetChanged();
                     }
+                    // 获取底部圆点数据
                     getPointData();
                     //第一次显示小白点
                     llPoint.getChildAt(0).setEnabled(true);
+                    // 设置默认显示第一页
                     mViewPager.setCurrentItem(0);
                     break;
                 case HandlerManager.GET_SYSTEM_TIME:
+                    // 更新时间，一秒发送
                     handler.postDelayed(updateTimeThread, 1000);
                     break;
                 case HandlerManager.HOME_LONG_CLICK :
+                    // 设置壁纸
                     AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
                     alertDialog.setMessage("是否设置壁纸")
                             .setPositiveButton("设置壁纸", new DialogInterface.OnClickListener() {
@@ -555,10 +569,12 @@ public class MainActivity extends BaseActivity {
                             .show();
                     break;
                 case HandlerManager.MUSIC_PLAY_UI :
-                    btnControl.setBackground(getResources().getDrawable(R.drawable.btn_player_play_normal));
+                    // 更新暂停按钮
+                    btnControl.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.btn_player_play_normal));
                     break;
                 case HandlerManager.MUSIC_PAUSE_UI :
-                    btnControl.setBackground(getResources().getDrawable(R.drawable.btn_player_pause_normal));
+                    // 更新播放按钮
+                    btnControl.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.btn_player_pause_normal));
                     break;
                 case HandlerManager.MUSIC_INFORMATION_UPDATE:
                     Bundle bundle = (Bundle) msg.obj;
@@ -566,50 +582,60 @@ public class MainActivity extends BaseActivity {
                     String artist = bundle.getString("artist");
                     musicName = trackName;
                     musicSinger = artist;
+                    // 设置歌名和歌手
                     tvMusicName.setText(musicName);
                     tvMusicSinger.setText(artist);
+                    // 保存到数据库
                     editor = sp.edit();
                     editor.putString("musicName", musicName);
                     editor.putString("musicSinger", musicSinger);
                     editor.commit();
                     break;
                 case HandlerManager.REMOVED_APP_SUCCESS:
+                    // 卸载应用
                     try {
                         int i = -1;
                         boolean isLastALLNone = true;
+                        // 获取卸载应用的包名
                         String obj = (String) msg.obj;
                         String removePkg = obj.split(":")[1];
+                        // 获取卸载的包名位于集合哪个位置
                         for (APPBean appBean : appBeanList) {
-//                        Log.d(TAG, "removePkg:" + removePkg + ",appBean.getPackageName():" + appBean.getPackageName());
                             if (removePkg.equals(appBean.getPackageName())) {
                                 i = appBeanList.indexOf(appBean);
                                 Log.d(TAG, "removePkg:" + removePkg + ",i:" + i);
                             }
                         }
+                        // 把该位置数据设置为空
                         if (i != -1) {
                             appBeanList.set(i, new APPBean());
                         }
+                        // 遍历获取该应用是否最后一页的最后一个应用
                         for (int j = appBeanList.size() - 18; j < appBeanList.size(); j++) {
                             if(appBeanList.get(j).getPackageName().length() != 0) {
+                                // 标记非最后一个应用
                                 isLastALLNone = false;
                             }
                         }
                         Log.e(TAG, "remove:" + appBeanList.size() + ",isLastALLNone:" + isLastALLNone);
                         if (isLastALLNone) {
+                            // 是最后一页最后一个应用情况
                             int totalSize = appBeanList.size() - 18;
+                            // 把最后一页的所有空数据从集合中删除
                             for (int j = appBeanList.size() - 1; j >= totalSize; j--) {
-                                Log.e(TAG, "j: " + j);
+                                Log.d(TAG, "j: " + j);
                                 appBeanList.remove(j);
                             }
-//                            mViewPager.removeView(mPageView.get(copyPageSelectedPosition));
+                            // 删除最后一页
                             mPageView.remove(copyPageSelectedPosition);
                         }
-                        Log.e(TAG, "mPageRemove:" + mPageView.size());
-//                        onPageChangeListener.onPageSelected(copyPageSelectedPosition);
+                        // 刷新viewPager页面
                         pagerAdapter.notifyDataSetChanged();
+                        // 同步删除最后一页的底部圆点
                         if (isLastALLNone) {
                             llPoint.removeView(pointViews.get(mPageView.size()));
                         }
+                        // 更新数据库
                         appListDataSaveUtils.setDataList("appList", appBeanList);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -620,10 +646,12 @@ public class MainActivity extends BaseActivity {
                         byte[] iconBytes = null;
                         String name = null;
                         int installPosition = -1;
+                        // 获取安装的应用包名
                         String obj1 = (String) msg.obj;
                         String installPkg = obj1.split(":")[1];
                         int firstNullPosition = -1;
                         Log.e(TAG, installPkg);
+                        // 根据包名获取应用图标和应用名称
                         Map<Drawable, String> iconANDAppName = CustomUtil.getIconANDAppName(installPkg);
                         if (iconANDAppName != null) {
                             Set<Map.Entry<Drawable, String>> entries = iconANDAppName.entrySet();
@@ -635,8 +663,11 @@ public class MainActivity extends BaseActivity {
                                 iconBytes = CustomUtil.bitmap2Bytes(bitmap);
                             }
                         }
+                        // 根据包名、应用图标、应用名称，新建APP实体类
                         APPBean installAPPBean = new APPBean(name, iconBytes, installPkg);
+                        // 判断集合中是否已经存在
                         boolean isAdd = appBeanList.contains(installAPPBean);
+                        // 从集合一开始开始寻找，找出集合首个空数据的位置
                         for (int i = 0; i < appBeanList.size(); i++) {
                             if (appBeanList.get(i).getPackageName().length() == 0) {
                                 firstNullPosition = i;
@@ -644,67 +675,86 @@ public class MainActivity extends BaseActivity {
                             }
                         }
                         Log.e(TAG, "isADD:" + isAdd);
+                        // 集合中没有该数据，避免重复添加
                         if (!isAdd) {
                             if (firstNullPosition != -1) {
+                                // 集合中有空数据，设置新安装APP到该位置
                                 appBeanList.set(firstNullPosition, installAPPBean);
+                                // 获取安装的页数
                                 installPosition = (firstNullPosition / 18 + 1) + 1;
-                                Log.e(TAG, "setInstallAPP:" + installPosition);
+                                Log.d(TAG, "setInstallAPP:" + installPosition);
                             } else {
+                                // 集合中没有空数据，直接添加新数据进集合
                                 appBeanList.add(installAPPBean);
+                                // 获取安装的页数
                                 installPosition = mPageView.size();
-                                Log.e(TAG, "addInstallAPP:" + installPosition);
+                                Log.d(TAG, "addInstallAPP:" + installPosition);
                             }
                             Toast.makeText(MainActivity.this, name + " 安装成功", Toast.LENGTH_SHORT).show();
                         }
+                        // 把未满18个数的gridview，用空数据填满
                         while (appBeanList.size() % 18 != 0) {
                             appBeanList.add(new APPBean());
                         }
                         if (firstNullPosition == -1) {
                             Log.e(TAG, "appList:" + appBeanList.size());
                             totalPage = (int) Math.ceil(appBeanList.size() * 1.0 / mPageSize);
+                            // 添加新页面到viewPager
                             DragGridView gridView = (DragGridView) LayoutInflater.from(MainActivity.this).inflate(R.layout.grid_view_app_list, null);
                             MyGridViewAdapter myGridViewAdapter = new MyGridViewAdapter(MainActivity.this, appBeanList, totalPage - 1, mPageSize);
-                            Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+                            Configuration mConfiguration = MyApplication.getInstance().getContext().getResources().getConfiguration(); //获取设置的配置信息
                             int ori = mConfiguration.orientation; //获取屏幕方向
                             if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                                // 横屏，列数六个
                                 gridView.setNumColumns(6);
                             } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                                // 竖屏，列数三个
                                 gridView.setNumColumns(3);
                             }
                             gridView.setAdapter(myGridViewAdapter);
                             //每一个GridView作为一个View对象添加到ViewPager集合中
                             mPageView.add(gridView);
                         }
+                        // 刷新viewPager页面
                         pagerAdapter.notifyDataSetChanged();
+                        // 获取底部圆点
                         getPointData();
+                        // 更新数据库
                         appListDataSaveUtils.setDataList("appList", appBeanList);
+                        // 设置当前页面
                         mViewPager.setCurrentItem(installPosition);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
                 case HandlerManager.CLEAR_RECYCLER_ANIMATION:
-//                    scaleAnimation = new ScaleAnimation(0.8f, 1.0f, 0.8f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-//                    scaleAnimation.setDuration(100);//设置动画持续时间
-//                    scaleAnimation.setFillAfter(true);
-//                    mViewPager.startAnimation(scaleAnimation);
+                    // 还原拖动时产生的动画和变化
+                    // 还原外边距
                     RelativeLayout.LayoutParams marginLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                     marginLayoutParams.setMargins(0, 0, 0, 0);
                     mViewPager.setLayoutParams(marginLayoutParams);
                     mViewPager.setClipChildren(false);
+                    // 还原透明度
                     mViewPager.setAlpha(1.0f);
                     break;
                 case HandlerManager.SKIP_NEXT_PAGE:
+                    // 手指移动到边缘，跳转下一页
                     if (copyPageSelectedPosition < mPageView.size() - 1) {
-                        mPageView.get(copyPageSelectedPosition + 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
+                        // 跳转时，还原填充的背景
+                        mPageView.get(copyPageSelectedPosition + 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
                     }
+                    // 跳转下一页
                     mViewPager.setCurrentItem(copyPageSelectedPosition + 1, true);
+                    // 清除runnable，重新使用
                     handler.removeCallbacks(nextRunnable);
                     break;
                 case HandlerManager.SKIP_PREVIOUS_PAGE:
                     if (copyPageSelectedPosition > 2) {
-                        mPageView.get(copyPageSelectedPosition - 1).setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
+                        // 跳转时，还原填充的背景
+                        mPageView.get(copyPageSelectedPosition - 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
+                        // 跳转上一页
                         mViewPager.setCurrentItem(copyPageSelectedPosition - 1, true);
+                        // 清除runnable，重新使用
                         handler.removeCallbacks(previousRunnable);
                     }
                     break;
@@ -715,6 +765,7 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    // 设置时间，日期的runnable
     Runnable updateTimeThread = new Runnable() {
 
         public void run() {
@@ -729,6 +780,7 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    // 设置壁纸的runnable
     Runnable updateWallpaper = new Runnable() {
 
         public void run() {
@@ -736,6 +788,7 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    // 还原动画的runnable
     Runnable clearAnimationRunnable = new Runnable() {
 
         public void run() {
@@ -743,6 +796,7 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    // 跳转下一页的runnable
     Runnable nextRunnable = new Runnable() {
         @Override
         public void run() {
@@ -750,6 +804,7 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    // 跳转上一页的runnable
     Runnable previousRunnable = new Runnable() {
         @Override
         public void run() {
@@ -757,18 +812,21 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    // 屏幕翻转时，调用
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         Log.d(TAG, "onSaveInstanceState");
+        // 把日期、时间、歌名、歌手信息保存起来
         outState.putString("musicName", musicName);
         outState.putString("musicSinger", musicSinger);
         outState.putString("date", date);
         outState.putString("calendar", calendar);
         outState.putString("week", week);
-//        outState.putParcelable("appList", appBeanList);
     }
 
+    // 暂不用，无法适配横竖屏UI
+    @Deprecated
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -790,26 +848,24 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        //隐藏底部导航栏
-//        View decorView = getWindow().getDecorView();
-//        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-//        decorView.setSystemUiVisibility(uiOptions);
+        // 隐藏底部导航栏
         CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
+        // 运行后台，用于监听应用安装卸载和音乐变化
         startService(new Intent(this, MyService.class));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            startService(new Intent(this, MusicNotificationListenerService.class));
-        }
+        // 设置全局handler
         HandlerManager.putHandler(handler);
+        // 使用数据库获取APP信息
         sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
         appListDataSaveUtils = new APPListDataSaveUtils(this, "app_list_data");
         appList = appListDataSaveUtils.getDataList("appList");
+        // 获取数据不为空，发送handler
         if (appList.size() != 0) {
             handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
-            Log.e(TAG, appList.toString());
+            Log.d(TAG, appList.toString());
         }
         initData();
+        // 旋转屏幕时，使用旋转保存的数据重新设置
         if (savedInstanceState != null) {
             String musicNameSave = savedInstanceState.getString("musicName");
             String musicSingerSave = savedInstanceState.getString("musicSinger");
@@ -827,11 +883,11 @@ public class MainActivity extends BaseActivity {
             tvCalendar.setText(calendarSave);
             tvWeek.setText(weekSave);
         }
+        // 使用数据库，设置歌名和歌手
         spMusicName = sp.getString("musicName", "暂无歌名");
         tvMusicName.setText(spMusicName);
         spMusicSinger = sp.getString("musicSinger", "暂无歌手");
         tvMusicSinger.setText(spMusicSinger);
-        setBackground();
 
     }
 
@@ -860,7 +916,7 @@ public class MainActivity extends BaseActivity {
         tvTime = view1.findViewById(R.id.tv_time);
         tvCalendar = view1.findViewById(R.id.tv_calendar);
         tvWeek = view1.findViewById(R.id.tv_week);
-        handler.sendEmptyMessageAtTime(HandlerManager.GET_SYSTEM_TIME, 1000);
+        handler.sendEmptyMessageAtTime(HandlerManager.GET_SYSTEM_TIME, 100);
         ivPicture = view1.findViewById(R.id.iv_picture);
         etSource = view1.findViewById(R.id.et_source);
         rlMusic = view1.findViewById(R.id.rl_music);
@@ -880,10 +936,12 @@ public class MainActivity extends BaseActivity {
         ibOffice = view2.findViewById(R.id.ib_office);
         initClickListener();
 
+        // 设置个性化字体
         AssetManager mgr = getAssets();
         Typeface tf = Typeface.createFromAsset(mgr, "fonts/Gilroy-Thin-13.otf");
         tvTime.setTypeface(tf);
 
+        // 使用子线程获取APP列表
         new Thread() {
             @Override
             public void run() {
@@ -895,11 +953,6 @@ public class MainActivity extends BaseActivity {
         mPageView = new ArrayList<>();
         mPageView.add(view1);
         mPageView.add(view2);
-
-        //app gridview
-//        initGridView();
-
-//        mPageView.add(view3);
 
         pagerAdapter = new PagerAdapter() {
 
@@ -918,7 +971,7 @@ public class MainActivity extends BaseActivity {
             //使从ViewGroup移除当前View
             @Override
             public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
-//                Log.e(TAG, "destroyItem:" + position);
+                // 使用object，不使用mPageView.get(position)，避免出现越界
                 container.removeView((View) object);
             }
 
@@ -930,30 +983,31 @@ public class MainActivity extends BaseActivity {
                 return mPageView.get(position);
             }
 
+            // 定义该方法，避免无法页面刷新
             @Override
             public int getItemPosition(Object object) {
                 return POSITION_NONE;
             }
         };
 
+        // 设置页面间的外边距
         mViewPager.setPageMargin(15);
-        mViewPager.setOffscreenPageLimit(3);
+        // 设置页面缓冲
+        mViewPager.setOffscreenPageLimit(10);
         mViewPager.setAdapter(pagerAdapter);
+        // 添加页面滑动监听
         mViewPager.addOnPageChangeListener(onPageChangeListener);
 //        mViewPager.setPageTransformer(true, new MyGalleyPageTransformer());
+        // 设置默认第一页
         onPageChangeListener.onPageSelected(0);
     }
 
-//    private void initGridView() {
-//
-//    }
-
     @SuppressLint("ClickableViewAccessibility")
     private void initClickListener() {
-        //View1 listener
+        // View1 listener
+        // 相册跳转
         ivPicture.setOnClickListener(view -> {
             Log.e("ivPicture=====>", "onClick");
-//                onSetWallpaper();
             try {
                 Intent intent = new Intent();
                 ComponentName componentNameGallery = new ComponentName("com.android.gallery3d", "com.android.gallery3d.app.GalleryActivity");
@@ -965,7 +1019,7 @@ public class MainActivity extends BaseActivity {
                 Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
             }
         });
-
+        // 浏览器搜索跳转
         etSource.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
@@ -986,7 +1040,7 @@ public class MainActivity extends BaseActivity {
                 return true;
             }
         });
-
+        // 相册跳转
         btnPicture.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1013,6 +1067,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
+        // 音乐跳转
         rlMusic.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1037,6 +1092,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
+        // 投屏跳转
         btnProjectionScreen.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1061,6 +1117,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
+        // 时钟跳转
         btnAlarm.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1085,6 +1142,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
+        // 浏览器跳转
         btnBrowser.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1109,7 +1167,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
-
+        // 音乐播放暂停控制
         btnControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -1117,6 +1175,7 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void run() {
                         super.run();
+                        // 通过发送键值实现
                         if (audioManager.isMusicActive()) {
                             Instrumentation mInst = new Instrumentation();
                             mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PAUSE);
@@ -1132,7 +1191,7 @@ public class MainActivity extends BaseActivity {
                 }.start();
             }
         });
-
+        // 音乐上一首
         btnPrevious.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -1148,7 +1207,7 @@ public class MainActivity extends BaseActivity {
                 }.start();
             }
         });
-
+        // 音乐下一首
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -1165,10 +1224,8 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-//        ivMusic.setStrokeWidth(20);
-//        ivMusic.setStrokeColor(Color.BLACK);
-
         //View2 listener
+        // 爱奇艺跳转
         ibVideo.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1193,7 +1250,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
-
+        // 音乐跳转
         ibMusic.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1218,7 +1275,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
-
+        // 直播抖音跳转
         ibTiktok.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1243,7 +1300,7 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
-
+        // 办公跳转
         ibOffice.setOnTouchListener((view, motionEvent) -> {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_btn_small);
@@ -1268,28 +1325,6 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
-
-    }
-
-    public static class MyTranslationTransformer implements ViewPager.PageTransformer {
-
-        @Override
-        public void transformPage(@NonNull View page, float position) {
-            Log.e("111111111", position + "");
-            if (position < 0 && position >= -1) {
-                page.setScaleX(1.0f);
-                page.setScaleY(1.0f);
-            } else if (position == 0) {
-                page.setScaleX(1.0f);
-                page.setScaleY(1.0f);
-            } else if (position <= 1 && position > 0) {
-                page.setScaleX(1.0f);
-                page.setScaleY(1.0f);
-            } else {
-                page.setScaleX(1.0f);
-                page.setScaleY(1.0f);
-            }
-        }
     }
 
     public static class MyGalleyPageTransformer implements ViewPager.PageTransformer {
@@ -1346,7 +1381,7 @@ public class MainActivity extends BaseActivity {
          * @see {@link View#setCameraDistance(float)}
          */
         private float getCameraDistance() {
-            DisplayMetrics displayMetrics = MyApplication.getContext().getResources().getDisplayMetrics();
+            DisplayMetrics displayMetrics = MyApplication.getInstance().getContext().getResources().getDisplayMetrics();
             float density = displayMetrics.density;
             int widthPixels = displayMetrics.widthPixels;
             int heightPixels = displayMetrics.heightPixels;
@@ -1357,14 +1392,16 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        etSource.setText("");
 //        registerForContextMenu(rvAPPList);//为RecyclerviewView注册上下文菜单
-//        receive();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        // 设置内容为空
+        etSource.setText("");
+        // 设置主屏幕背景
+        setBackground();
         if (audioManager.isMusicActive()) {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
             ivMusic.startAnimation(animation);//開始动画
@@ -1379,8 +1416,6 @@ public class MainActivity extends BaseActivity {
      */
     private void getPointData() {
         pointViews = new ArrayList<>();
-        //设置图片
-        ImageView imageView;
         View view;
         if (llPoint != null) {
             llPoint.removeAllViews();
@@ -1416,18 +1451,13 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // 禁止返回
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             return true;
         }
         return super.onKeyDown(keyCode, event);
     }
 
-    /**
-     * 使editText点击外部时候失去焦点
-     *
-     * @param ev 触屏事件
-     * @return 事件是否被消费
-     */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
@@ -1437,23 +1467,18 @@ public class MainActivity extends BaseActivity {
             parentDownX = rawX;
             parentDownY = rawY;
 
+            // 获取当前聚焦
             View v = getCurrentFocus();
 
-//            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY) && appBeanList.get(CustomUtil.findItem(rvAPPList, rawX, rawY)).getPackageName().length() == 0) {
-//                return true;
-//            }
-
-            Log.e(TAG, "rawX " + rawX + "rawY " + rawY);
-//            if (CustomUtil.isTouchPointInView(rvAPPList, rawX, rawY)) {
-//                rvAPPList.removeLongClick();
-//            }
-
+            Log.e(TAG, "rawX：" + rawX + "rawY：" + rawY);
             Log.e(TAG, "copyPageSelectedPosition:dispatch:" + copyPageSelectedPosition);
+            // 获取是否点击在gridview
             if (copyPageSelectedPosition > 1) {
                 GridView gridView = (GridView) mPageView.get(copyPageSelectedPosition);
                 isGridView = CustomUtil.isTouchPointInView(gridView, rawX, rawY);
                 Log.e(TAG, "gridview:" + isGridView);
             }
+            // 当没点击在控件上时再触发设置壁纸
             if (!(CustomUtil.isTouchPointInView(etSource, rawX, rawY) || CustomUtil.isTouchPointInView(rlMusic, rawX, rawY)
                     || CustomUtil.isTouchPointInView(tvTime, rawX, rawY)
                     || CustomUtil.isTouchPointInView(tvCalendar, rawX, rawY)
@@ -1493,25 +1518,17 @@ public class MainActivity extends BaseActivity {
 
             if (disX == 0 && disY == 0) {
             } else {
+                // 移动时，取消发送设置壁纸runnable
                 handler.removeCallbacks(updateWallpaper);
-                CustomUtil.hideBottomUIMenu(this);
             }
 
         } else if (ev.getAction() == MotionEvent.ACTION_UP) {
             Log.e(TAG, "ACTION_UP");
+            // 抬起时，取消发送设置壁纸runnable
             handler.removeCallbacks(updateWallpaper);
-//            if (isCreateLastView) {
-//                int totalSize = appBeanList.size() - 18;
-//                for (int j = appBeanList.size() - 1; j >= totalSize; j--) {
-//                    Log.e(TAG, "j: " + j);
-//                    appBeanList.remove(j);
-//                }
-//                mPageView.remove(mPageView.size() - 1);
-//                pagerAdapter.notifyDataSetChanged();
-//                isCreateLastView = false;
-//            }
         } else if (ev.getAction() == MotionEvent.ACTION_CANCEL) {
             Log.e(TAG, "ACTION_CANCEL");
+            // 取消时，取消发送设置壁纸runnable
             handler.removeCallbacks(updateWallpaper);
         }
         // 必不可少，否则所有的组件都不会有TouchEvent了
@@ -1522,9 +1539,7 @@ public class MainActivity extends BaseActivity {
         PackageManager pm = getPackageManager();
         //获取到所有安装了的应用程序的信息，包括那些卸载了的，但没有清除数据的应用程序
         List<PackageInfo> list2 = pm.getInstalledPackages(GET_URI_PERMISSION_PATTERNS);
-
         int j = 0;
-
         for (PackageInfo packageInfo : list2) {
 
             if (packageInfo.versionName == null) {
@@ -1632,6 +1647,7 @@ public class MainActivity extends BaseActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
+                // 设置壁纸成功时，回调更新背景
                 case 1001 :
                     setBackground();
                     break;
@@ -1643,9 +1659,7 @@ public class MainActivity extends BaseActivity {
     @TargetApi(Build.VERSION_CODES.N)
     private Bitmap getLockWallpaper() {
         WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);//获取WallpaperManager实例
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
-        }
+        ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         ParcelFileDescriptor mParcelFileDescriptor = wallpaperManager.getWallpaperFile(WallpaperManager.FLAG_SYSTEM);//获取桌面壁纸
         FileDescriptor fileDescriptor = mParcelFileDescriptor.getFileDescriptor();
         Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);//获取Bitmap类型返回值
@@ -1670,13 +1684,12 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStop() {
         super.onStop();
-//        unregisterReceiver(myReceiver);
-//        unregisterReceiver(myInstalledReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // 清空集合
         appBeanList.clear();
     }
 }

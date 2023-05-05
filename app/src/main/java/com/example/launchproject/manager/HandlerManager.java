@@ -2,6 +2,7 @@ package com.example.launchproject.manager;
 
 import android.os.Handler;
 
+// 全局handler，使用线程池进行保存和获取
 public class HandlerManager {
     public static final int GET_SYSTEM_TIME = 0;
     public static final int GET_APP_LIST = 1;

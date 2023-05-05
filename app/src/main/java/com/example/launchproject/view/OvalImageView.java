@@ -19,7 +19,6 @@ import androidx.appcompat.widget.AppCompatImageView;
 /**
  * 圆形的ImageView
  */
- 
 public class OvalImageView extends AppCompatImageView {
     private Paint mPaintBitmap = new Paint(Paint.ANTI_ALIAS_FLAG);//抗锯齿
     private Bitmap mRawBitmap;

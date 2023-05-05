@@ -40,7 +40,7 @@ public class RecyclerViewAPPAdapter extends RecyclerView.Adapter<RecyclerViewAPP
     public APPViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext).inflate(R.layout.item_list_view_app, parent, false);
         APPViewHolder appViewHolder = new APPViewHolder(view);
-        Configuration mConfiguration = MyApplication.getContext().getResources().getConfiguration(); //获取设置的配置信息
+        Configuration mConfiguration = MyApplication.getInstance().getContext().getResources().getConfiguration(); //获取设置的配置信息
         int ori = mConfiguration.orientation; //获取屏幕方向
         if (ori == mConfiguration.ORIENTATION_LANDSCAPE) {
             //横屏
@@ -59,7 +59,7 @@ public class RecyclerViewAPPAdapter extends RecyclerView.Adapter<RecyclerViewAPP
     @Override
     public void onBindViewHolder(@NonNull APPViewHolder holder, @SuppressLint("RecyclerView") int position) {
         if (isShowFrame) {
-            holder.appIcon.setBackground(MyApplication.getContext().getResources().getDrawable(R.drawable.selector_iv_bg));
+            holder.appIcon.setBackground(MyApplication.getInstance().getContext().getResources().getDrawable(R.drawable.selector_iv_bg));
         }
         holder.appIcon.setImageBitmap(mAPPList.get(position).getAppIcon());
 //        holder.appIcon.setBackground(mAPPList.get(position).getAppIconDrawable());

@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+/** 定义基本类，所有新建activity继承此类 */
 @SuppressLint("LongLogTag")
 public class BaseActivity extends Activity {
 

@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.example.launchproject.manager.HandlerManager;
 
+// 应用安装卸载广播接收者
 public class MyInstalledReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {

@@ -14,6 +14,10 @@ import com.example.launchproject.manager.HandlerManager;
 import com.example.launchproject.recevier.MusicReceiver;
 import com.example.launchproject.recevier.MyInstalledReceiver;
 
+/** *
+ * 后台监听广播
+ * 应用安装和卸载、QQ音乐广播
+ */
 @SuppressLint("LongLogTag")
 public class MyService extends Service {
 

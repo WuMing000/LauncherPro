@@ -1,5 +1,6 @@
 package com.example.launchproject.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -8,12 +9,17 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Insets;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowManager;
+import android.view.WindowMetrics;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
@@ -27,8 +33,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import androidx.recyclerview.widget.RecyclerView;
+import kotlin.Deprecated;
 
 public class CustomUtil {
 
@@ -66,18 +74,7 @@ public class CustomUtil {
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-//    @SuppressLint("Range")
-//    public static boolean isShowWallpaper(View view, int x, int y) {
-//        int[] location = new int[] {2};
-//        view.getLocationOnScreen(location);
-//        int left = location[0];
-//        int top = location[1];
-//        int right = left + view.getMeasuredWidth();
-//        int bottom = top + view.getMeasuredHeight();
-//
-//        return y in top..bottom && x >= left && x <= right
-//    }
-
+    /** 判断触摸的位置是否在控件上 */
     public static boolean isTouchPointInView(@NotNull View view, int x, int y) {
         int[] location = new int[2];
         view.getLocationOnScreen(location);
@@ -93,6 +90,7 @@ public class CustomUtil {
         return false;
     }
 
+    /** 根据触摸的位置获取recyclerview的position */
     public static int findItem(RecyclerView recyclerView, int x, int y) {
         View childViewUnder = recyclerView.findChildViewUnder(x, y);
         if (childViewUnder != null) {
@@ -102,12 +100,12 @@ public class CustomUtil {
             }
         }
         return -1;
-
     }
 
+    /** 根据包名获取应用图标和名称 */
     public static Map<Drawable, String> getIconANDAppName(String packageName) {
         Map<Drawable, String > map = new HashMap<Drawable, String>();
-        PackageManager pm = MyApplication.getContext().getPackageManager();
+        PackageManager pm = MyApplication.getInstance().getContext().getPackageManager();
         try {
             ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
 
@@ -140,6 +138,7 @@ public class CustomUtil {
         return false;
     }
 
+    /** 执行命令 */
     public static void runCommand() {
         try {
             Process process = Runtime.getRuntime().exec("pm list package -3");
@@ -158,9 +157,7 @@ public class CustomUtil {
      * */
     public static boolean NotActiveApp(Context context, String packageName){
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-        if (intent == null)
-            return true;
-        return false;
+        return intent == null;
     }
 
     /**
@@ -173,7 +170,7 @@ public class CustomUtil {
 //        System.out.println("Drawable转Bitmap");
         Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
         Bitmap bitmap = Bitmap.createBitmap(w,h,config);
-        //注意，下面三行代码要用到，否在在View或者surfaceView里的canvas.drawBitmap会看不到图
+        //注意，下面三行代码要用到，否则在View或者surfaceView里的canvas.drawBitmap会看不到图
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, w, h);
         drawable.draw(canvas);
@@ -191,6 +188,7 @@ public class CustomUtil {
         return baos.toByteArray();
     }
 
+    /** 隐藏系统底部导航栏 */
     public static void hideBottomUIMenu(Activity activity) {
         int flags;
         int curApiVersion = android.os.Build.VERSION.SDK_INT;
@@ -211,6 +209,41 @@ public class CustomUtil {
 
         // must be executed in main thread :)
         activity.getWindow().getDecorView().setSystemUiVisibility(flags);
+    }
+
+    /**
+     * 获取状态栏的高度
+     *
+     * @param context
+     * @return
+     */
+    @SuppressLint("PrivateApi")
+    public static int getStatusHeight(Context context) {
+        int statusHeight;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+            WindowInsets windowInsets = windowMetrics.getWindowInsets();
+            Insets insets = windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() | WindowInsets.Type.displayCutout());
+            return insets.top;
+        } else {
+            Rect localRect = new Rect();
+            ((Activity) context).getWindow().getDecorView().getWindowVisibleDisplayFrame(localRect);
+            statusHeight = localRect.top;
+            if (0 == statusHeight) {
+                Class<?> localClass;
+                try {
+                    localClass = Class.forName("com.android.internal.R$dimen");
+                    Object localObject = localClass.newInstance();
+                    int height = Integer.parseInt(Objects.requireNonNull(localClass.getField("status_bar_height").get(localObject)).toString());
+                    statusHeight = context.getResources().getDimensionPixelSize(height);
+                    return statusHeight;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return -1;
     }
 
 }

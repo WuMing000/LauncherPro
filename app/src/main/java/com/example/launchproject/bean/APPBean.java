@@ -6,6 +6,9 @@ import android.graphics.drawable.Drawable;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * 保存APP图标、包名、应用名称的实体类
+ * */
 public class APPBean {
 
     private String appName;

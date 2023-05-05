@@ -5,15 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.ImageView;
 import android.widget.TextView;
- 
+
+// QQ音乐广播接收者
 public class MusicReceiver extends BroadcastReceiver {
  
-    private ImageView mCover;
-    private TextView mTitle ;
-    private TextView singer;
-    private TextView malbum;
- 
-    private DataCallBack mDataCallBack;
+    private final DataCallBack mDataCallBack;
  
     public MusicReceiver(DataCallBack callBack) {
         mDataCallBack = callBack;
@@ -22,13 +18,10 @@ public class MusicReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String albumName = intent.getStringExtra("album");
- 
         String artist = intent.getStringExtra("artist");
- 
         String trackName = intent.getStringExtra("track");
- 
-        String xiaMiName =intent.getStringExtra("widget_song_name");
- 
+        String xiaMiName = intent.getStringExtra("widget_song_name");
+
         System.out.println("最新的结果是！: " + albumName + " artist: "
                 + artist + " Track:" + trackName+" xiaMiName:"+xiaMiName);
         if(albumName != null || artist != null || trackName != null) {

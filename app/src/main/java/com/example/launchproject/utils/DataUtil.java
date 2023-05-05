@@ -3,12 +3,16 @@ package com.example.launchproject.utils;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+/**
+ * 获取时间日期的工具类
+ * */
 public class DataUtil {
     private static String mYear;
     private static String mMonth;
     private static String mDay;
     private static String mWay;
-    
+
+    // 获取年月日
     public static String StringCalendar(){
         final Calendar c = Calendar.getInstance();
         c.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
@@ -34,6 +38,7 @@ public class DataUtil {
         return mYear + "年" + mMonth + "月" + mDay + "日";
     }
 
+    // 计算星期
     public static String StringWeek(){
         final Calendar c = Calendar.getInstance();
         c.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
