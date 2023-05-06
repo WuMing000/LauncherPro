@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.os.Build;
 
 import com.example.launchproject.service.GuardService;
+import com.example.launchproject.service.MusicNotificationListenerService;
 import com.example.launchproject.service.MyService;
+import com.example.launchproject.utils.CustomUtil;
 
 @SuppressLint("StaticFieldLeak")
 public class MyApplication extends Application {
@@ -24,6 +26,9 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            startService(new Intent(this, MusicNotificationListenerService.class));
+//        }
         // 运行后台，用于监听应用安装卸载和音乐变化
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(new Intent(this, MyService.class));

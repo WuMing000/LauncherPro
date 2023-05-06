@@ -1,239 +1,239 @@
 package com.example.launchproject.service;
 
-import android.content.Intent;
-import android.media.AudioManager;
-import android.media.RemoteController;
-import android.os.Binder;
-import android.os.Build;
-import android.os.IBinder;
-import android.os.SystemClock;
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.service.notification.NotificationListenerService;
-import android.service.notification.StatusBarNotification;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
+import android.media.MediaMetadata;
+import android.media.MediaMetadataRetriever;
+import android.media.RemoteController;
+import android.media.session.MediaController;
+import android.media.session.MediaSessionManager;
+import android.media.session.PlaybackState;
+import android.os.Build;
 import android.util.Log;
-import android.view.KeyEvent;
 
+import com.example.launchproject.R;
+import com.example.launchproject.activity.MainActivity;
+import com.example.launchproject.utils.CustomUtil;
+
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
+
+import java.util.List;
+
+import static androidx.core.app.NotificationCompat.PRIORITY_HIGH;
+import static androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC;
 
 @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+@SuppressLint("OverrideAbstract")
 public class MusicNotificationListenerService extends NotificationListenerService implements RemoteController.OnClientUpdateListener {
-    public RemoteController remoteController;
 
-    private RemoteController.OnClientUpdateListener mExternalClientUpdateListener;
-
-    private IBinder mBinder = new RCBinder();
+    public MusicNotificationListenerService() {
+    }
 
     @Override
-
     public void onCreate() {
-
-        registerRemoteController();
-
+        super.onCreate();
+        Log.i("MY_TAG", "MusicNotificationListenerService onCreate");
+        initNotify("MediaController", "MusicNotificationListenerService");
     }
 
-
     @Override
-
-    public IBinder onBind(Intent intent) {
-
-        if (intent.getAction().equals("com.example.wangzhaopeng.music.BIND_RC_CONTROL_SERVICE")) {//这里要根据实际进行替换
-
-            return mBinder;
-
-        } else {
-
-            return super.onBind(intent);
-
+    public int onStartCommand(final Intent intent, final int flags, final int startId) {
+        Log.i("MY_TAG", "MusicNotificationListenerService onStartCommand");
+        if (CustomUtil.isNotificationListenerEnabled(this)) {//开启通知使用权后再设置,否则会报权限错误
+            initMediaSessionManager();
+            registerRemoteController();
         }
-
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i("MY_TAG", "MusicNotificationListenerService onDestroy");
+    }
 
-    public void onNotificationPosted(StatusBarNotification sbn) {
-
-        // Log.e(TAG, "onNotificationPosted...");
-
-        if (sbn.getPackageName().contains("music"))
-        {
-            Log.e("TAG", "音乐软件正在播放...");
-            Log.e("TAG", sbn.getPackageName());
-            Log.e("TAG", sbn.getNotification().toString());
+    //////////////////////////////////MediaController获取音乐信息/////////////////////////////////////
+    private List<MediaController> mActiveSessions;
+    private MediaController.Callback mSessionCallback;
+    private void initMediaSessionManager() {
+        MediaSessionManager mediaSessionManager = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mediaSessionManager = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
         }
-        Log.e("正在播放", sbn.getPackageName());
+        ComponentName localComponentName = new ComponentName(this, MusicNotificationListenerService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mediaSessionManager.addOnActiveSessionsChangedListener(new MediaSessionManager.OnActiveSessionsChangedListener() {
+                @Override
+                public void onActiveSessionsChanged(@Nullable final List<MediaController> controllers) {
+                    for (MediaController mediaController : controllers) {
+                        String packageName = mediaController.getPackageName();
+                        Log.e("MY_TAG", "MyApplication onActiveSessionsChanged mediaController.getPackageName: " + packageName);
+                        synchronized (this) {
+                            mActiveSessions = controllers;
+                            registerSessionCallbacks();
+                        }
+                    }
+                }
+            }, localComponentName);
+        }
+        synchronized (this) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mActiveSessions = mediaSessionManager.getActiveSessions(localComponentName);
+            }
+            registerSessionCallbacks();
+        }
     }
 
+    private void registerSessionCallbacks() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            for (MediaController controller : mActiveSessions) {
+                if (mSessionCallback == null) {
+                    mSessionCallback = new MediaController.Callback() {
+                        @Override
+                        public void onMetadataChanged(MediaMetadata metadata) {
+                            if (metadata != null) {
+                                String trackName =
+                                        metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
+                                String artistName =
+                                        metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
+                                String albumArtistName =
+                                        metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST);
+                                String albumName =
+                                        metadata.getString(MediaMetadata.METADATA_KEY_ALBUM);
+                                Log.i("MY_TAG", "---------------------------------");
+                                Log.i("MY_TAG", "| trackName: " + trackName);
+                                Log.i("MY_TAG", "| artistName: " + artistName);
+                                Log.i("MY_TAG", "| albumArtistName: " + albumArtistName);
+                                Log.i("MY_TAG", "| albumName: " + albumName);
+                                Log.i("MY_TAG", "---------------------------------");
+                            }
+                        }
 
-
-    @Override
-
-    public void onNotificationRemoved(StatusBarNotification sbn) {
-
-        Log.e("TAG", "onNotificationRemoved...");
-
+                        @Override
+                        public void onPlaybackStateChanged(PlaybackState state) {
+                            if(state != null){
+                                boolean isPlaying = state.getState() == PlaybackState.STATE_PLAYING;
+                                Log.e("MY_TAG", "MediaController.Callback onPlaybackStateChanged isPlaying: " + isPlaying);
+                            }
+                        }
+                    };
+                }
+                controller.registerCallback(mSessionCallback);
+            }
+        }
     }
 
+    //////////////////////////////////RemoteController获取音乐信息/////////////////////////////////////
+    public RemoteController remoteController;
     public void registerRemoteController() {
-
         remoteController = new RemoteController(this, this);
-
         boolean registered;
-
         try {
-
             registered = ((AudioManager) getSystemService(AUDIO_SERVICE)).registerRemoteController(remoteController);
-
         } catch (NullPointerException e) {
-
             registered = false;
-
         }
-
         if (registered) {
-
             try {
-
-                remoteController.setArtworkConfiguration(
-
-                        100,
-
-                        100);
-
+                remoteController.setArtworkConfiguration(100,100);
                 remoteController.setSynchronizationMode(RemoteController.POSITION_SYNCHRONIZATION_CHECK);
-
             } catch (IllegalArgumentException e) {
-
                 e.printStackTrace();
-
             }
-
         }
-
-    }
-
-    public void setClientUpdateListener(RemoteController.OnClientUpdateListener listener) {
-
-        mExternalClientUpdateListener = listener;
-
     }
 
     @Override
-
-    public void onClientChange(boolean clearing) {
-
-        if (mExternalClientUpdateListener != null) {
-
-            mExternalClientUpdateListener.onClientChange(clearing);
-
-        }
-
+    public void onClientChange(final boolean clearing) {
+        Log.d("MY_TAG", "clearing == " + clearing);
     }
 
     @Override
-
-    public void onClientPlaybackStateUpdate(int state) {
-
-        if (mExternalClientUpdateListener != null) {
-
-            mExternalClientUpdateListener.onClientPlaybackStateUpdate(state);
-
-        }
-
+    public void onClientPlaybackStateUpdate(final int state) {
+        Log.d("MY_TAG", "state1 == " + state);
     }
 
     @Override
-
-    public void onClientPlaybackStateUpdate(int state, long stateChangeTimeMs, long currentPosMs, float speed) {
-
-        if (mExternalClientUpdateListener != null) {
-
-            mExternalClientUpdateListener.onClientPlaybackStateUpdate(state, stateChangeTimeMs, currentPosMs, speed);
-
-        }
-
+    public void onClientPlaybackStateUpdate(final int state, final long stateChangeTimeMs, final long currentPosMs, final float speed) {
+        Log.i("MY_TAG", "state2 == " + state + "stateChangeTimeMs == " + stateChangeTimeMs + "currentPosMs == " + currentPosMs + "speed == " + speed);
     }
 
     @Override
-
-    public void onClientTransportControlUpdate(int transportControlFlags) {
-
-        if (mExternalClientUpdateListener != null) {
-
-            mExternalClientUpdateListener.onClientTransportControlUpdate(transportControlFlags);
-
-        }
-
+    public void onClientTransportControlUpdate(final int transportControlFlags) {
+        Log.d("MY_TAG", "transportControlFlags == " + transportControlFlags);
     }
 
     @Override
-
-    public void onClientMetadataUpdate(RemoteController.MetadataEditor metadataEditor) {
-
-        if (mExternalClientUpdateListener != null) {
-
-            mExternalClientUpdateListener.onClientMetadataUpdate(metadataEditor);
-
-        }
-
+    public void onClientMetadataUpdate(final RemoteController.MetadataEditor metadataEditor) {
+        String artist = metadataEditor.
+                getString(MediaMetadataRetriever.METADATA_KEY_ARTIST, "null");
+        String album = metadataEditor.
+                getString(MediaMetadataRetriever.METADATA_KEY_ALBUM, "null");
+        String title = metadataEditor.
+                getString(MediaMetadataRetriever.METADATA_KEY_TITLE, "null");
+        Long duration = metadataEditor.
+                getLong(MediaMetadataRetriever.METADATA_KEY_DURATION, -1);
+        Bitmap defaultCover = BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_compass);
+        Bitmap bitmap = metadataEditor.
+                getBitmap(RemoteController.MetadataEditor.BITMAP_KEY_ARTWORK, defaultCover);
+        Log.e("MY_TAG", "artist:" + artist + ", album:" + album + ", title:" + title + ", duration:" + duration);
     }
 
-    public boolean sendMusicKeyEvent(int keyCode) {
+    /**
+     * 添加一个常驻通知
+     * @param title
+     * @param context
+     */
+    public void initNotify(String title, String context) {
+        String CHANNEL_ONE_ID = "1000";
 
-        if (remoteController != null) {
-
-            KeyEvent keyEvent = new KeyEvent(KeyEvent.ACTION_DOWN, keyCode);
-
-            boolean down = remoteController.sendMediaKeyEvent(keyEvent);
-
-            keyEvent = new KeyEvent(KeyEvent.ACTION_UP, keyCode);
-
-            boolean up = remoteController.sendMediaKeyEvent(keyEvent);
-
-            return down && up;
-
-        } else {
-
-            long eventTime = SystemClock.uptimeMillis();
-
-            KeyEvent key = new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, keyCode, 0);
-
-            dispatchMediaKeyToAudioService(key);
-
-            dispatchMediaKeyToAudioService(KeyEvent.changeAction(key, KeyEvent.ACTION_UP));
-
+        Drawable drawable = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            drawable = getResources().getDrawable(R.mipmap.ic_launcher, null);
         }
+        drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
+        //Bitmap bitmapIcon = BitmapUtils.getBitmapFromDrawable(drawable);
 
-        return false;
+        Intent nfIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, nfIntent, 0);
+        @SuppressLint("WrongConstant") NotificationCompat.Builder builder = new NotificationCompat.Builder(this.getApplicationContext(), CHANNEL_ONE_ID)
+                .setContentIntent(pendingIntent) // 设置PendingIntent
+                .setSmallIcon(R.mipmap.ic_launcher) // 设置状态栏内的小图标
+                //.setLargeIcon(bitmapIcon)// 设置大图标
+                .setContentTitle(title)
+                .setContentText(context) // 设置上下文内容
+                .setWhen(System.currentTimeMillis())// 设置该通知发生的时间
+                .setVisibility(VISIBILITY_PUBLIC)// 锁屏显示全部通知
+                //.setDefaults(Notification.DEFAULT_ALL)// //使用默认的声音、振动、闪光
+                .setPriority(PRIORITY_HIGH);// 通知的优先级
 
-    }
-
-    private void dispatchMediaKeyToAudioService(KeyEvent event) {
-
-        AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-
-        if (audioManager != null) {
-
-            try {
-
-                audioManager.dispatchMediaKeyEvent(event);
-
-            } catch (Exception e) {
-
-                e.printStackTrace();
-
-            }
-
+        //----------------  新增代码 ------------------------
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            //修改安卓8.1以上系统报错
+            NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ONE_ID, "app_service_notify", NotificationManager.IMPORTANCE_MIN);
+            notificationChannel.enableLights(false);//如果使用中的设备支持通知灯，则说明此通知通道是否应显示灯
+            notificationChannel.setShowBadge(false);//是否显示角标
+            notificationChannel.enableVibration(false);//是否震动
+            notificationChannel.setLockscreenVisibility(VISIBILITY_PUBLIC);//锁屏显示全部通知
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            manager.createNotificationChannel(notificationChannel);
+            builder.setChannelId(CHANNEL_ONE_ID);
         }
-
-    }
-    public class RCBinder extends Binder {
-
-        public MusicNotificationListenerService getService() {
-
-            return MusicNotificationListenerService.this;
-
-        }
-
+        Notification notification = builder.build(); // 获取构建好的Notification
+        notification.defaults = Notification.DEFAULT_SOUND; //设置为默认的声音
+        startForeground(1, notification);
     }
 
 }
-

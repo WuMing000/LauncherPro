@@ -977,6 +977,9 @@ public class MainActivity extends BaseActivity {
         // 隐藏底部导航栏
         CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
+//        if (!CustomUtil.isNotificationListenerEnabled(this)) {//是否开启通知使用权
+//            CustomUtil.openNotificationListenSettings(this);
+//        }
         // 设置全局handler
         HandlerManager.putHandler(handler);
         // 使用数据库获取APP信息
