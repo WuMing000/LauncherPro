@@ -411,10 +411,10 @@ public class DragGridView extends GridView {
     private void onDragItem(int x, int y) {
         // 定义位置
         // 减去viewpager的内边距和外边距
-        mLayoutParams.x = x - 70;
+        mLayoutParams.x = x - 70 * 2;
 //        mLayoutParams.y = y - mPoint2ItemTop + mOffset2Top - mStatusHeight;
         // 减去外边距和状态栏
-        mLayoutParams.y = y - 100 - mStatusHeight;
+        mLayoutParams.y = y - 100 * 2 - mStatusHeight;
         //更新镜像位置
         mWindowManager.updateViewLayout(mDragMirrorView, mLayoutParams);
 //        int[] location = new int[2];
@@ -440,11 +440,11 @@ public class DragGridView extends GridView {
         mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT; // 左 上
         // 指定位置 其实就是 该 item 对应的 rawX rawY 因为Window 添加View是需要知道 raw x ,y的
         // 减去viewpager的内边距和外边距
-        mLayoutParams.x = downX - 70;
+        mLayoutParams.x = downX - 70 * 2;
 //        mLayoutParams.y = mOffset2Top + (downY - mPoint2ItemTop) + mStatusHeight;
 //        mLayoutParams.y = mOffset2Top + (downY - 2 * mPoint2ItemTop);
         // 减去外边距和状态栏
-        mLayoutParams.y = downY - 100 - mStatusHeight;
+        mLayoutParams.y = downY - 100 * 2 - mStatusHeight;
         // 指定布局大小
         mLayoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
