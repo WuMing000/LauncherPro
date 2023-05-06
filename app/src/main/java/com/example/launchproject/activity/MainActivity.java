@@ -353,8 +353,14 @@ public class MainActivity extends BaseActivity {
                             appBeanList.set(newPosition, saveFrontAPPContent);
                             // 刷新界面
                             pagerAdapter.notifyDataSetChanged();
-                            // 更新数据库
-                            appListDataSaveUtils.setDataList("appList", appBeanList);
+                            new Thread() {
+                                @Override
+                                public void run() {
+                                    super.run();
+                                    // 更新数据库
+                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                }
+                            }.start();
                         } else {
                             // 按下和抬起页数不一致情况
 
@@ -384,8 +390,14 @@ public class MainActivity extends BaseActivity {
                                                     appBeanList.set(newPosition, saveFrontAPPContent);
                                                     // 刷新页面
                                                     pagerAdapter.notifyDataSetChanged();
-                                                    // 更新数据库
-                                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                                    new Thread() {
+                                                        @Override
+                                                        public void run() {
+                                                            super.run();
+                                                            // 更新数据库
+                                                            appListDataSaveUtils.setDataList("appList", appBeanList);
+                                                        }
+                                                    }.start();
                                                 }
                                             })
                                             .setNegativeButton("否", new DialogInterface.OnClickListener() {
@@ -402,8 +414,14 @@ public class MainActivity extends BaseActivity {
                                     appBeanList.set(newPosition, saveFrontAPPContent);
                                     // 刷新页面
                                     pagerAdapter.notifyDataSetChanged();
-                                    // 更新数据库
-                                    appListDataSaveUtils.setDataList("appList", appBeanList);
+                                    new Thread() {
+                                        @Override
+                                        public void run() {
+                                            super.run();
+                                            // 更新数据库
+                                            appListDataSaveUtils.setDataList("appList", appBeanList);
+                                        }
+                                    }.start();
                                 }
                             }
                         }
@@ -512,7 +530,14 @@ public class MainActivity extends BaseActivity {
                         Log.d(TAG, "加载应用完成" + appBeanList.size());
                         handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
                         // 把所有APP添加进数据库
-                        appListDataSaveUtils.setDataList("appList", appBeanList);
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                super.run();
+                                // 更新数据库
+                                appListDataSaveUtils.setDataList("appList", appBeanList);
+                            }
+                        }.start();
                     }
                     break;
                 case HandlerManager.SHOW_APP_LIST:
@@ -641,8 +666,14 @@ public class MainActivity extends BaseActivity {
                         if (isLastALLNone) {
                             llPoint.removeView(pointViews.get(mPageView.size()));
                         }
-                        // 更新数据库
-                        appListDataSaveUtils.setDataList("appList", appBeanList);
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                super.run();
+                                // 更新数据库
+                                appListDataSaveUtils.setDataList("appList", appBeanList);
+                            }
+                        }.start();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -725,8 +756,14 @@ public class MainActivity extends BaseActivity {
                         pagerAdapter.notifyDataSetChanged();
                         // 获取底部圆点
                         getPointData();
-                        // 更新数据库
-                        appListDataSaveUtils.setDataList("appList", appBeanList);
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                super.run();
+                                // 更新数据库
+                                appListDataSaveUtils.setDataList("appList", appBeanList);
+                            }
+                        }.start();
                         // 设置当前页面
                         mViewPager.setCurrentItem(installPosition);
                     } catch (Exception e) {
@@ -1474,7 +1511,7 @@ public class MainActivity extends BaseActivity {
             // 获取当前聚焦
             View v = getCurrentFocus();
 
-            Log.e(TAG, "rawX：" + rawX + "rawY：" + rawY);
+            Log.e(TAG, "rawX：" + rawX + ", rawY：" + rawY);
             Log.e(TAG, "copyPageSelectedPosition:dispatch:" + copyPageSelectedPosition);
             // 获取是否点击在gridview
             if (copyPageSelectedPosition > 1) {

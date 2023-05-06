@@ -3,6 +3,7 @@ package com.example.launchproject.recevier;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,6 +23,7 @@ public class MusicReceiver extends BroadcastReceiver {
         String trackName = intent.getStringExtra("track");
         String xiaMiName = intent.getStringExtra("widget_song_name");
 
+        Log.e("MusicReceiver======>", intent.getExtras().toString());
         System.out.println("最新的结果是！: " + albumName + " artist: "
                 + artist + " Track:" + trackName+" xiaMiName:"+xiaMiName);
         if(albumName != null || artist != null || trackName != null) {
