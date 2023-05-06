@@ -18,6 +18,7 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -38,6 +39,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -52,7 +54,6 @@ import com.example.launchproject.R;
 import com.example.launchproject.adapter.MyGridViewAdapter;
 import com.example.launchproject.bean.APPBean;
 import com.example.launchproject.manager.HandlerManager;
-import com.example.launchproject.service.MyService;
 import com.example.launchproject.utils.APPListDataSaveUtils;
 import com.example.launchproject.utils.CustomUtil;
 import com.example.launchproject.utils.DataUtil;
@@ -149,8 +150,21 @@ public class MainActivity extends BaseActivity {
     // 用于设置判断拖动时背景
     private boolean isMoving = true;
 
+    // 记录是否变色
     private boolean isRemoveBg = false;
+    // 记录变色背景
     private View removeBgView;
+
+    // 初始化position，用于管理清除平移动画；拖拽的item的position
+    private int firstMovePosition, mDragPosition;
+    // 初始化view，用于管理清除平移动画；拖拽的item对应的View
+    private View mDragView, firstMoveView;
+    //平移动画
+    private Animation translateAnimation;
+    // 用于记录移动position是否变化
+    private int moveBgPosition;
+    // 用于记录变色的ImageView
+    private ImageView saveMoveBgImageView, moveBgImageView;
 
     // viewPager页面滑动时回调
     private final ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
@@ -200,7 +214,9 @@ public class MainActivity extends BaseActivity {
             // 回调按下、移动、抬起等方法
             gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
                 @Override
-                public void onDown(int x, int y, int p, Handler handler, Runnable runnable) {
+                public void onDown(int x, int y, int p, View downView, Handler handler, Runnable runnable) {
+                    mDragPosition = p;
+                    mDragView = downView;
 //                    if (!isCreateLastView) {
 //                        for (int i = 0; i < mPageSize; i++) {
 //                            appBeanList.add(new APPBean());
@@ -216,6 +232,7 @@ public class MainActivity extends BaseActivity {
 //                    }
                     // 重新赋值position，因为固定了一个gridview显示18个条目，需要结合页数进行更新
                     int newPosition = p + savePosition * mPageSize;
+                    moveBgPosition = newPosition;
                     Log.d("TAG", "onDown:" + newPosition);
                     // 包名为空的位置，不展示长按窗口
                     if (appBeanList.get(newPosition).getPackageName().length() == 0) {
@@ -234,9 +251,10 @@ public class MainActivity extends BaseActivity {
                 }
 
                 @Override
-                public void onMove(int x, int y, boolean isMove, int p) {
-
+                public void onMove(int x, int y, boolean isMove, int p, View moveView) {
 //                    Log.d("TAG", "onMove" + isMove);
+                    // 重新赋值position，因为固定了一个gridview显示18个条目，需要结合页数进行更新
+                    int newPosition = p + savePosition * mPageSize;
                     // 获取屏幕宽度
                     int widthPixels = getResources().getDisplayMetrics().widthPixels;
 
@@ -275,8 +293,67 @@ public class MainActivity extends BaseActivity {
                         }
                     }
 
-                    if (isMove && !isScale && isMoving) {
+                    if (p == mDragPosition) {
+                        // 初始化
+                        firstMovePosition = 0;
+                    }
+                    if (p != firstMovePosition && firstMoveView != null) {
+                        // 移动到新的position，去除上一个平移动画
+                        firstMoveView.clearAnimation();
+                    }
 
+                    // 按下和移动两个position不一致才执行平移动画
+                    if (p != mDragPosition && p != firstMovePosition && moveView != null && gridView.isDrag() && appBeanList.get(newPosition).getPackageName().length() != 0) {
+                        // 每次平移重新赋值
+                        firstMovePosition = p;
+                        firstMoveView = moveView;
+//                    Log.d(TAG, "update:moveX " + mMoveView.getX() + ", moveY " + mMoveView.getY() + "frontX " + mDragView.getX() + ", frontY " + mDragView.getY());
+                        if (moveView.getX() == mDragView.getX()) {
+                            translateAnimation = new TranslateAnimation(0, 0, 0, mDragView.getY() - moveView.getY());//Y平移动画
+                            translateAnimation.setDuration(300);
+                            translateAnimation.setFillAfter(true);
+                            firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
+                        } else if (moveView.getY() == mDragView.getY()) {
+                            translateAnimation = new TranslateAnimation(0, mDragView.getX() - moveView.getX(), 0, 0);//X平移动画
+                            translateAnimation.setDuration(300);
+                            translateAnimation.setFillAfter(true);
+                            firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
+                        } else {
+                            translateAnimation = new TranslateAnimation(0, mDragView.getX() - moveView.getX(), 0, mDragView.getY() - moveView.getY());//X、Y平移动画
+                            translateAnimation.setDuration(300);
+                            translateAnimation.setFillAfter(true);
+                            firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
+                        }
+                    }
+
+                    // 增加选中效果
+                    // 获取移动选中的图标
+                    DragGridView view3 = (DragGridView) mPageView.get(copyPageSelectedPosition);
+                    LinearLayout childAt = (LinearLayout) view3.getChildAt(p);
+                    moveBgImageView = childAt.findViewById(R.id.iv_app_icon);
+//                    Log.e(TAG, "moveBgPosition:" + moveBgPosition + ",newPosition:" + newPosition);
+                    // 移动到的position发生变更
+                    if (moveBgPosition != newPosition) {
+                        // 更新移动position
+                        moveBgPosition = newPosition;
+                        if (appBeanList.get(newPosition).getPackageName().length() != 0 && onDownGridPage != savePosition) {
+                            // 移动到的位置有数据，且不在当前页设置黑度
+                            moveBgImageView.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.picture_color_black_80), PorterDuff.Mode.SRC_ATOP);
+                        } else if (appBeanList.get(newPosition).getPackageName().length() == 0){
+                            // 移动到的位置没有数据，设置背景和透明度
+                            moveBgImageView.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_solid));
+                            moveBgImageView.setAlpha(0.3f);
+                        }
+                        if (saveMoveBgImageView != null) {
+                            // position变化时，还原变色的图标
+                            saveMoveBgImageView.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.transparent));
+                            saveMoveBgImageView.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.picture_color_black_20), PorterDuff.Mode.SRC_ATOP);
+                        }
+                        // 随着移动变更
+                        saveMoveBgImageView = moveBgImageView;
+                    }
+
+                    if (isMove && !isScale && isMoving) {
                         // 设置viewPager透明度80%
                         mViewPager.setAlpha(0.8f);
 
@@ -333,9 +410,15 @@ public class MainActivity extends BaseActivity {
 
                 @Override
                 public void onUp(int p, Animation transAnimation) {
+                    // 手指抬起时，还原移动到ImageView的背景
+                    if (moveBgImageView != null) {
+                        moveBgImageView.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.transparent));
+                        moveBgImageView.setAlpha(1.0f);
+                        moveBgImageView.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.picture_color_black_20), PorterDuff.Mode.SRC_ATOP);
+                    }
                     // 手指抬起时，去除平移动画
-                    if (transAnimation != null) {
-                        transAnimation.cancel();
+                    if (translateAnimation != null) {
+                        translateAnimation.cancel();
                     }
                     // 更新手指抬起时position，根据页数和页个数更新
                     int newPosition = p + savePosition * mPageSize;
@@ -1350,7 +1433,7 @@ public class MainActivity extends BaseActivity {
                 ibOffice.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.tencent.android.qqdownloader", "com.tencent.assistantv2.activity.MainActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.lenovo.leos.appstore", "com.lenovo.leos.appstore.activities.Main");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1433,6 +1516,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        // 设置主屏幕背景
+        setBackground();
 //        registerForContextMenu(rvAPPList);//为RecyclerviewView注册上下文菜单
     }
 
@@ -1441,8 +1526,6 @@ public class MainActivity extends BaseActivity {
         super.onResume();
         // 设置内容为空
         etSource.setText("");
-        // 设置主屏幕背景
-        setBackground();
         if (audioManager.isMusicActive()) {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
             ivMusic.startAnimation(animation);//開始动画
