@@ -7,6 +7,7 @@
     android:orientation="vertical"
     tools:context=".activity.MainActivity"
     android:id="@+id/ll_bg_home"
+    android:background="@drawable/bg_hd"
     android:clipChildren="false">
 
     <androidx.viewpager.widget.ViewPager

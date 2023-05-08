@@ -749,14 +749,8 @@ public class MainActivity extends BaseActivity {
                         if (isLastALLNone) {
                             llPoint.removeView(pointViews.get(mPageView.size()));
                         }
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                super.run();
-                                // 更新数据库
-                                appListDataSaveUtils.setDataList("appList", appBeanList);
-                            }
-                        }.start();
+                        // 更新数据库
+                        appListDataSaveUtils.setDataList("appList", appBeanList);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -839,14 +833,8 @@ public class MainActivity extends BaseActivity {
                         pagerAdapter.notifyDataSetChanged();
                         // 获取底部圆点
                         getPointData();
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                super.run();
-                                // 更新数据库
-                                appListDataSaveUtils.setDataList("appList", appBeanList);
-                            }
-                        }.start();
+                        // 更新数据库
+                        appListDataSaveUtils.setDataList("appList", appBeanList);
                         // 设置当前页面
                         mViewPager.setCurrentItem(installPosition);
                     } catch (Exception e) {
@@ -1164,7 +1152,7 @@ public class MainActivity extends BaseActivity {
                     intent.setData(uri);
                     startActivity(intent);
                 }
-                return true;
+                return false;
             }
         });
         // 相册跳转
@@ -1203,7 +1191,7 @@ public class MainActivity extends BaseActivity {
                 rlMusic.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusic", "com.tencent.qqmusic.activity.AppStarterActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusicpad", "com.tencent.qqmusicpad.activity.AppStarterActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1361,7 +1349,7 @@ public class MainActivity extends BaseActivity {
                 ibVideo.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.qiyi.video", "com.qiyi.video.WelcomeActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.qiyi.video.pad", "com.qiyi.video.WelcomeActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1386,7 +1374,7 @@ public class MainActivity extends BaseActivity {
                 ibMusic.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusic", "com.tencent.qqmusic.activity.AppStarterActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusicpad", "com.tencent.qqmusicpad.activity.AppStarterActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1411,7 +1399,7 @@ public class MainActivity extends BaseActivity {
                 ibTiktok.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.ss.android.ugc.aweme", "com.ss.android.ugc.aweme.splash.SplashActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.ss.android.ugc.aweme", "com.ss.android.ugc.aweme.carplay.main.CarPlayMainActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
