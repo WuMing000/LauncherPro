@@ -963,8 +963,9 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // 隐藏底部导航栏
-        CustomUtil.hideBottomUIMenu(this);
+//        CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
+        CustomUtil.hideNavigationBar(this);
 //        if (!CustomUtil.isNotificationListenerEnabled(this)) {//是否开启通知使用权
 //            CustomUtil.openNotificationListenSettings(this);
 //        }
@@ -1424,9 +1425,10 @@ public class MainActivity extends BaseActivity {
                 ibOffice.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.lenovo.leos.appstore", "com.lenovo.leos.appstore.activities.Main");
+                    ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("position", 3);
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
