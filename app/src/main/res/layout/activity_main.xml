@@ -7,17 +7,16 @@
     android:orientation="vertical"
     tools:context=".activity.MainActivity"
     android:id="@+id/ll_bg_home"
-    android:background="@drawable/bg_hd"
-    android:clipChildren="false">
+    android:background="@drawable/bg_hd">
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingRight="55dp"
-        android:paddingLeft="55dp"
+        android:paddingRight="50dp"
+        android:paddingLeft="50dp"
         android:paddingTop="30dp"
-        android:paddingBottom="80dp"/>
+        android:paddingBottom="80dp" />
 
     <LinearLayout
         android:id="@+id/ll_point"
