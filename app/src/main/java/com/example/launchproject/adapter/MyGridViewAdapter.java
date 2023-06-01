@@ -1,6 +1,8 @@
 package com.example.launchproject.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -79,7 +81,7 @@ public class MyGridViewAdapter extends BaseAdapter {
             // 横屏时，高度显示三个item
             int parentHeight = parent.getHeight();
             ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
-            layoutParams.height = parentHeight / 3;
+            layoutParams.height = parentHeight / 4;
         } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
             // 竖屏时，高度显示六个item
             int parentHeight = parent.getHeight();
@@ -100,6 +102,22 @@ public class MyGridViewAdapter extends BaseAdapter {
             bitmap = BitmapFactory.decodeByteArray(bean.getAppIconBytes(), 0, bean.getAppIconBytes().length);
         }
         holder.imgUrl.setImageBitmap(bitmap);
+        holder.imgUrl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (position == -1 || listData.get(pos).getPackageName().length() == 0) {
+                    return;
+                }
+                try {
+                    PackageManager pm = context.getPackageManager();
+                    Intent intent = pm.getLaunchIntentForPackage(listData.get(pos).getPackageName());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         //添加item监听
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
