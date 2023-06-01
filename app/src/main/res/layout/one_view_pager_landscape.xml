@@ -14,7 +14,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="66dp"
         android:layout_marginLeft="41dp"
         android:layout_marginRight="43dp">
 
@@ -86,7 +86,7 @@
         android:layout_weight="1"
         android:layout_marginLeft="38dp"
         android:layout_marginRight="38dp"
-        android:layout_marginTop="27dp">
+        android:layout_marginTop="37dp">
 
         <LinearLayout
             android:id="@+id/btn_picture"
@@ -118,7 +118,7 @@
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:layout_marginLeft="158dp"
-                android:layout_marginTop="25dp"/>
+                android:layout_marginTop="19dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -237,7 +237,7 @@
         android:layout_marginLeft="38dp"
         android:layout_marginRight="38dp">
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/btn_browser"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -247,7 +247,21 @@
             android:layout_marginRight="10dp"
             android:orientation="vertical">
 
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                android:src="@drawable/btn_browser_png" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/btn_browser_icon"
+                android:layout_marginLeft="45dp"
+                android:layout_marginTop="68dp"/>
+
             <TextView
+                android:id="@+id/tv_browser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="浏览器"
@@ -258,6 +272,7 @@
                 android:layout_marginTop="45dp"/>
 
             <TextView
+                android:id="@+id/tv_browser_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="探索精彩"
@@ -265,18 +280,30 @@
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:layout_marginLeft="120dp"
-                android:layout_marginTop="20dp"/>
+                android:layout_marginTop="12dp"
+                android:layout_below="@id/tv_browser"/>
 
             <TextView
+                android:id="@+id/tv_browser_3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="探知更广视界"
                 android:textColor="@color/my_light_white"
                 android:textSize="16sp"
                 android:layout_marginLeft="120dp"
-                android:layout_marginTop="6dp"/>
+                android:layout_marginTop="6dp"
+                android:layout_below="@id/tv_browser_2"/>
 
-        </LinearLayout>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/btn_enter_icon"
+                android:layout_toRightOf="@id/tv_browser_3"
+                android:layout_below="@id/tv_browser_2"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="10dp"/>
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -311,7 +338,7 @@
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     android:layout_marginLeft="25dp"
-                    android:layout_marginTop="20dp"/>
+                    android:layout_marginTop="12dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -324,7 +351,7 @@
 
             </LinearLayout>
 
-            <LinearLayout
+            <RelativeLayout
                 android:id="@+id/btn_alarm"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -333,7 +360,14 @@
                 android:background="@drawable/selector_ll_time_bg"
                 android:orientation="vertical">
 
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_time_icon"
+                    android:scaleType="centerCrop"/>
+
                 <TextView
+                    android:id="@+id/tv_alarm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="时钟"
@@ -344,6 +378,7 @@
                     android:layout_marginTop="45dp"/>
 
                 <TextView
+                    android:id="@+id/tv_alarm_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="每时每刻"
@@ -351,18 +386,30 @@
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     android:layout_marginLeft="25dp"
-                    android:layout_marginTop="20dp"/>
+                    android:layout_marginTop="12dp"
+                    android:layout_below="@id/tv_alarm"/>
 
                 <TextView
+                    android:id="@+id/tv_alarm_3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="前往设置"
                     android:textColor="@color/my_light_white"
                     android:textSize="16sp"
                     android:layout_marginLeft="25dp"
-                    android:layout_marginTop="6dp"/>
+                    android:layout_marginTop="6dp"
+                    android:layout_below="@id/tv_alarm_2"/>
 
-            </LinearLayout>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_enter_icon"
+                    android:layout_toRightOf="@id/tv_alarm_3"
+                    android:layout_below="@id/tv_alarm_2"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginLeft="10dp"/>
+
+            </RelativeLayout>
 
         </LinearLayout>
 
