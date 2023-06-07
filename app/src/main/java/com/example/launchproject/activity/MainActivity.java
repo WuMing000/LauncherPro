@@ -1183,7 +1183,7 @@ public class MainActivity extends BaseActivity {
             Log.e("ivPicture=====>", "onClick");
             try {
                 Intent intent = new Intent();
-                ComponentName componentNameGallery = new ComponentName("com.js.photoalbum", "com.js.photoalbum.MainActivity");
+                ComponentName componentNameGallery = new ComponentName("com.js.photoalbum", "com.js.photoalbum.activity.SlideActivity");
                 intent.setComponent(componentNameGallery);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
@@ -1223,7 +1223,7 @@ public class MainActivity extends BaseActivity {
                 btnPicture.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.js.photoalbum", "com.js.photoalbum.MainActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.js.photoalbum", "com.js.photoalbum.activity.CheckPermissionActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -1653,6 +1653,8 @@ public class MainActivity extends BaseActivity {
                 isGridView = CustomUtil.isTouchPointInView(gridView, rawX, rawY);
                 Log.e(TAG, "gridview:" + isGridView);
                 gridView.removeLongClick();
+            } else {
+                isGridView = false;
             }
             // 当没点击在控件上时再触发设置壁纸
             if (!(CustomUtil.isTouchPointInView(etSource, rawX, rawY) || CustomUtil.isTouchPointInView(rlMusic, rawX, rawY)
