@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.launchproject'
+    namespace 'com.js.launcher'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.launchproject"
+        applicationId "com.js.launcher"
         minSdk 16
         targetSdk 33
         versionCode 1

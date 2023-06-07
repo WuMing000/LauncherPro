@@ -54,7 +54,7 @@
             android:background="@drawable/selector_et_bg"
             android:drawableLeft="@drawable/bg_home_et_source"
             android:padding="8dp"
-            android:hint="你要搜索什么呢"
+            android:hint="搜索"
             android:textColor="@color/white"
             android:textColorHint="@color/white"
             android:maxLines="1"
