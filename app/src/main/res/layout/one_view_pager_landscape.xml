@@ -62,7 +62,7 @@
         <EditText
             android:id="@+id/et_source"
             android:layout_width="150dp"
-            android:layout_height="30dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/selector_et_bg"
             android:drawableLeft="@drawable/bg_home_et_source"
             android:padding="8dp"
