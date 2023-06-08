@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:alphaandroid="http://schemas.android.com/apk/res-auto">
+    <!--android:fromAlphaFloat. 设置透明度的初始值，其中0.0是透明，1.0是不透明的。android:toAlphaFloat. 设置透明度的结束值，其中0.0是透明，1.0是不透明的。-->
+    <alpha android:duration="1200" android:fromAlpha="0.5" android:toAlpha="1.0" />
+</set>

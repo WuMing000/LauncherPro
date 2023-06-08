@@ -1192,6 +1192,7 @@ public class MainActivity extends BaseActivity {
                 intent.setComponent(componentNameGallery);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_from_bottom, 0);
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
