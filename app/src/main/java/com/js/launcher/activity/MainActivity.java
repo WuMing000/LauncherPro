@@ -51,11 +51,15 @@ import com.js.launcher.MyApplication;
 import com.js.launcher.R;
 import com.js.launcher.adapter.MyGridViewAdapter;
 import com.js.launcher.bean.APPBean;
+import com.js.launcher.bean.DownBean;
+import com.js.launcher.bean.DownProgressBean;
+import com.js.launcher.manager.Contact;
 import com.js.launcher.manager.HandlerManager;
 import com.js.launcher.utils.APPListDataSaveUtils;
 import com.js.launcher.utils.CustomUtil;
 import com.js.launcher.utils.DataUtil;
 import com.js.launcher.view.DragGridView;
+import com.js.launcher.view.UpdateDialog;
 
 import java.io.FileDescriptor;
 import java.io.UnsupportedEncodingException;
@@ -168,6 +172,7 @@ public class MainActivity extends BaseActivity {
     private ImageView saveMoveBgImageView, moveBgImageView;
 
     private Timer timer;
+    private UpdateDialog updateDialog;
 
     // viewPager页面滑动时回调
     private final ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
@@ -919,6 +924,49 @@ public class MainActivity extends BaseActivity {
                         handler.removeCallbacks(previousRunnable);
                     }
                     break;
+                case HandlerManager.NETWORK_NO_CONNECT:
+//                    Toast.makeText(MainActivity.this, "网络未连接，请先连接网络", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "网络未连接，请先连接网络");
+                    break;
+                case HandlerManager.UPDATE_VERSION_DIFFERENT:
+                    Log.e(TAG, "版本号不一致");
+                    updateDialog = new UpdateDialog(MainActivity.this);
+                    updateDialog.setMessage("桌面有新版本！！！");
+                    updateDialog.setTitleVisible(View.GONE);
+                    updateDialog.setExitOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            updateDialog.dismiss();
+                        }
+                    });
+                    updateDialog.setUpdateOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            updateDialog.setProgressVisible(View.VISIBLE);
+                            updateDialog.setButtonVisible(View.GONE);
+                            DownBean downBean = CustomUtil.updateAPK(Contact.SERVER_URL + ":8080/test/js_project/launcher/js_launcher.apk");
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
+                                    Log.e(TAG, downProgressBean.getProgress());
+                                    float progress = Float.parseFloat(downProgressBean.getProgress());
+                                    if (progress == 100.00) {
+                                        updateDialog.dismiss();
+                                    }
+                                    updateDialog.setPbProgress((int) progress);
+                                    updateDialog.setTvProgress(downProgressBean.getProgress());
+                                }
+                            }, 0, 1000);
+                        }
+                    });
+                    updateDialog.setCancelable(false);
+                    updateDialog.show();
+                    break;
+                case HandlerManager.UPDATE_VERSION_SAME:
+                    Log.e(TAG, "版本号一致");
+                    break;
                 default:
                     Log.e(TAG, "It's not send handler message.");
                     break;
@@ -1066,6 +1114,24 @@ public class MainActivity extends BaseActivity {
         tvMusicName.setText(spMusicName);
         spMusicSinger = sp.getString("musicSinger", "暂无歌手");
         tvMusicSinger.setText(spMusicSinger);
+
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":8080/test/js_project/launcher/Version.txt");
+                if (serverFile.length() == 0) {
+                    handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
+                    return;
+                }
+                String localVersionName = CustomUtil.getLocalVersionName();
+                if (localVersionName.equals(serverFile)) {
+                    handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
+                } else {
+                    handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_DIFFERENT, 100);
+                }
+            }
+        }.start();
 
     }
 
@@ -1878,5 +1944,8 @@ public class MainActivity extends BaseActivity {
         super.onDestroy();
         // 清空集合
         appBeanList.clear();
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+        }
     }
 }

@@ -17,6 +17,9 @@ public class HandlerManager {
     public static final int CLEAR_RECYCLER_ANIMATION = 10;
     public static final int SKIP_NEXT_PAGE = 11;
     public static final int SKIP_PREVIOUS_PAGE = 12;
+    public static final int NETWORK_NO_CONNECT = 13;
+    public static final int UPDATE_VERSION_SAME = 14;
+    public static final int UPDATE_VERSION_DIFFERENT = 15;
     public static ThreadLocal<Handler> threadLocal = new ThreadLocal<Handler>();
 
     public static Handler getHandler() {
