@@ -174,6 +174,7 @@ public class MainActivity extends BaseActivity {
 
     private Timer timer;
     private UpdateDialog updateDialog;
+    private AlertDialog wallDialog;
 
     private ProgressBar pbLoading;
     private TextView tvLoading;
@@ -723,8 +724,8 @@ public class MainActivity extends BaseActivity {
                     break;
                 case HandlerManager.HOME_LONG_CLICK :
                     // 设置壁纸
-                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-                    alertDialog.setMessage("是否设置壁纸")
+                    wallDialog = new AlertDialog.Builder(MainActivity.this)
+                            .setMessage("是否设置壁纸")
                             .setPositiveButton("设置壁纸", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
@@ -1957,6 +1958,9 @@ public class MainActivity extends BaseActivity {
         super.onStop();
         if (updateDialog != null) {
             updateDialog.dismiss();
+        }
+        if (wallDialog != null) {
+            wallDialog.dismiss();
         }
     }
 
