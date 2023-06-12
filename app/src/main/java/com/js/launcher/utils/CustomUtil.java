@@ -156,20 +156,6 @@ public class CustomUtil {
         return false;
     }
 
-    /** 执行命令 */
-    public static void runCommand() {
-        try {
-            Process process = Runtime.getRuntime().exec("pm list package -3");
-            BufferedReader bis = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = null;
-            while ((line = bis.readLine()) != null) {
-                System.out.println("MainActivity.runCommand, line=" + line);
-            }
-        } catch (IOException e) {
-            System.out.println("MainActivity.runCommand,e=" + e);
-        }
-    }
-
     /**
      * 判断app能不能主动启动 否就隐藏
      * */
@@ -204,29 +190,6 @@ public class CustomUtil {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
         return baos.toByteArray();
-    }
-
-    /** 隐藏系统底部导航栏 */
-    public static void hideBottomUIMenu(Activity activity) {
-        int flags;
-        int curApiVersion = android.os.Build.VERSION.SDK_INT;
-        // This work only for android 4.4+
-        if(curApiVersion >= Build.VERSION_CODES.KITKAT){
-
-            // This work only for android 4.4+
-            // hide navigation bar permanently in android activity
-            // touch the screen, the navigation bar will not show
-
-            flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE;
-        }else{
-            // touch the screen, the navigation bar will show
-            flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|
-                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-        }
-
-        // must be executed in main thread :)
-        activity.getWindow().getDecorView().setSystemUiVisibility(flags);
     }
 
     /**

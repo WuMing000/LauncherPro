@@ -1048,34 +1048,6 @@ public class MainActivity extends BaseActivity {
         outState.putString("week", week);
     }
 
-    // 暂不用，无法适配横竖屏UI
-    @Deprecated
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        Log.e(TAG, "onConfigurationChanged");
-//        sp = getSharedPreferences("home_save_data", Activity.MODE_PRIVATE);
-//        appListDataSaveUtils = new APPListDataSaveUtils(this, "app_list_data");
-//        appList = appListDataSaveUtils.getDataList("appList");
-//        // 获取数据不为空，发送handler
-//        if (appList.size() != 0) {
-//            handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
-//            Log.d(TAG, appList.toString());
-//        }
-//        LayoutInflater layoutInflater = getLayoutInflater();
-//        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
-//        int ori = mConfiguration.orientation; //获取屏幕方向
-//        if (ori == Configuration.ORIENTATION_LANDSCAPE) {
-////            //横屏
-//            view1 = layoutInflater.inflate(R.layout.one_view_pager_landscape, null);
-//            view2 = layoutInflater.inflate(R.layout.two_view_pager_landscape, null);
-//        } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
-////            //竖屏
-//            view1 = layoutInflater.inflate(R.layout.one_view_pager_portrait, null);
-//            view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
-//        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -1590,68 +1562,6 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
-    }
-
-    public static class MyGalleyPageTransformer implements ViewPager.PageTransformer {
-        public static final float DEFAULT_MAX_ROTATION = 60f;
-        public static final float DEF_MIN_SCALE = 0.86f;
-
-        /**
-         * 最大旋转角度
-         */
-        private float mMaxRotation = DEFAULT_MAX_ROTATION;
-
-        /**
-         * 最小缩放
-         */
-        private float mMinScale = DEF_MIN_SCALE;
-
-        @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-        @Override
-        public void transformPage(@NonNull View page, float position) {
-            page.setPivotY(page.getHeight() / 2f);
-
-            float distance = getCameraDistance();
-            page.setCameraDistance(distance);//设置 View 的镜头距离，可以防止旋转大角度时出现图像失真或不显示。
-            if (position < -1) { // [-Infinity,-1)
-                page.setRotationY(-mMaxRotation);
-                page.setPivotX(page.getWidth());
-            } else if (position <= 1) { // [-1,1]
-
-                page.setRotationY(position * mMaxRotation);
-                if (position < 0) {//[0,-1]
-                    page.setPivotX(page.getWidth());
-                    float scale = DEF_MIN_SCALE + 4f * (1f - DEF_MIN_SCALE) * (position + 0.5f) * (position + 0.5f);
-                    page.setScaleX(scale);
-                    page.setScaleY(scale);
-                } else {//[1,0]
-                    page.setPivotX(0);
-                    float scale = DEF_MIN_SCALE + 4f * (1f - DEF_MIN_SCALE) * (position - 0.5f) * (position - 0.5f);
-                    page.setScaleX(scale);
-                    page.setScaleY(scale);
-                }
-            } else { // (1,+Infinity]
-                page.setRotationY(mMaxRotation);
-                page.setPivotX(0);
-            }
-        }
-
-        /**
-         * 获得镜头距离（图像与屏幕距离）。参考{@link View#setCameraDistance(float)}，小距离表示小视角，
-         * 大距离表示大视角。这个距离较小时，在 3D 变换（如围绕X和Y轴的旋转）时，会导致更大的失真。
-         * 如果改变 rotationX 或 rotationY 属性，使得此 View 很大 （超过屏幕尺寸的一半），则建议始终使用
-         * 大于此时图高度 （X 轴旋转）或 宽度（Y 轴旋转）的镜头距离。
-         * @return  镜头距离 distance
-         *
-         * @see {@link View#setCameraDistance(float)}
-         */
-        private float getCameraDistance() {
-            DisplayMetrics displayMetrics = MyApplication.getInstance().getContext().getResources().getDisplayMetrics();
-            float density = displayMetrics.density;
-            int widthPixels = displayMetrics.widthPixels;
-            int heightPixels = displayMetrics.heightPixels;
-            return 1.5f * Math.max(widthPixels, heightPixels) * density;
-        }
     }
 
     @Override

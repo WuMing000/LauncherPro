@@ -29,7 +29,7 @@ import androidx.core.content.ContextCompat;
  */
 public class DragGridView extends GridView {
 
-    private static final String TAG = "DragRecyclerView======>";
+    private static final String TAG = "DragGridView======>";
 
     //拖拽响应的时间 默认为1s
     private long mDragResponseMs = 500;
