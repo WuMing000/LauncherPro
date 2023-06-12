@@ -61,6 +61,7 @@ import com.js.launcher.utils.APPListDataSaveUtils;
 import com.js.launcher.utils.CustomUtil;
 import com.js.launcher.utils.DataUtil;
 import com.js.launcher.view.DragGridView;
+import com.js.launcher.view.MyViewPager;
 import com.js.launcher.view.UpdateDialog;
 
 import java.io.FileDescriptor;
@@ -89,7 +90,7 @@ public class MainActivity extends BaseActivity {
     private static final String TAG = "MainActivity==============>";
 
     // 滑动控件
-    private ViewPager mViewPager;
+    private MyViewPager mViewPager;
     // 用于保存viewPager拥有的子view
     private ArrayList<View> mPageView;
     // 用于更新主背景，实现壁纸功能
@@ -230,11 +231,15 @@ public class MainActivity extends BaseActivity {
             gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
                 @Override
                 public void onDown(int x, int y, int p, View downView, Handler handler, Runnable runnable) {
+                    // 重新赋值position，因为固定了一个gridview显示18个条目，需要结合页数进行更新
+                    int newPosition = p + savePosition * mPageSize;
                     MyGridViewAdapter myGridViewAdapter = (MyGridViewAdapter) gridView.getAdapter();
                     myGridViewAdapter.setOnImgItemLongClickListener(new MyGridViewAdapter.OnImgItemLongClickListener() {
                         @Override
                         public void onClick(int position) {
-                            gridView.createLongClick();
+                            if (appBeanList.get(newPosition).getPackageName().length() != 0) {
+                                gridView.createLongClick();
+                            }
                         }
                     });
                     mDragPosition = p;
@@ -252,8 +257,6 @@ public class MainActivity extends BaseActivity {
 //                        pagerAdapter.notifyDataSetChanged();
 //                        isCreateLastView = true;
 //                    }
-                    // 重新赋值position，因为固定了一个gridview显示18个条目，需要结合页数进行更新
-                    int newPosition = p + savePosition * mPageSize;
                     moveBgPosition = newPosition;
                     Log.d("TAG", "onDown:" + newPosition);
                     // 包名为空的位置，不展示长按窗口
@@ -443,6 +446,7 @@ public class MainActivity extends BaseActivity {
                         timer.cancel();
                     }
 
+                    Log.e(TAG, "isScale:" + isScale + ",isMoving:" + isMoving);
                     // 拖动异常时，还原背景
                     if (isScale && !isMoving) {
                         for (int i = 0; i < mPageView.size(); i++) {
@@ -588,8 +592,8 @@ public class MainActivity extends BaseActivity {
                     }
                 }
 
-                @Override
-                public void onItemClick(int p) {
+//                @Override
+//                public void onItemClick(int p) {
                     // 更新手指点击时position，根据页数和页个数更新
 //                    int newPosition = p + savePosition * mPageSize;
 //                    // 当position为-1或者item中无数据不执行下面内容
@@ -606,7 +610,7 @@ public class MainActivity extends BaseActivity {
 //                    } catch (Exception e) {
 //                        e.printStackTrace();
 //                    }
-                }
+//                }
             });
 
             // 根据当前页获取当前gridview

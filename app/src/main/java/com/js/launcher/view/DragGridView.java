@@ -286,10 +286,10 @@ public class DragGridView extends GridView {
                 //告诉viewGroup不要去拦截我
                 getParent().requestDisallowInterceptTouchEvent(true);
                 // 判断是否是点击
-                if (!isMove && !isDrag && mDragMirrorView == null && itemMoveListener != null && Math.abs(mMoveX - mDownX) <20 && Math.abs(mMoveY - mDownY) <20 && mDragPosition != AdapterView.INVALID_POSITION){
-                    Log.e(TAG, "onItemOnClick");
-                    itemMoveListener.onItemClick(mDragPosition);
-                }
+//                if (!isMove && !isDrag && mDragMirrorView == null && itemMoveListener != null && Math.abs(mMoveX - mDownX) <20 && Math.abs(mMoveY - mDownY) <20 && mDragPosition != AdapterView.INVALID_POSITION){
+//                    Log.e(TAG, "onItemOnClick");
+//                    itemMoveListener.onItemClick(mDragPosition);
+//                }
                 // 添加抬起接口
                 if (itemMoveListener != null && actionUpPosition != AdapterView.INVALID_POSITION) {
                     itemMoveListener.onUp(actionUpPosition, translateAnimation);
@@ -561,7 +561,6 @@ public class DragGridView extends GridView {
         void onMove(int x, int y, boolean isMove, int position, View moveView);
         void onCancel();
         void onUp(int position, Animation translateAnimation);
-        void onItemClick(int position);
     }
 
     //是系统APP则不添加卸载子布局
