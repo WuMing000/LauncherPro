@@ -1955,6 +1955,9 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+        }
     }
 
     @Override
@@ -1962,8 +1965,5 @@ public class MainActivity extends BaseActivity {
         super.onDestroy();
         // 清空集合
         appBeanList.clear();
-        if (updateDialog != null) {
-            updateDialog.dismiss();
-        }
     }
 }
