@@ -3,11 +3,6 @@ package com.js.launcher;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
-
-import com.js.launcher.service.GuardService;
-import com.js.launcher.service.MyService;
 
 @SuppressLint("StaticFieldLeak")
 public class MyApplication extends Application {

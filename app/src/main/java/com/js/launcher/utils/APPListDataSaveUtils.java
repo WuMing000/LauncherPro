@@ -3,9 +3,9 @@ package com.js.launcher.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.js.launcher.bean.APPBean;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.js.launcher.bean.APPBean;
 
 import java.util.ArrayList;
 import java.util.List;

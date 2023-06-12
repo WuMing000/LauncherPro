@@ -182,7 +182,7 @@ public class DragGridView extends GridView {
                 } else {
                     isFingerMove = true;
                     // 移动时去除长按runnable，避免长按不够时间也创建长按窗口
-                    mHandler.removeCallbacks(mLongClickRunnable);
+//                    mHandler.removeCallbacks(mLongClickRunnable);
                     // 拖动时隐藏长按窗口
                     removeLongClick();
                     //告诉viewGroup不要去拦截我
@@ -257,29 +257,32 @@ public class DragGridView extends GridView {
 
                 //如果只在按下的item上移动，未超过边界，就不移除mLongClickRunnable
                 if (!isTouchInItem(mDragView, mMoveX, mMoveY)) {
-                    mHandler.removeCallbacks(mLongClickRunnable);
+//                    mHandler.removeCallbacks(mLongClickRunnable);
+                    removeLongClick();
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
-                    Log.e(TAG, "onActionCANCEL");
-                    // 告诉viewGroup不要去拦截我
-                    getParent().requestDisallowInterceptTouchEvent(true);
-                    mHandler.removeCallbacks(mLongClickRunnable);
-                    // 添加cancel接口
-                    if (itemMoveListener != null) {
-                        itemMoveListener.onCancel();
-                    }
-                    // 拖动异常时调用去除镜像
-                    if (isDrag) {
-                        onStopDrag();
-                        isDrag = false;
-                        return true;
-                    }
-                    break;
+                Log.e(TAG, "onActionCANCEL");
+                // 告诉viewGroup不要去拦截我
+                getParent().requestDisallowInterceptTouchEvent(true);
+//                    mHandler.removeCallbacks(mLongClickRunnable);
+                removeLongClick();
+                // 添加cancel接口
+                if (itemMoveListener != null) {
+                    itemMoveListener.onCancel();
+                }
+                // 拖动异常时调用去除镜像
+                if (isDrag) {
+                    onStopDrag();
+                    isDrag = false;
+                    return true;
+                }
+                break;
             case MotionEvent.ACTION_UP:
                 Log.e(TAG, "onActionUP");
                 // 抬起清除长按runnable，避免长按不够时间依然展示长按窗口
-                mHandler.removeCallbacks(mLongClickRunnable);
+//                mHandler.removeCallbacks(mLongClickRunnable);
+//                removeLongClick();
                 //告诉viewGroup不要去拦截我
                 getParent().requestDisallowInterceptTouchEvent(true);
                 // 判断是否是点击
