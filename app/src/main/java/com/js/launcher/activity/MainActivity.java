@@ -29,7 +29,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -56,6 +55,8 @@ import com.js.launcher.bean.DownBean;
 import com.js.launcher.bean.DownProgressBean;
 import com.js.launcher.manager.Contact;
 import com.js.launcher.manager.HandlerManager;
+import com.js.launcher.service.GuardService;
+import com.js.launcher.service.MyService;
 import com.js.launcher.utils.APPListDataSaveUtils;
 import com.js.launcher.utils.CustomUtil;
 import com.js.launcher.utils.DataUtil;
@@ -1060,6 +1061,14 @@ public class MainActivity extends BaseActivity {
 //        }
         // 设置全局handler
         HandlerManager.putHandler(handler);
+        // 运行后台，用于监听应用安装卸载和音乐变化
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, MyService.class));
+            startForegroundService(new Intent(this, GuardService.class));
+        } else {
+            startService(new Intent(this, MyService.class));
+            startService(new Intent(this, GuardService.class));
+        }
         appBeanList = new ArrayList<>();
         LayoutInflater layoutInflater = getLayoutInflater();
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -1568,13 +1577,15 @@ public class MainActivity extends BaseActivity {
     protected void onStart() {
         super.onStart();
         // 设置主屏幕背景
-        setBackground();
+//        setBackground();
 //        registerForContextMenu(rvAPPList);//为RecyclerviewView注册上下文菜单
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        // 设置主屏幕背景
+        setBackground();
         // 设置内容为空
         etSource.setText("");
         if (audioManager.isMusicActive()) {

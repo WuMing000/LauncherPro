@@ -27,14 +27,6 @@ public class MyApplication extends Application {
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 //            startService(new Intent(this, MusicNotificationListenerService.class));
 //        }
-        // 运行后台，用于监听应用安装卸载和音乐变化
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(this, MyService.class));
-            startForegroundService(new Intent(this, GuardService.class));
-        } else {
-            startService(new Intent(this, MyService.class));
-            startService(new Intent(this, GuardService.class));
-        }
         singleton = this;
         context = getApplicationContext();
     }

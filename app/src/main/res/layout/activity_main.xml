@@ -6,8 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".activity.MainActivity"
-    android:id="@+id/ll_bg_home"
-    android:background="@drawable/bg_hd">
+    android:id="@+id/ll_bg_home">
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
