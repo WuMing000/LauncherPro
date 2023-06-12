@@ -1044,13 +1044,14 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.d(TAG, "onSaveInstanceState");
+        Log.d(TAG, "onSaveInstanceState=======");
         // 把日期、时间、歌名、歌手信息保存起来
         outState.putString("musicName", musicName);
         outState.putString("musicSinger", musicSinger);
         outState.putString("date", date);
         outState.putString("calendar", calendar);
         outState.putString("week", week);
+        pagerAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -1155,6 +1156,7 @@ public class MainActivity extends BaseActivity {
         // 设置页面缓冲
         mViewPager.setOffscreenPageLimit(10);
         mViewPager.setAdapter(pagerAdapter);
+        pagerAdapter.notifyDataSetChanged();
 
         new Thread() {
             @Override
@@ -1635,6 +1637,7 @@ public class MainActivity extends BaseActivity {
     public static void gotoAppDetailIntent(Activity activity, String packageName) {
         Intent intent = new Intent();
         intent.setAction(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setData(Uri.parse("package:" + packageName));
         activity.startActivity(intent);
     }
@@ -1886,6 +1889,11 @@ public class MainActivity extends BaseActivity {
         }
         if (wallDialog != null) {
             wallDialog.dismiss();
+        }
+        if (copyPageSelectedPosition > 1) {
+            View view = mPageView.get(copyPageSelectedPosition);
+            DragGridView gridView = (DragGridView) view;
+            gridView.removeLongClick();
         }
     }
 
