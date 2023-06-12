@@ -685,6 +685,8 @@ public class MainActivity extends BaseActivity {
                     }
                     break;
                 case HandlerManager.SHOW_APP_LIST:
+                    mPageView.add(view1);
+                    mPageView.add(view2);
                     // 数据库有值时，直接赋值
                     if (appList.size() != 0) {
                         appBeanList = appList;
@@ -712,12 +714,13 @@ public class MainActivity extends BaseActivity {
                         //每一个GridView作为一个View对象添加到ViewPager集合中
                         mPageView.add(gridView);
                         // 刷新viewPager
-                        pagerAdapter.notifyDataSetChanged();
+//                        pagerAdapter.notifyDataSetChanged();
                         pbLoading.setVisibility(View.GONE);
                         tvLoading.setVisibility(View.GONE);
                     }
                     // 获取底部圆点数据
                     getPointData();
+                    pagerAdapter.notifyDataSetChanged();
                     //第一次显示小白点
                     llPoint.getChildAt(0).setEnabled(true);
                     // 设置默认显示第一页
@@ -979,6 +982,9 @@ public class MainActivity extends BaseActivity {
                 case HandlerManager.UPDATE_VERSION_SAME:
                     Log.e(TAG, "版本号一致");
                     break;
+                case HandlerManager.VIEW_PAGER_ADAPTER_UPDATE:
+                    pagerAdapter.notifyDataSetChanged();
+                    break;
                 default:
                     Log.e(TAG, "It's not send handler message.");
                     break;
@@ -1051,7 +1057,6 @@ public class MainActivity extends BaseActivity {
         outState.putString("date", date);
         outState.putString("calendar", calendar);
         outState.putString("week", week);
-        pagerAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -1066,14 +1071,6 @@ public class MainActivity extends BaseActivity {
 //        }
         // 设置全局handler
         HandlerManager.putHandler(handler);
-        // 运行后台，用于监听应用安装卸载和音乐变化
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(this, MyService.class));
-            startForegroundService(new Intent(this, GuardService.class));
-        } else {
-            startService(new Intent(this, MyService.class));
-            startService(new Intent(this, GuardService.class));
-        }
         appBeanList = new ArrayList<>();
         LayoutInflater layoutInflater = getLayoutInflater();
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -1090,7 +1087,7 @@ public class MainActivity extends BaseActivity {
             view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
         }
         llBgHome = findViewById(R.id.ll_bg_home);
-        mViewPager = findViewById(R.id.view_pager);
+        mViewPager = findViewById(R.id.my_view_pager);
         pbLoading = findViewById(R.id.pb_loading);
         tvLoading = findViewById(R.id.tv_loading);
         llPoint = findViewById(R.id.ll_point);
@@ -1116,6 +1113,33 @@ public class MainActivity extends BaseActivity {
         ibTiktok = view2.findViewById(R.id.ib_tiktok);
         ibOffice = view2.findViewById(R.id.ib_office);
         mPageView = new ArrayList<>();
+
+        // 使用数据库获取APP信息
+        sp = getSharedPreferences("home_save_data", MODE_PRIVATE);
+        // 旋转屏幕时，使用旋转保存的数据重新设置
+        if (savedInstanceState != null) {
+            String musicNameSave = savedInstanceState.getString("musicName");
+            String musicSingerSave = savedInstanceState.getString("musicSinger");
+            String dateSave = savedInstanceState.getString("date");
+            String calendarSave = savedInstanceState.getString("calendar");
+            String weekSave = savedInstanceState.getString("week");
+            musicName = musicNameSave;
+            musicSinger = musicSingerSave;
+            date = dateSave;
+            calendar = calendarSave;
+            week = weekSave;
+            tvMusicName.setText(musicNameSave);
+            tvMusicSinger.setText(musicSingerSave);
+            tvTime.setText(dateSave);
+            tvCalendar.setText(calendarSave);
+            tvWeek.setText(weekSave);
+        }
+        // 使用数据库，设置歌名和歌手
+        spMusicName = sp.getString("musicName", "暂无歌名");
+        tvMusicName.setText(spMusicName);
+        spMusicSinger = sp.getString("musicSinger", "暂无歌手");
+        tvMusicSinger.setText(spMusicSinger);
+
         pagerAdapter = new PagerAdapter() {
 
             //获取当前窗体界面数
@@ -1156,40 +1180,20 @@ public class MainActivity extends BaseActivity {
         // 设置页面缓冲
         mViewPager.setOffscreenPageLimit(10);
         mViewPager.setAdapter(pagerAdapter);
-        pagerAdapter.notifyDataSetChanged();
+
+        // 添加页面滑动监听
+        mViewPager.addOnPageChangeListener(onPageChangeListener);
+//        mViewPager.setPageTransformer(true, new MyGalleyPageTransformer());
+        // 设置默认第一页
+        onPageChangeListener.onPageSelected(0);
+
+        initClickListener();
 
         new Thread() {
             @Override
             public void run() {
                 super.run();
-                // 使用数据库获取APP信息
-                sp = getSharedPreferences("home_save_data", MODE_PRIVATE);
-                appListDataSaveUtils = new APPListDataSaveUtils(MainActivity.this, "app_list_data");
-                appList = appListDataSaveUtils.getDataList("appList");
                 initData();
-                // 旋转屏幕时，使用旋转保存的数据重新设置
-                if (savedInstanceState != null) {
-                    String musicNameSave = savedInstanceState.getString("musicName");
-                    String musicSingerSave = savedInstanceState.getString("musicSinger");
-                    String dateSave = savedInstanceState.getString("date");
-                    String calendarSave = savedInstanceState.getString("calendar");
-                    String weekSave = savedInstanceState.getString("week");
-                    musicName = musicNameSave;
-                    musicSinger = musicSingerSave;
-                    date = dateSave;
-                    calendar = calendarSave;
-                    week = weekSave;
-                    tvMusicName.setText(musicNameSave);
-                    tvMusicSinger.setText(musicSingerSave);
-                    tvTime.setText(dateSave);
-                    tvCalendar.setText(calendarSave);
-                    tvWeek.setText(weekSave);
-                }
-                // 使用数据库，设置歌名和歌手
-                spMusicName = sp.getString("musicName", "暂无歌名");
-                tvMusicName.setText(spMusicName);
-                spMusicSinger = sp.getString("musicSinger", "暂无歌手");
-                tvMusicSinger.setText(spMusicSinger);
             }
         }.start();
 
@@ -1215,41 +1219,30 @@ public class MainActivity extends BaseActivity {
 
     private void initData() {
 
-        initClickListener();
-
         // 设置个性化字体
         AssetManager mgr = getAssets();
         Typeface tf = Typeface.createFromAsset(mgr, "fonts/Gilroy-Thin-13.otf");
         tvTime.setTypeface(tf);
+
+        appListDataSaveUtils = new APPListDataSaveUtils(MainActivity.this, "app_list_data");
+        appList = appListDataSaveUtils.getDataList("appList");
 
         // 使用子线程获取APP列表
         new Thread() {
             @Override
             public void run() {
                 super.run();
-                getAllAppNames();
+                if (appList.size() == 0) {
+                    getAllAppNames();
+                }
             }
         }.start();
 
-        mPageView.add(view1);
-        mPageView.add(view2);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                pagerAdapter.notifyDataSetChanged();
-            }
-        });
         // 获取数据不为空，发送handler
         if (appList.size() != 0) {
             handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
             Log.d(TAG, appList.toString());
         }
-
-        // 添加页面滑动监听
-        mViewPager.addOnPageChangeListener(onPageChangeListener);
-//        mViewPager.setPageTransformer(true, new MyGalleyPageTransformer());
-        // 设置默认第一页
-        onPageChangeListener.onPageSelected(0);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -1902,5 +1895,9 @@ public class MainActivity extends BaseActivity {
         super.onDestroy();
         // 清空集合
         appBeanList.clear();
+        pagerAdapter.notifyDataSetChanged();
+        mPageView = null;
+        pagerAdapter = null;
+        mViewPager = null;
     }
 }

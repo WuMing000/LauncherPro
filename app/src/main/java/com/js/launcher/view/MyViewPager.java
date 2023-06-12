@@ -10,10 +10,6 @@ import androidx.viewpager.widget.ViewPager;
 
 public class MyViewPager extends ViewPager {
 
-    public MyViewPager(@NonNull Context context) {
-        super(context);
-    }
-
     public MyViewPager(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
