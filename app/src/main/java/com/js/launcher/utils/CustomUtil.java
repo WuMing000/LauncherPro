@@ -153,6 +153,9 @@ public class CustomUtil {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+        if ("com.js.appstore".equals(packageName) || "com.js.photoalbum".equals(packageName)) {
+            return true;
+        }
         return false;
     }
 

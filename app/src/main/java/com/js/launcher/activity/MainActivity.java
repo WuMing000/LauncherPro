@@ -1324,7 +1324,13 @@ public class MainActivity extends BaseActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "系统中暂无该应用，请下载QQ音乐HD", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent();
+                    ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                    intent.setComponent(componentNameGallery);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("position", 0);
+                    startActivity(intent);
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 rlMusic.clearAnimation();
@@ -1349,7 +1355,13 @@ public class MainActivity extends BaseActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "系统中暂无该应用，请下载傲软投屏", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent();
+                    ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                    intent.setComponent(componentNameGallery);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("position", 0);
+                    startActivity(intent);
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 btnProjectionScreen.clearAnimation();
@@ -1482,7 +1494,13 @@ public class MainActivity extends BaseActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "系统中暂无该应用，请下载爱奇艺Pad", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent();
+                    ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                    intent.setComponent(componentNameGallery);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("position", 0);
+                    startActivity(intent);
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibVideo.clearAnimation();
@@ -1507,7 +1525,13 @@ public class MainActivity extends BaseActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "系统中暂无该应用，请下载QQ音乐HD", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent();
+                    ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                    intent.setComponent(componentNameGallery);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("position", 0);
+                    startActivity(intent);
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibMusic.clearAnimation();
@@ -1532,7 +1556,13 @@ public class MainActivity extends BaseActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "系统中暂无该应用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "系统中暂无该应用，请下载抖音", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent();
+                    ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                    intent.setComponent(componentNameGallery);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("position", 0);
+                    startActivity(intent);
                 }
             } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
                 ibTiktok.clearAnimation();
