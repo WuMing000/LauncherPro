@@ -55,8 +55,6 @@ import com.js.launcher.bean.DownBean;
 import com.js.launcher.bean.DownProgressBean;
 import com.js.launcher.manager.Contact;
 import com.js.launcher.manager.HandlerManager;
-import com.js.launcher.service.GuardService;
-import com.js.launcher.service.MyService;
 import com.js.launcher.utils.APPListDataSaveUtils;
 import com.js.launcher.utils.CustomUtil;
 import com.js.launcher.utils.DataUtil;
@@ -1754,7 +1752,8 @@ public class MainActivity extends BaseActivity {
             if (CustomUtil.NotActiveApp(this, packageName)) {
                 continue;
             }
-            if ("com.js.launcher".equals(packageName)) {
+
+            if ("com.js.launcher".equals(packageName) || "com.android.traceur".equals(packageName) || "com.mediatek.duraspeed".equals(packageName)) {
                 continue;
             }
 

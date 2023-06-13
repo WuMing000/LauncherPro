@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.js.launcher.MyApplication;
 import com.js.launcher.R;
 import com.js.launcher.bean.APPBean;
+import com.js.launcher.view.RoundImageView;
 
 import java.util.List;
 
@@ -136,7 +137,7 @@ public class MyGridViewAdapter extends BaseAdapter {
 
     class ViewHolder{
         private TextView proName;
-        private ImageView imgUrl;
+        private RoundImageView imgUrl;
     }
 
     public void setOnImgItemLongClickListener(OnImgItemLongClickListener itemLongClickListener) {
