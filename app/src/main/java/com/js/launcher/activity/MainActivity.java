@@ -5,9 +5,11 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.app.Instrumentation;
 import android.app.WallpaperManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -964,12 +966,21 @@ public class MainActivity extends BaseActivity {
                                 public void run() {
                                     DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
                                     Log.e(TAG, downProgressBean.getProgress());
-                                    float progress = Float.parseFloat(downProgressBean.getProgress());
-                                    if (progress == 100.00) {
+                                    try {
+                                        float progress = Float.parseFloat(downProgressBean.getProgress());
+                                        if (progress == 100.00) {
+                                            updateDialog.dismiss();
+                                        }
+                                        updateDialog.setPbProgress((int) progress);
+                                        updateDialog.setTvProgress(downProgressBean.getProgress());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
                                         updateDialog.dismiss();
+                                        timer.cancel();
+                                        handler.sendEmptyMessageAtTime(HandlerManager.DOWNLOAD_ERROR, 100);
+                                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                                        manager.remove(downProgressBean.getDownloadId());
                                     }
-                                    updateDialog.setPbProgress((int) progress);
-                                    updateDialog.setTvProgress(downProgressBean.getProgress());
                                 }
                             }, 0, 1000);
                         }
@@ -982,6 +993,9 @@ public class MainActivity extends BaseActivity {
                     break;
                 case HandlerManager.VIEW_PAGER_ADAPTER_UPDATE:
                     pagerAdapter.notifyDataSetChanged();
+                    break;
+                case HandlerManager.DOWNLOAD_ERROR:
+                    Toast.makeText(MainActivity.this, "下载异常，已取消下载", Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     Log.e(TAG, "It's not send handler message.");

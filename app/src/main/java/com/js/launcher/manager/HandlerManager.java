@@ -21,6 +21,7 @@ public class HandlerManager {
     public static final int UPDATE_VERSION_SAME = 14;
     public static final int UPDATE_VERSION_DIFFERENT = 15;
     public static final int VIEW_PAGER_ADAPTER_UPDATE = 16;
+    public static final int DOWNLOAD_ERROR = 17;
     public static ThreadLocal<Handler> threadLocal = new ThreadLocal<Handler>();
 
     public static Handler getHandler() {
