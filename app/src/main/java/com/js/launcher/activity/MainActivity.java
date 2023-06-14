@@ -1906,9 +1906,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (updateDialog != null) {
-            updateDialog.dismiss();
-        }
         if (wallDialog != null) {
             wallDialog.dismiss();
         }
@@ -1928,5 +1925,8 @@ public class MainActivity extends BaseActivity {
         mPageView = null;
         pagerAdapter = null;
         mViewPager = null;
+        if (updateDialog != null) {
+            updateDialog.dismiss();
+        }
     }
 }
