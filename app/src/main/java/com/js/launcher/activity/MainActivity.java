@@ -238,7 +238,12 @@ public class MainActivity extends BaseActivity {
                         @Override
                         public void onClick(int position) {
                             if (appBeanList.get(newPosition).getPackageName().length() != 0) {
-                                gridView.createLongClick();
+                                try {
+                                    gridView.removeLongClick();
+                                    gridView.createLongClick();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     });
