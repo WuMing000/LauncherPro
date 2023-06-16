@@ -7,7 +7,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.js.launcher.MyApplication;
 import com.js.launcher.manager.HandlerManager;
+
+import java.io.File;
 
 // 应用安装卸载广播接收者
 public class MyInstalledReceiver extends BroadcastReceiver {
@@ -16,7 +19,7 @@ public class MyInstalledReceiver extends BroadcastReceiver {
  
 		if (intent.getAction().equals("android.intent.action.PACKAGE_ADDED")) {		// install
 			String packageName = intent.getDataString();
-			Log.i("homer", "安装了 :" + packageName);
+			Log.i("launcher-homer", "安装了 :" + packageName);
 			Handler handler = HandlerManager.getHandler();
 			Message message = new Message();
 			message.what = HandlerManager.INSTALL_APP_SUCCESS;
@@ -31,7 +34,7 @@ public class MyInstalledReceiver extends BroadcastReceiver {
 			message.what = HandlerManager.REMOVED_APP_SUCCESS;
 			message.obj = packageName;
 			handler.sendMessageAtTime(message, 100);
-			Log.i("homer", "卸载了 :" + packageName);
+			Log.i("launcher-homer", "卸载了 :" + packageName);
 		}
 	}
 }

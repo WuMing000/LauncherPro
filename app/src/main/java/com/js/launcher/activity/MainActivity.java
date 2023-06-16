@@ -64,6 +64,7 @@ import com.js.launcher.view.DragGridView;
 import com.js.launcher.view.MyViewPager;
 import com.js.launcher.view.UpdateDialog;
 
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -950,8 +951,64 @@ public class MainActivity extends BaseActivity {
                     break;
                 case HandlerManager.UPDATE_VERSION_DIFFERENT:
                     Log.e(TAG, "版本号不一致");
+                    String versionName = (String) msg.obj;
+//                    updateDialog = new UpdateDialog(MainActivity.this);
+//                    updateDialog.setMessage("桌面有新版本！！！");
+//                    updateDialog.setTitleVisible(View.GONE);
+//                    updateDialog.setExitOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//                            updateDialog.dismiss();
+//                        }
+//                    });
+//                    updateDialog.setUpdateOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//                            updateDialog.setProgressVisible(View.VISIBLE);
+//                            updateDialog.setButtonVisible(View.GONE);
+                            DownBean downBean = CustomUtil.updateAPK(Contact.SERVER_URL + ":8080/test/js_project/launcher/js_launcher.apk", versionName);
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
+                                    Log.e(TAG, downProgressBean.getProgress());
+                                    try {
+                                        float progress = Float.parseFloat(downProgressBean.getProgress());
+                                        if (progress == 100.00) {
+//                                            updateDialog.dismiss();
+                                            Log.e(TAG, "新版本下载成功，重启应用可进行更新");
+                                        }
+//                                        updateDialog.setPbProgress((int) progress);
+//                                        updateDialog.setTvProgress(downProgressBean.getProgress());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+//                                        updateDialog.dismiss();
+                                        timer.cancel();
+                                        handler.sendEmptyMessageAtTime(HandlerManager.DOWNLOAD_ERROR, 100);
+                                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                                        manager.remove(downProgressBean.getDownloadId());
+                                    }
+                                }
+                            }, 0, 1000);
+//                        }
+//                    });
+//                    updateDialog.setCancelable(false);
+//                    updateDialog.show();
+                    break;
+                case HandlerManager.UPDATE_VERSION_SAME:
+                    Log.e(TAG, "版本号一致");
+                    break;
+                case HandlerManager.VIEW_PAGER_ADAPTER_UPDATE:
+                    pagerAdapter.notifyDataSetChanged();
+                    break;
+                case HandlerManager.DOWNLOAD_ERROR:
+                    Toast.makeText(MainActivity.this, "下载异常，已取消下载", Toast.LENGTH_SHORT).show();
+                    break;
+                case HandlerManager.IS_INSTALL_APP:
+                    File saveFile = (File) msg.obj;
                     updateDialog = new UpdateDialog(MainActivity.this);
-                    updateDialog.setMessage("桌面有新版本！！！");
+                    updateDialog.setMessage("检测到新版本，是否安装？");
                     updateDialog.setTitleVisible(View.GONE);
                     updateDialog.setExitOnClickListener(new View.OnClickListener() {
                         @Override
@@ -962,45 +1019,12 @@ public class MainActivity extends BaseActivity {
                     updateDialog.setUpdateOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            updateDialog.setProgressVisible(View.VISIBLE);
-                            updateDialog.setButtonVisible(View.GONE);
-                            DownBean downBean = CustomUtil.updateAPK(Contact.SERVER_URL + ":8080/test/js_project/launcher/js_launcher.apk");
-                            Timer timer = new Timer();
-                            timer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
-                                    Log.e(TAG, downProgressBean.getProgress());
-                                    try {
-                                        float progress = Float.parseFloat(downProgressBean.getProgress());
-                                        if (progress == 100.00) {
-                                            updateDialog.dismiss();
-                                        }
-                                        updateDialog.setPbProgress((int) progress);
-                                        updateDialog.setTvProgress(downProgressBean.getProgress());
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        updateDialog.dismiss();
-                                        timer.cancel();
-                                        handler.sendEmptyMessageAtTime(HandlerManager.DOWNLOAD_ERROR, 100);
-                                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                                        manager.remove(downProgressBean.getDownloadId());
-                                    }
-                                }
-                            }, 0, 1000);
+                            updateDialog.dismiss();
+                            CustomUtil.installAPK(MainActivity.this, saveFile);
                         }
                     });
                     updateDialog.setCancelable(false);
                     updateDialog.show();
-                    break;
-                case HandlerManager.UPDATE_VERSION_SAME:
-                    Log.e(TAG, "版本号一致");
-                    break;
-                case HandlerManager.VIEW_PAGER_ADAPTER_UPDATE:
-                    pagerAdapter.notifyDataSetChanged();
-                    break;
-                case HandlerManager.DOWNLOAD_ERROR:
-                    Toast.makeText(MainActivity.this, "下载异常，已取消下载", Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     Log.e(TAG, "It's not send handler message.");
@@ -1219,15 +1243,32 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 super.run();
                 String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":8080/test/js_project/launcher/Version.txt");
+                String localVersionName = CustomUtil.getLocalVersionName();
                 if (serverFile.length() == 0) {
                     handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
                     return;
                 }
-                String localVersionName = CustomUtil.getLocalVersionName();
-                if (localVersionName.equals(serverFile)) {
-                    handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
+                File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + serverFile + ".apk");
+                Log.e(TAG, saveFile.getAbsolutePath());
+                if (saveFile.exists()) {
+                    if (localVersionName.equals(serverFile)) {
+                        Log.e(TAG, "删除升级包");
+                        saveFile.delete();
+                    } else {
+                        Message message = new Message();
+                        message.what = HandlerManager.IS_INSTALL_APP;
+                        message.obj = saveFile;
+                        handler.sendMessageAtTime(message, 100);
+                    }
                 } else {
-                    handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_DIFFERENT, 100);
+                    if (localVersionName.equals(serverFile)) {
+                        handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
+                    } else {
+                        Message message = new Message();
+                        message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
+                        message.obj = serverFile;
+                        handler.sendMessageAtTime(message, 100);
+                    }
                 }
             }
         }.start();

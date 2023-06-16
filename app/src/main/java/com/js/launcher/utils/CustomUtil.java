@@ -334,8 +334,17 @@ public class CustomUtil {
         return localVersion;
     }
 
-    public static DownBean updateAPK(String url) {
+    public static DownBean updateAPK(String url, String versionName) {
 
+        File file = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
+        if (file.listFiles() != null) {
+            for (int i = 0; i < file.listFiles().length; i++) {
+                Log.e(TAG, file.listFiles()[i].getName() + "===========");
+                if (file.listFiles()[i].getName().contains("com.js.launcher")) {
+                    file.listFiles()[i].delete();
+                }
+            }
+        }
         DownloadManager manager = (DownloadManager) MyApplication.getInstance().getContext().getSystemService(Context.DOWNLOAD_SERVICE);
         /*
          * 1. 封装下载请求
@@ -346,13 +355,13 @@ public class CustomUtil {
 
         Log.e(TAG, MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
         Log.e(TAG, url.substring(url.lastIndexOf("/") + 1));
-        File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher");
+        File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + versionName);
         request.setDestinationUri(Uri.fromFile(saveFile));
 
-        if (saveFile.exists()) {
-            saveFile.delete();
-            Log.e(TAG, "删除");
-        }
+//        if (saveFile.exists()) {
+//            saveFile.delete();
+//            Log.e(TAG, "删除");
+//        }
 
         long downloadId = manager.enqueue(request);
 
@@ -399,7 +408,7 @@ public class CustomUtil {
             }
             Log.e(TAG, installFile.getAbsolutePath());
 //            System.out.println("下载成功, 打开文件, 文件路径: " + localFilename);
-            installAPK(MyApplication.getInstance().getContext(), installFile);
+//            installAPK(MyApplication.getInstance().getContext(), installFile);
             timer.cancel();
         }
 
