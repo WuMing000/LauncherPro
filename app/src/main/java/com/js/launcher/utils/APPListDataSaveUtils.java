@@ -59,4 +59,39 @@ public class APPListDataSaveUtils {
         }.getType());
         return dataList;
     }
+
+    /**
+     * 保存普通String
+     *
+     * @param key
+     * @param value
+     */
+    public void setDataString(String key, String value) {
+        if (value == null) {
+            return;
+        }
+        Gson gson = new Gson();
+        //转换成json数据，再保存
+        String strJson = gson.toJson(value);
+        editor.clear();
+        editor.putString(key, strJson);
+        editor.commit();
+    }
+
+    /**
+     * 获取普通的String
+     * @param key
+     * @return
+     */
+    public String getDataString(String key) {
+        String value = "";
+        String strJson = preferences.getString(key, null);
+        if (null == strJson) {
+            return value;
+        }
+        Gson gson = new Gson();
+        value = gson.fromJson(strJson, new TypeToken<String>() {
+        }.getType());
+        return value;
+    }
 }

@@ -33,16 +33,22 @@ import com.js.launcher.MyApplication;
 import com.js.launcher.bean.DownBean;
 import com.js.launcher.bean.DownProgressBean;
 
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -462,5 +468,83 @@ public class CustomUtil {
             e.printStackTrace();
             Log.e("TAG", e.toString());
         }
+    }
+
+    /**
+     * 下载文件
+     * @param FilePath  要存放的文件的路径
+     * @param FileName   远程FTP服务器上的那个文件的名字
+     * @return   true为成功，false为失败
+     */
+    public static boolean downLoadFile(FTPClient ftpClient, String FilePath, String FileName) {
+        Log.e(TAG, "=================run update APK");
+        if (!ftpClient.isConnected()) {
+            Log.e(TAG, "ftp is not connect");
+            return false;
+        }
+        APPListDataSaveUtils update_size = new APPListDataSaveUtils(MyApplication.getInstance().getContext(), "update_size");
+        OutputStream outputStream = null;
+        InputStream inputStream = null;
+        try {
+            // 转到指定下载目录
+//            ftpClient.changeWorkingDirectory("/data");
+            // 列出该目录下所有文件
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+            FTPFile[] files = ftpClient.listFiles(new String(FileName.getBytes("GBK"),"iso-8859-1"));
+            if (files.length != 1) {
+                Log.e(TAG, "remote file is not exists!");
+                return false;
+            }
+            //根据绝对路径初始化文件
+            File localFile = new File(FilePath);
+            if (localFile.length() > files[0].getSize()) {
+                Log.e(TAG, "local size large remote size.");
+                return false;
+            }
+            if (update_size.getDataString("updateSize").length() != 0 && !update_size.getDataString("updateSize").equals(String.valueOf(files[0].getSize()))) {
+                Log.e(TAG, "remote size is difference.");
+                new File(FilePath).delete();
+            }
+            update_size.setDataString("updateSize", String.valueOf(files[0].getSize()));
+            // 输出流
+            outputStream = new FileOutputStream(localFile, true);
+            ftpClient.setRestartOffset(localFile.length());
+            Log.e(TAG, localFile.length() + "");
+            inputStream = ftpClient.retrieveFileStream(new String(FileName.getBytes("GBK"),"iso-8859-1"));
+            byte[] bytes = new byte[4096];
+            int c;
+            int finishSize = (int) localFile.length();
+            while((c = inputStream.read(bytes)) != -1){
+                outputStream.write(bytes, 0, c);
+                finishSize += c;
+                Log.d(TAG, "downSize======" + finishSize);
+                if (finishSize == files[0].getSize()) {
+                    Log.e(TAG, "download success!");
+                    renameFile(FilePath, FilePath + ".apk");
+//                            installAPK(MyApplication.getInstance().getContext(), new File(FilePath + ".apk"));
+                }
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            Log.e(TAG, "close connect");
+            try {
+                //退出登陆FTP，关闭ftpClient的连接
+                ftpClient.logout();
+                ftpClient.disconnect();
+                //关闭流
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
     }
 }

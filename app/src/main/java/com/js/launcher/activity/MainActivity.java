@@ -64,8 +64,14 @@ import com.js.launcher.view.DragGridView;
 import com.js.launcher.view.MyViewPager;
 import com.js.launcher.view.UpdateDialog;
 
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPClientConfig;
+import org.apache.commons.net.ftp.FTPFile;
+
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -951,53 +957,72 @@ public class MainActivity extends BaseActivity {
                     break;
                 case HandlerManager.UPDATE_VERSION_DIFFERENT:
                     Log.e(TAG, "版本号不一致");
-                    String versionName = (String) msg.obj;
-//                    updateDialog = new UpdateDialog(MainActivity.this);
-//                    updateDialog.setMessage("桌面有新版本！！！");
-//                    updateDialog.setTitleVisible(View.GONE);
-//                    updateDialog.setExitOnClickListener(new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View v) {
-//                            updateDialog.dismiss();
-//                        }
-//                    });
-//                    updateDialog.setUpdateOnClickListener(new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View v) {
+                    File saveFile = (File) msg.obj;
+                    updateDialog = new UpdateDialog(MainActivity.this);
+                    updateDialog.setMessage("桌面发现新版本！！！");
+                    updateDialog.setTitleVisible(View.GONE);
+                    updateDialog.setExitOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            updateDialog.dismiss();
+                        }
+                    });
+                    updateDialog.setUpdateOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            updateDialog.dismiss();
+                            CustomUtil.installAPK(MainActivity.this, saveFile);
 //                            updateDialog.setProgressVisible(View.VISIBLE);
 //                            updateDialog.setButtonVisible(View.GONE);
-                            DownBean downBean = CustomUtil.updateAPK(Contact.SERVER_URL + ":8080/test/js_project/launcher/js_launcher.apk", versionName);
-                            Timer timer = new Timer();
-                            timer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
-                                    Log.e(TAG, downProgressBean.getProgress());
-                                    try {
-                                        float progress = Float.parseFloat(downProgressBean.getProgress());
-                                        if (progress == 100.00) {
-//                                            updateDialog.dismiss();
-                                            Log.e(TAG, "新版本下载成功，重启应用可进行更新");
-                                        }
-//                                        updateDialog.setPbProgress((int) progress);
-//                                        updateDialog.setTvProgress(downProgressBean.getProgress());
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-//                                        updateDialog.dismiss();
-                                        timer.cancel();
-                                        handler.sendEmptyMessageAtTime(HandlerManager.DOWNLOAD_ERROR, 100);
-                                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                                        manager.remove(downProgressBean.getDownloadId());
-                                    }
-                                }
-                            }, 0, 1000);
-//                        }
-//                    });
+//                            DownBean downBean = CustomUtil.updateAPK(Contact.SERVER_URL + ":8080/test/js_project/launcher/js_launcher.apk", versionName);
+//                            Timer timer = new Timer();
+//                            timer.schedule(new TimerTask() {
+//                                @Override
+//                                public void run() {
+//                                    DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
+//                                    Log.e(TAG, downProgressBean.getProgress());
+//                                    try {
+//                                        float progress = Float.parseFloat(downProgressBean.getProgress());
+//                                        if (progress == 100.00) {
+////                                            updateDialog.dismiss();
+//                                            Log.e(TAG, "新版本下载成功，重启应用可进行更新");
+//                                        }
+////                                        updateDialog.setPbProgress((int) progress);
+////                                        updateDialog.setTvProgress(downProgressBean.getProgress());
+//                                    } catch (Exception e) {
+//                                        e.printStackTrace();
+////                                        updateDialog.dismiss();
+//                                        timer.cancel();
+//                                        handler.sendEmptyMessageAtTime(HandlerManager.DOWNLOAD_ERROR, 100);
+//                                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+//                                        manager.remove(downProgressBean.getDownloadId());
+//                                    }
+//                                }
+//                            }, 0, 1000);
+                        }
+                    });
 //                    updateDialog.setCancelable(false);
-//                    updateDialog.show();
+                    updateDialog.show();
                     break;
                 case HandlerManager.UPDATE_VERSION_SAME:
                     Log.e(TAG, "版本号一致");
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            super.run();
+                            File file = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
+                            Log.e(TAG, file.listFiles().length + "");
+                            if (file.listFiles() != null) {
+                                for (File listFile : file.listFiles()) {
+                                    Log.e(TAG, listFile.getName() + "===========");
+                                    if (listFile.getName().contains("com.js.launcher")) {
+                                        listFile.delete();
+                                        Log.e(TAG, "delete update APK...");
+                                    }
+                                }
+                            }
+                        }
+                    }.start();
                     break;
                 case HandlerManager.VIEW_PAGER_ADAPTER_UPDATE:
                     pagerAdapter.notifyDataSetChanged();
@@ -1006,7 +1031,7 @@ public class MainActivity extends BaseActivity {
                     Toast.makeText(MainActivity.this, "下载异常，已取消下载", Toast.LENGTH_SHORT).show();
                     break;
                 case HandlerManager.IS_INSTALL_APP:
-                    File saveFile = (File) msg.obj;
+                    File updateFile = (File) msg.obj;
                     updateDialog = new UpdateDialog(MainActivity.this);
                     updateDialog.setMessage("检测到新版本，是否安装？");
                     updateDialog.setTitleVisible(View.GONE);
@@ -1020,7 +1045,7 @@ public class MainActivity extends BaseActivity {
                         @Override
                         public void onClick(View v) {
                             updateDialog.dismiss();
-                            CustomUtil.installAPK(MainActivity.this, saveFile);
+                            CustomUtil.installAPK(MainActivity.this, updateFile);
                         }
                     });
                     updateDialog.setCancelable(false);
@@ -1243,36 +1268,87 @@ public class MainActivity extends BaseActivity {
             public void run() {
                 super.run();
                 String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":8080/test/js_project/launcher/Version.txt");
+                Log.e(TAG, serverFile.length() + "=======wu");
                 String localVersionName = CustomUtil.getLocalVersionName();
                 if (serverFile.length() == 0) {
                     handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
                     return;
                 }
-                File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + serverFile + ".apk");
-                Log.e(TAG, saveFile.getAbsolutePath());
-                if (saveFile.exists()) {
-                    if (localVersionName.equals(serverFile)) {
-                        Log.e(TAG, "删除升级包");
-                        saveFile.delete();
-                    } else {
-                        Message message = new Message();
-                        message.what = HandlerManager.IS_INSTALL_APP;
-                        message.obj = saveFile;
-                        handler.sendMessageAtTime(message, 100);
-                    }
+                if (localVersionName.equals(serverFile)) {
+                    handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
                 } else {
-                    if (localVersionName.equals(serverFile)) {
-                        handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
-                    } else {
+                    File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + serverFile + ".apk");
+                    if (saveFile.exists()) {
                         Message message = new Message();
                         message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
-                        message.obj = serverFile;
+                        message.obj = saveFile;
                         handler.sendMessageAtTime(message, 100);
+                    } else {
+                        getUpdateAPK(serverFile);
                     }
                 }
             }
         }.start();
 
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                super.run();
+//                String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":8080/test/js_project/launcher/Version.txt");
+//                String localVersionName = CustomUtil.getLocalVersionName();
+//                if (serverFile.length() == 0) {
+//                    handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
+//                    return;
+//                }
+//                File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + serverFile + ".apk");
+//                Log.e(TAG, saveFile.getAbsolutePath());
+//                if (saveFile.exists()) {
+//                    if (localVersionName.equals(serverFile)) {
+//                        Log.e(TAG, "删除升级包");
+//                        saveFile.delete();
+//                    } else {
+//                        Message message = new Message();
+//                        message.what = HandlerManager.IS_INSTALL_APP;
+//                        message.obj = saveFile;
+//                        handler.sendMessageAtTime(message, 100);
+//                    }
+//                } else {
+//                    if (localVersionName.equals(serverFile)) {
+//                        handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
+//                    } else {
+//                        Message message = new Message();
+//                        message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
+//                        message.obj = serverFile;
+//                        handler.sendMessageAtTime(message, 100);
+//                    }
+//                }
+//            }
+//        }.start();
+
+    }
+
+    private void getUpdateAPK(String version) {
+        try {
+            Log.e(TAG, "================开始");
+            FTPClient client = new FTPClient();
+            client.connect(Contact.FTP_SERVER_IP, Contact.FTP_SERVER_PORT);
+            client.login(Contact.FTP_SERVER_USERNAME, Contact.FTP_SERVER_PASSWORD);
+            client.configure(new FTPClientConfig(FTPClientConfig.SYST_UNIX));
+//                    int replyCode = client.getReplyCode();
+//                    Log.e(TAG, replyCode + "==============1111");
+            if (client.getReplyCode() == 230) {
+//                Log.e(TAG, "1111" + MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
+                CustomUtil.downLoadFile(client, MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath() + "/com.js.launcher_" + version, "com.js.launcher.apk");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            try {
+                Thread.sleep(60000);
+                getUpdateAPK(version);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     private void initData() {
@@ -1664,7 +1740,6 @@ public class MainActivity extends BaseActivity {
     protected void onStart() {
         super.onStart();
         // 设置主屏幕背景
-//        setBackground();
 //        registerForContextMenu(rvAPPList);//为RecyclerviewView注册上下文菜单
     }
 
