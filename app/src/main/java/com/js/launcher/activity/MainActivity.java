@@ -2,7 +2,6 @@ package com.js.launcher.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Instrumentation;
@@ -17,15 +16,11 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -411,13 +406,6 @@ public class MainActivity extends BaseActivity {
                         // 设置viewPager透明度80%
                         mViewPager.setAlpha(0.8f);
 
-//                        for (int i = 0; i < mPageView.size(); i++) {
-//                            if (i > 1) {
-//                                DragGridView view2 = (DragGridView) mPageView.get(i);
-//                                view2.setBackground(getResources().getDrawable(R.drawable.selector_gridview_bg_stroke));
-//                            }
-//                        }
-
                         // 优化设置背景
                         if (copyPageSelectedPosition > 2 && copyPageSelectedPosition < mPageView.size() - 1) {
                             mPageView.get(copyPageSelectedPosition - 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
@@ -597,26 +585,6 @@ public class MainActivity extends BaseActivity {
                         isMoving = true;
                     }
                 }
-
-//                @Override
-//                public void onItemClick(int p) {
-                    // 更新手指点击时position，根据页数和页个数更新
-//                    int newPosition = p + savePosition * mPageSize;
-//                    // 当position为-1或者item中无数据不执行下面内容
-//                    if (p == -1 || appBeanList.get(newPosition).getPackageName().length() == 0) {
-//                        return;
-//                    }
-//                    Log.d("TAG", "onItemClick====>" + newPosition + "");
-//                    //查询这个应用程序的入口activity。把他开启起来
-//                    try {
-//                        PackageManager pm = getPackageManager();
-//                        Intent intent = pm.getLaunchIntentForPackage(appBeanList.get(newPosition).getPackageName());
-//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                        startActivity(intent);
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
             });
 
             // 根据当前页获取当前gridview
@@ -966,31 +934,6 @@ public class MainActivity extends BaseActivity {
                         public void onClick(View v) {
                             updateDialog.dismiss();
                             CustomUtil.installAPK(MainActivity.this, saveFile);
-//                            updateDialog.setProgressVisible(View.VISIBLE);
-//                            updateDialog.setButtonVisible(View.GONE);
-//                            Timer timer = new Timer();
-//                            timer.schedule(new TimerTask() {
-//                                @Override
-//                                public void run() {
-//                                    Log.e(TAG, downProgressBean.getProgress());
-//                                    try {
-//                                        float progress = Float.parseFloat(downProgressBean.getProgress());
-//                                        if (progress == 100.00) {
-////                                            updateDialog.dismiss();
-//                                            Log.e(TAG, "新版本下载成功，重启应用可进行更新");
-//                                        }
-////                                        updateDialog.setPbProgress((int) progress);
-////                                        updateDialog.setTvProgress(downProgressBean.getProgress());
-//                                    } catch (Exception e) {
-//                                        e.printStackTrace();
-////                                        updateDialog.dismiss();
-//                                        timer.cancel();
-//                                        handler.sendEmptyMessageAtTime(HandlerManager.DOWNLOAD_ERROR, 100);
-//                                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-//                                        manager.remove(downProgressBean.getDownloadId());
-//                                    }
-//                                }
-//                            }, 0, 1000);
                         }
                     });
 //                    updateDialog.setCancelable(false);
@@ -1120,13 +1063,9 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // 隐藏底部导航栏
-//        CustomUtil.hideBottomUIMenu(this);
         setContentView(R.layout.activity_main);
+        // 隐藏底部导航栏
         CustomUtil.hideNavigationBar(this);
-//        if (!CustomUtil.isNotificationListenerEnabled(this)) {//是否开启通知使用权
-//            CustomUtil.openNotificationListenSettings(this);
-//        }
         // 设置全局handler
         HandlerManager.putHandler(handler);
         appBeanList = new ArrayList<>();
@@ -1294,10 +1233,7 @@ public class MainActivity extends BaseActivity {
             client.connect(Contact.FTP_SERVER_IP, Contact.FTP_SERVER_PORT);
             client.login(Contact.FTP_SERVER_USERNAME, Contact.FTP_SERVER_PASSWORD);
             client.configure(new FTPClientConfig(FTPClientConfig.SYST_UNIX));
-//                    int replyCode = client.getReplyCode();
-//                    Log.e(TAG, replyCode + "==============1111");
             if (client.getReplyCode() == 230) {
-//                Log.e(TAG, "1111" + MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
                 CustomUtil.downLoadFile(client, MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath() + "/com.js.launcher_" + version, "com.js.launcher.apk");
             }
         } catch (IOException e) {
@@ -1867,9 +1803,6 @@ public class MainActivity extends BaseActivity {
             Drawable drawable = packageInfo.applicationInfo.loadIcon(getPackageManager());
             //得到应用所在包的名字,即在AndroidManifest.xml中的package的值。
             String packageName = packageInfo.packageName;
-//            Log.e("=======aaa", "应用的名字:" + appName);
-//            Log.e("=======bbb", "应用的包名字:" + packageName);
-//            APPBean appBean = new APPBean(packageName, drawable);
             byte[] appIconBytes = CustomUtil.bitmap2Bytes(CustomUtil.drawableToBitmap(drawable));
 
             if (CustomUtil.NotActiveApp(this, packageName)) {
