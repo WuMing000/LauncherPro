@@ -2,13 +2,11 @@ package com.js.launcher.utils;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Insets;
@@ -17,7 +15,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -30,8 +27,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import com.js.launcher.MyApplication;
-import com.js.launcher.bean.DownBean;
-import com.js.launcher.bean.DownProgressBean;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -48,17 +43,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.Timer;
 
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.RecyclerView;
 
 public class CustomUtil {
 
@@ -114,18 +103,6 @@ public class CustomUtil {
         return false;
     }
 
-    /** 根据触摸的位置获取recyclerview的position */
-    public static int findItem(RecyclerView recyclerView, int x, int y) {
-        View childViewUnder = recyclerView.findChildViewUnder(x, y);
-        if (childViewUnder != null) {
-            RecyclerView.ViewHolder childViewHolder = recyclerView.getChildViewHolder(childViewUnder);
-            if (childViewHolder != null) {
-                return childViewHolder.getAdapterPosition();
-            }
-        }
-        return -1;
-    }
-
     /** 根据包名获取应用图标和名称 */
     public static Map<Drawable, String> getIconANDAppName(String packageName) {
         Map<Drawable, String > map = new HashMap<Drawable, String>();
@@ -159,10 +136,7 @@ public class CustomUtil {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        if ("com.js.appstore".equals(packageName) || "com.js.photoalbum".equals(packageName)) {
-            return true;
-        }
-        return false;
+        return "com.js.appstore".equals(packageName) || "com.js.photoalbum".equals(packageName);
     }
 
     /**
@@ -260,36 +234,8 @@ public class CustomUtil {
         return -1;
     }
 
-    /**
-     * 是否开启通知权限
-     * @param context
-     * @return
-     */
-    public static boolean isNotificationListenerEnabled(Context context) {
-        Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
-        if (packageNames.contains(context.getPackageName())) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 开启通知权限
-     */
-    public static void openNotificationListenSettings(Context context) {
-        try {
-            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static String getServerFile(String path) {
         //获取网络数据
-        //01.定义获取网络的数据的路径
-//        String path="http://114.132.220.67:8080/test/js_project/store/Version.txt";
-//        StringBuilder stringBuffer = null;
         String str = "";
         try {
             //2.实例化url
@@ -340,87 +286,6 @@ public class CustomUtil {
         return localVersion;
     }
 
-    public static DownBean updateAPK(String url, String versionName) {
-
-        File file = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
-        if (file.listFiles() != null) {
-            for (int i = 0; i < file.listFiles().length; i++) {
-                Log.e(TAG, file.listFiles()[i].getName() + "===========");
-                if (file.listFiles()[i].getName().contains("com.js.launcher")) {
-                    file.listFiles()[i].delete();
-                }
-            }
-        }
-        DownloadManager manager = (DownloadManager) MyApplication.getInstance().getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-        /*
-         * 1. 封装下载请求
-         */
-        // 创建下载请求
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
-
-        Log.e(TAG, MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath());
-        Log.e(TAG, url.substring(url.lastIndexOf("/") + 1));
-        File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + versionName);
-        request.setDestinationUri(Uri.fromFile(saveFile));
-
-//        if (saveFile.exists()) {
-//            saveFile.delete();
-//            Log.e(TAG, "删除");
-//        }
-
-        long downloadId = manager.enqueue(request);
-
-        return new DownBean(downloadId);
-    }
-
-    public static DownProgressBean updateProgress(long downloadId, Timer timer) {
-        DownProgressBean downProgressBean = new DownProgressBean();
-        DownloadManager manager = (DownloadManager) MyApplication.getInstance().getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-        // 创建一个查询对象
-        DownloadManager.Query query = new DownloadManager.Query();
-        // 根据 下载ID 过滤结果
-        query.setFilterById(downloadId);
-        // 还可以根据状态过滤结果
-        // query.setFilterByStatus(DownloadManager.STATUS_SUCCESSFUL);
-        // 执行查询, 返回一个 Cursor (相当于查询数据库)
-        Cursor cursor = manager.query(query);
-        if (!cursor.moveToFirst()) {
-            cursor.close();
-            return downProgressBean;
-        }
-        // 下载ID
-        @SuppressLint("Range") long id = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_ID));
-        // 下载请求的状态
-        @SuppressLint("Range") int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
-        // 下载文件在本地保存的路径（Android 7.0 以后 COLUMN_LOCAL_FILENAME 字段被弃用, 需要用 COLUMN_LOCAL_URI 字段来获取本地文件路径的 Uri）
-        @SuppressLint("Range") String localFilename = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-        // 已下载的字节大小
-        @SuppressLint("Range") long downloadedSoFar = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-        // 下载文件的总字节大小
-        @SuppressLint("Range") long totalSize = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)) == -1 ? 1 : cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-        cursor.close();
-//        System.out.println("下载进度: " + downloadedSoFar  + "/" + totalSize);
-        DecimalFormat decimalFormat = new DecimalFormat( "##0.00 ");
-        String dd = decimalFormat.format(downloadedSoFar * 1.0f / totalSize * 100);
-//        Log.e(TAG, downloadedSoFar * 1.0f / totalSize * 100 + "");
-        Log.e(TAG, dd);
-        downProgressBean = new DownProgressBean(downloadId, dd);
-        if (status == DownloadManager.STATUS_SUCCESSFUL) {
-            File installFile = null;
-            File saveFile = new File(localFilename.substring(7));
-            if (saveFile.exists()) {
-                installFile = renameFile(localFilename.substring(7), localFilename.substring(7) + ".apk");
-            }
-            Log.e(TAG, installFile.getAbsolutePath());
-//            System.out.println("下载成功, 打开文件, 文件路径: " + localFilename);
-//            installAPK(MyApplication.getInstance().getContext(), installFile);
-            timer.cancel();
-        }
-
-        return downProgressBean;
-    }
-
     /**
      * oldPath 和 newPath必须是新旧文件的绝对路径
      */
@@ -462,7 +327,6 @@ public class CustomUtil {
                 intent.setDataAndType(Uri.fromFile(apkName), "application/vnd.android.package-archive");
             }
             mContext.startActivity(intent);
-//            android.os.Process.killProcess(android.os.Process.myPid());//安装完之后会提示”完成” “打开”。
 
         } catch (Exception e) {
             e.printStackTrace();

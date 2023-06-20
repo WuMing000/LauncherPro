@@ -217,40 +217,6 @@ public class DragGridView extends GridView {
 
                 // 设置最后移动的位置的position
                 setActionUpPosition(mMovePosition);
-//                Log.e(TAG, "1111111111:" + mMovePosition + ",actionUP:" + actionUpPosition);
-
-//                if (mMovePosition == mDragPosition) {
-//                    // 初始化
-//                    firstMovePosition = 0;
-//                }
-//                if (mMovePosition != firstMovePosition && firstMoveView != null) {
-//                    // 移动到新的position，去除上一个平移动画
-//                    firstMoveView.clearAnimation();
-//                }
-//
-//                // 按下和移动两个position不一致才执行平移动画
-//                if (mMovePosition != mDragPosition && mMovePosition != firstMovePosition && mMoveView != null && isDrag) {
-//                    // 每次平移重新赋值
-//                    firstMovePosition = mMovePosition;
-//                    firstMoveView = mMoveView;
-////                    Log.d(TAG, "update:moveX " + mMoveView.getX() + ", moveY " + mMoveView.getY() + "frontX " + mDragView.getX() + ", frontY " + mDragView.getY());
-//                    if (mMoveView.getX() == mDragView.getX()) {
-//                        translateAnimation = new TranslateAnimation(0, 0, 0, mDragView.getY() - mMoveView.getY());//Y平移动画
-//                        translateAnimation.setDuration(300);
-//                        translateAnimation.setFillAfter(true);
-//                        firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
-//                    } else if (mMoveView.getY() == mDragView.getY()) {
-//                        translateAnimation = new TranslateAnimation(0, mDragView.getX() - mMoveView.getX(), 0, 0);//X平移动画
-//                        translateAnimation.setDuration(300);
-//                        translateAnimation.setFillAfter(true);
-//                        firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
-//                    } else {
-//                        translateAnimation = new TranslateAnimation(0, mDragView.getX() - mMoveView.getX(), 0, mDragView.getY() - mMoveView.getY());//X、Y平移动画
-//                        translateAnimation.setDuration(300);
-//                        translateAnimation.setFillAfter(true);
-//                        firstMoveView.startAnimation(translateAnimation);//给imageView添加的动画效果
-//                    }
-//                }
 
                 // 告诉viewGroup不要去拦截我
                 getParent().requestDisallowInterceptTouchEvent(isDrag);

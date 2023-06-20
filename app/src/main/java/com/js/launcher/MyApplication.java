@@ -24,9 +24,6 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            startService(new Intent(this, MusicNotificationListenerService.class));
-//        }
         singleton = this;
         context = getApplicationContext();
         // 运行后台，用于监听应用安装卸载和音乐变化
