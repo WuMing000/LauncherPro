@@ -5,11 +5,9 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DownloadManager;
 import android.app.Instrumentation;
 import android.app.WallpaperManager;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,6 +17,8 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
@@ -30,7 +30,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -53,8 +52,6 @@ import com.js.launcher.MyApplication;
 import com.js.launcher.R;
 import com.js.launcher.adapter.MyGridViewAdapter;
 import com.js.launcher.bean.APPBean;
-import com.js.launcher.bean.DownBean;
-import com.js.launcher.bean.DownProgressBean;
 import com.js.launcher.manager.Contact;
 import com.js.launcher.manager.HandlerManager;
 import com.js.launcher.utils.APPListDataSaveUtils;
@@ -64,13 +61,10 @@ import com.js.launcher.view.DragGridView;
 import com.js.launcher.view.MyViewPager;
 import com.js.launcher.view.UpdateDialog;
 
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
-import org.apache.commons.net.ftp.FTPFile;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -974,12 +968,10 @@ public class MainActivity extends BaseActivity {
                             CustomUtil.installAPK(MainActivity.this, saveFile);
 //                            updateDialog.setProgressVisible(View.VISIBLE);
 //                            updateDialog.setButtonVisible(View.GONE);
-//                            DownBean downBean = CustomUtil.updateAPK(Contact.SERVER_URL + ":8080/test/js_project/launcher/js_launcher.apk", versionName);
 //                            Timer timer = new Timer();
 //                            timer.schedule(new TimerTask() {
 //                                @Override
 //                                public void run() {
-//                                    DownProgressBean downProgressBean = CustomUtil.updateProgress(downBean.getDownloadId(), timer);
 //                                    Log.e(TAG, downProgressBean.getProgress());
 //                                    try {
 //                                        float progress = Float.parseFloat(downProgressBean.getProgress());
@@ -1180,6 +1172,9 @@ public class MainActivity extends BaseActivity {
         ibOffice = view2.findViewById(R.id.ib_office);
         mPageView = new ArrayList<>();
 
+        // 设置主屏幕背景
+        setBackground();
+
         // 使用数据库获取APP信息
         sp = getSharedPreferences("home_save_data", MODE_PRIVATE);
         // 旋转屏幕时，使用旋转保存的数据重新设置
@@ -1289,41 +1284,6 @@ public class MainActivity extends BaseActivity {
                 }
             }
         }.start();
-
-//        new Thread() {
-//            @Override
-//            public void run() {
-//                super.run();
-//                String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":8080/test/js_project/launcher/Version.txt");
-//                String localVersionName = CustomUtil.getLocalVersionName();
-//                if (serverFile.length() == 0) {
-//                    handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
-//                    return;
-//                }
-//                File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + serverFile + ".apk");
-//                Log.e(TAG, saveFile.getAbsolutePath());
-//                if (saveFile.exists()) {
-//                    if (localVersionName.equals(serverFile)) {
-//                        Log.e(TAG, "删除升级包");
-//                        saveFile.delete();
-//                    } else {
-//                        Message message = new Message();
-//                        message.what = HandlerManager.IS_INSTALL_APP;
-//                        message.obj = saveFile;
-//                        handler.sendMessageAtTime(message, 100);
-//                    }
-//                } else {
-//                    if (localVersionName.equals(serverFile)) {
-//                        handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
-//                    } else {
-//                        Message message = new Message();
-//                        message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
-//                        message.obj = serverFile;
-//                        handler.sendMessageAtTime(message, 100);
-//                    }
-//                }
-//            }
-//        }.start();
 
     }
 
@@ -1746,8 +1706,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // 设置主屏幕背景
-        setBackground();
         // 设置内容为空
         etSource.setText("");
         if (audioManager.isMusicActive()) {
@@ -2013,25 +1971,24 @@ public class MainActivity extends BaseActivity {
     }
 
     //使用WallpaperManager类
-    @TargetApi(Build.VERSION_CODES.N)
-    private Bitmap getLockWallpaper() {
+    private Drawable getLockWallpaper() {
         WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);//获取WallpaperManager实例
         ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        ParcelFileDescriptor mParcelFileDescriptor = wallpaperManager.getWallpaperFile(WallpaperManager.FLAG_SYSTEM);//获取桌面壁纸
-        FileDescriptor fileDescriptor = mParcelFileDescriptor.getFileDescriptor();
-        Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);//获取Bitmap类型返回值
-        try {
-            mParcelFileDescriptor.close();
-        } catch(Exception e) {
+//        ParcelFileDescriptor mParcelFileDescriptor = wallpaperManager.getWallpaperFile(WallpaperManager.FLAG_SYSTEM);//获取桌面壁纸
+//        FileDescriptor fileDescriptor = mParcelFileDescriptor.getFileDescriptor();
+//        Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);//获取Bitmap类型返回值
+        //        try {
+//            mParcelFileDescriptor.close();
+//        } catch(Exception e) {
 //            android.util.Log.d(TAG,"mParcelFileDescriptor.close() error");
-        }
-        return image;
+//        }
+        return wallpaperManager.getDrawable();
     }
 
     private void setBackground(){ //获取壁纸后设置为view的背景
         try {
-            Drawable drawable =new BitmapDrawable(getResources(), getLockWallpaper());//将Bitmap类型转换为Drawable类型
-            llBgHome.setBackground(drawable);//设置背景
+//            Drawable drawable =new BitmapDrawable(getResources(), getLockWallpaper());//将Bitmap类型转换为Drawable类型
+            llBgHome.setBackground(getLockWallpaper());//设置背景
 //            drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);//设置背景灰度
         } catch(Exception e) {
 //            android.util.Log.d(TAG,"set Background fail");
