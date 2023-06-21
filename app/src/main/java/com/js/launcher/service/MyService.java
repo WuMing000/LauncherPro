@@ -64,7 +64,7 @@ public class MyService extends Service {
         // 8.0 以上需要特殊处理
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // 静音通知
-            channelId = createNotificationChannel("kim.hsl", "ForegroundService");
+            channelId = createNotificationChannel();
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId);
             Notification notification = builder.setOngoing(true)
                     .setSmallIcon(R.mipmap.ic_launcher)
@@ -83,7 +83,7 @@ public class MyService extends Service {
     }
 
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             //链接上
@@ -149,18 +149,15 @@ public class MyService extends Service {
 
     /**
      * 创建通知通道
-     * @param channelId
-     * @param channelName
-     * @return
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private String createNotificationChannel(String channelId, String channelName){
-        NotificationChannel chan = new NotificationChannel(channelId,
-                channelName, NotificationManager.IMPORTANCE_NONE);
+    private String createNotificationChannel(){
+        NotificationChannel chan = new NotificationChannel("kim.hsl",
+                "ForegroundService", NotificationManager.IMPORTANCE_NONE);
         chan.setLightColor(Color.BLUE);
         chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
         NotificationManager service = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         service.createNotificationChannel(chan);
-        return channelId;
+        return "kim.hsl";
     }
 }

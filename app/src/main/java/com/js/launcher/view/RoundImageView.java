@@ -26,6 +26,7 @@ public class RoundImageView extends ImageView {
         super(context, attrs, defStyleAttr);
     }
  
+    @SuppressLint("DrawAllocation")
     protected void onDraw(Canvas canvas) {
         Path path = new Path();
         int w = this.getWidth();

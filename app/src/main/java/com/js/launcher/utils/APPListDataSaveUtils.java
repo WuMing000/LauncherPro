@@ -26,9 +26,6 @@ public class APPListDataSaveUtils {
 
     /**
      * 保存List
-     *
-     * @param tag
-     * @param dataList
      */
     public void setDataList(String tag, List<APPBean> dataList) {
         if (null == dataList || dataList.size() <= 0)
@@ -44,9 +41,6 @@ public class APPListDataSaveUtils {
 
     /**
      * 获取List
-     *
-     * @param tag
-     * @return
      */
     public List<APPBean> getDataList(String tag) {
         List<APPBean> dataList = new ArrayList();
@@ -62,9 +56,6 @@ public class APPListDataSaveUtils {
 
     /**
      * 保存普通String
-     *
-     * @param key
-     * @param value
      */
     public void setDataString(String key, String value) {
         if (value == null) {
@@ -80,8 +71,6 @@ public class APPListDataSaveUtils {
 
     /**
      * 获取普通的String
-     * @param key
-     * @return
      */
     public String getDataString(String key) {
         String value = "";

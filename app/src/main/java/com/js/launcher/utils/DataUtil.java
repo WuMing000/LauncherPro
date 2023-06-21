@@ -20,20 +20,28 @@ public class DataUtil {
         mMonth = String.valueOf(c.get(Calendar.MONTH) + 1);// 获取当前月份
         mDay = String.valueOf(c.get(Calendar.DAY_OF_MONTH));// 获取当前月份的日期号码
         mWay = String.valueOf(c.get(Calendar.DAY_OF_WEEK));
-        if("1".equals(mWay)){
-            mWay ="日";
-        }else if("2".equals(mWay)){
-            mWay ="一";
-        }else if("3".equals(mWay)){
-            mWay ="二";
-        }else if("4".equals(mWay)){
-            mWay ="三";
-        }else if("5".equals(mWay)){
-            mWay ="四";
-        }else if("6".equals(mWay)){
-            mWay ="五";
-        }else if("7".equals(mWay)){
-            mWay ="六";
+        switch (mWay) {
+            case "1":
+                mWay = "日";
+                break;
+            case "2":
+                mWay = "一";
+                break;
+            case "3":
+                mWay = "二";
+                break;
+            case "4":
+                mWay = "三";
+                break;
+            case "5":
+                mWay = "四";
+                break;
+            case "6":
+                mWay = "五";
+                break;
+            case "7":
+                mWay = "六";
+                break;
         }
         return mYear + "年" + mMonth + "月" + mDay + "日";
     }
@@ -46,20 +54,28 @@ public class DataUtil {
         mMonth = String.valueOf(c.get(Calendar.MONTH) + 1);// 获取当前月份
         mDay = String.valueOf(c.get(Calendar.DAY_OF_MONTH));// 获取当前月份的日期号码
         mWay = String.valueOf(c.get(Calendar.DAY_OF_WEEK));
-        if("1".equals(mWay)){
-            mWay ="日";
-        }else if("2".equals(mWay)){
-            mWay ="一";
-        }else if("3".equals(mWay)){
-            mWay ="二";
-        }else if("4".equals(mWay)){
-            mWay ="三";
-        }else if("5".equals(mWay)){
-            mWay ="四";
-        }else if("6".equals(mWay)){
-            mWay ="五";
-        }else if("7".equals(mWay)){
-            mWay ="六";
+        switch (mWay) {
+            case "1":
+                mWay = "日";
+                break;
+            case "2":
+                mWay = "一";
+                break;
+            case "3":
+                mWay = "二";
+                break;
+            case "4":
+                mWay = "三";
+                break;
+            case "5":
+                mWay = "四";
+                break;
+            case "6":
+                mWay = "五";
+                break;
+            case "7":
+                mWay = "六";
+                break;
         }
         return "星期" + mWay;
     }

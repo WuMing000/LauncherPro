@@ -1,5 +1,5 @@
 package com.js.launcher.view;
- 
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,7 +12,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
@@ -25,7 +24,7 @@ import com.js.launcher.utils.CustomUtil;
 import androidx.core.content.ContextCompat;
 
 /**
- * @explain 长按移动的gridView
+ * 长按移动的gridView
  */
 public class DragGridView extends GridView {
 
@@ -74,14 +73,6 @@ public class DragGridView extends GridView {
     private boolean isMove = false;
     //手指抬起前的position
     private int actionUpPosition;
-    // 初始化position，用于管理清除平移动画
-    private int firstMovePosition;
-    // 初始化view，用于管理清除平移动画
-    private View firstMoveView;
-//    private ObjectAnimator translationAnimator;
-    //平移动画
-    private Animation translateAnimation;
-//    private boolean isCanDrag = false;
 
     //卸载点击
     private OnUninstallClick onUninstallClick;
@@ -94,22 +85,20 @@ public class DragGridView extends GridView {
 
     private final Handler mHandler;
 
-    private boolean isFingerMove;
-
     /**
      * 长按的Runnable
      */
-    private final Runnable mLongClickRunnable = new Runnable() {
-        @Override
-        public void run() {
-            // 创建长按窗口
-//            onCreateLongButton(mDownX, mDownY - mStatusHeight);
-            // 标记可拖动
-//            isDrag = true;
-            // 添加振动
-//            mVibrator.vibrate(100);
-        }
-    };
+//    private final Runnable mLongClickRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            // 创建长按窗口
+////            onCreateLongButton(mDownX, mDownY - mStatusHeight);
+//            // 标记可拖动
+////            isDrag = true;
+//            // 添加振动
+////            mVibrator.vibrate(100);
+//        }
+//    };
 
     public DragGridView(Context context) {
         this(context, null);
@@ -130,6 +119,7 @@ public class DragGridView extends GridView {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        boolean isFingerMove;
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 Log.e(TAG, "onActionDown");
@@ -160,7 +150,7 @@ public class DragGridView extends GridView {
 
                 // 添加点击接口
                 if (itemMoveListener != null) {
-                    itemMoveListener.onDown(mDownX, mDownY - mStatusHeight, mDragPosition, mDragView, mHandler, mLongClickRunnable);
+                    itemMoveListener.onDown(mDownX, mDownY - mStatusHeight, mDragPosition, mDragView, mHandler);
                 }
 
                 break;
@@ -258,7 +248,7 @@ public class DragGridView extends GridView {
 //                }
                 // 添加抬起接口
                 if (itemMoveListener != null && actionUpPosition != AdapterView.INVALID_POSITION) {
-                    itemMoveListener.onUp(actionUpPosition, translateAnimation);
+                    itemMoveListener.onUp(actionUpPosition);
                 }
                 // 可拖动时，手指抬起去除镜像和更改标记状态
                 if (isDrag) {
@@ -317,27 +307,16 @@ public class DragGridView extends GridView {
     public void setOnItemMoveListener(OnItemMoveListener itemMoveListener) {
         this.itemMoveListener = itemMoveListener;
     }
-    /******************************************************************************/
-
 
     /**
      * 点是否在该View上面
-     *
-     * @param view
-     * @param x
-     * @param y
-     * @return
      */
     private boolean isTouchInItem(View view, int x, int y) {
         if (view == null) {
             return false;
         }
-        if (view.getLeft() < x && x < view.getRight()
-                && view.getTop() < y && y < view.getBottom()) {
-            return true;
-        } else {
-            return false;
-        }
+        return view.getLeft() < x && x < view.getRight()
+                && view.getTop() < y && y < view.getBottom();
     }
 
     /**
@@ -383,9 +362,6 @@ public class DragGridView extends GridView {
 
     /**
      * 拖动item到指定位置
-     *
-     * @param x
-     * @param y
      */
     private void onDragItem(int x, int y) {
         // 定义位置
@@ -407,10 +383,6 @@ public class DragGridView extends GridView {
 
     /**
      * 创建拖动的镜像
-     *
-     * @param bitmap
-     * @param downX
-     * @param downY
      */
     @SuppressLint("RtlHardcoded")
     public void createDragView(Bitmap bitmap, int downX, int downY) {
@@ -522,11 +494,11 @@ public class DragGridView extends GridView {
      * item 交换时的回调接口
      */
     public interface OnItemMoveListener {
-        void onDown(int x, int y, int position, View downView, Handler handler, Runnable runnable);
+        void onDown(int x, int y, int position, View downView, Handler handler);
         void isMove(boolean isFingerMove);
         void onMove(int x, int y, boolean isMove, int position, View moveView);
         void onCancel();
-        void onUp(int position, Animation translateAnimation);
+        void onUp(int position);
     }
 
     //是系统APP则不添加卸载子布局

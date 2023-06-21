@@ -226,7 +226,7 @@ public class MainActivity extends BaseActivity {
             // 回调按下、移动、抬起等方法
             gridView.setOnItemMoveListener(new DragGridView.OnItemMoveListener() {
                 @Override
-                public void onDown(int x, int y, int p, View downView, Handler handler, Runnable runnable) {
+                public void onDown(int x, int y, int p, View downView, Handler handler) {
                     // 重新赋值position，因为固定了一个gridview显示18个条目，需要结合页数进行更新
                     int newPosition = p + savePosition * mPageSize;
                     MyGridViewAdapter myGridViewAdapter = (MyGridViewAdapter) gridView.getAdapter();
@@ -261,9 +261,9 @@ public class MainActivity extends BaseActivity {
                     moveBgPosition = newPosition;
                     Log.d("TAG", "onDown:" + newPosition);
                     // 包名为空的位置，不展示长按窗口
-                    if (appBeanList.get(newPosition).getPackageName().length() == 0) {
-                        handler.removeCallbacks(runnable);
-                    }
+//                    if (appBeanList.get(newPosition).getPackageName().length() == 0) {
+//                        handler.removeCallbacks(runnable);
+//                    }
                     // 包名不为空时，判断是否是系统应用
                     if (appBeanList.get(newPosition).getPackageName().length() != 0) {
                         gridView.isUninstallVisible(CustomUtil.isSystemApplication(MainActivity.this, appBeanList.get(newPosition).getPackageName()));
@@ -458,7 +458,7 @@ public class MainActivity extends BaseActivity {
                 }
 
                 @Override
-                public void onUp(int p, Animation transAnimation) {
+                public void onUp(int p) {
 
                     // 移动时，取消发送设置壁纸runnable
                     if (timer != null) {

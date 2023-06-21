@@ -7,10 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.js.launcher.MyApplication;
 import com.js.launcher.manager.HandlerManager;
-
-import java.io.File;
 
 // 应用安装卸载广播接收者
 public class MyInstalledReceiver extends BroadcastReceiver {

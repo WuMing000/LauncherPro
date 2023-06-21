@@ -61,7 +61,7 @@ public class CustomUtil {
      * @return 视图v是否应该隐藏输入软键盘，若v不是输入框，返回false
      */
     public static boolean isShouldHideInput(View v, MotionEvent event) {
-        if (v != null && (v instanceof EditText)) {
+        if ((v instanceof EditText)) {
             int[] leftTop = {0, 0};
             //获取输入框当前的location位置
             v.getLocationInWindow(leftTop);
@@ -96,16 +96,14 @@ public class CustomUtil {
         int right = left + view.getMeasuredWidth();
         int bottom = top + view.getMeasuredHeight();
         if (top <= y) {
-            if (bottom >= y && x >= left && x <= right) {
-                return true;
-            }
+            return bottom >= y && x >= left && x <= right;
         }
         return false;
     }
 
     /** 根据包名获取应用图标和名称 */
     public static Map<Drawable, String> getIconANDAppName(String packageName) {
-        Map<Drawable, String > map = new HashMap<Drawable, String>();
+        Map<Drawable, String > map = new HashMap<>();
         PackageManager pm = MyApplication.getInstance().getContext().getPackageManager();
         try {
             ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
@@ -167,7 +165,6 @@ public class CustomUtil {
     /**
      * bitmap转化成byte数组
      * @param bm 需要转换的Bitmap
-     * @return
      */
     public static byte[] bitmap2Bytes(Bitmap bm){
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -201,9 +198,6 @@ public class CustomUtil {
 
     /**
      * 获取状态栏的高度
-     *
-     * @param context
-     * @return
      */
     @SuppressLint("PrivateApi")
     public static int getStatusHeight(Context context) {
@@ -300,8 +294,7 @@ public class CustomUtil {
         File oldFile = new File(oldPath);
         File newFile = new File(newPath);
         boolean b = oldFile.renameTo(newFile);
-        File file2 = new File(newPath);
-        return file2;
+        return new File(newPath);
     }
 
     /**
@@ -320,7 +313,7 @@ public class CustomUtil {
                 Log.e("TAG", "11111111111111");
                 //如果SDK版本>=24，即：Build.VERSION.SDK_INT >= 24，使用FileProvider兼容安装apk
                 String packageName = mContext.getApplicationContext().getPackageName();
-                String authority = new StringBuilder(packageName).append(".fileprovider").toString();
+                String authority = packageName + ".fileprovider";
                 Uri apkUri = FileProvider.getUriForFile(mContext, authority, apkName);
                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
             } else {
