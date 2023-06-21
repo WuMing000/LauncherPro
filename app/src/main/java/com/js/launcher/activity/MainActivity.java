@@ -1324,7 +1324,7 @@ public class MainActivity extends BaseActivity {
                 btnPicture.clearAnimation();
                 try {
                     Intent intent = new Intent();
-                    ComponentName componentNameGallery = new ComponentName("com.js.photoalbum", "com.js.photoalbum.activity.CheckPermissionActivity");
+                    ComponentName componentNameGallery = new ComponentName("com.js.photoalbum", "com.js.photoalbum.activity.MainActivity");
                     intent.setComponent(componentNameGallery);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
