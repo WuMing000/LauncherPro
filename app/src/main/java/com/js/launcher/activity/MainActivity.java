@@ -1201,8 +1201,8 @@ public class MainActivity extends BaseActivity {
             @Override
             public void run() {
                 super.run();
-                String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":8080/test/js_project/launcher/Version.txt");
-                Log.e(TAG, serverFile.length() + "=======wu");
+                String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":"+ Contact.TOMCAT_SERVER_PORT + Contact.VERSION_URL);
+                Log.e(TAG, serverFile.length() + "=======");
                 String localVersionName = CustomUtil.getLocalVersionName();
                 if (serverFile.length() == 0) {
                     handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
@@ -1211,7 +1211,7 @@ public class MainActivity extends BaseActivity {
                 if (localVersionName.equals(serverFile)) {
                     handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
                 } else {
-                    File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), "com.js.launcher_" + serverFile + ".apk");
+                    File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), Contact.PACKAGE_NAME + "-" + serverFile + ".apk");
                     if (saveFile.exists()) {
                         Message message = new Message();
                         message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
@@ -1234,7 +1234,7 @@ public class MainActivity extends BaseActivity {
             client.login(Contact.FTP_SERVER_USERNAME, Contact.FTP_SERVER_PASSWORD);
             client.configure(new FTPClientConfig(FTPClientConfig.SYST_UNIX));
             if (client.getReplyCode() == 230) {
-                CustomUtil.downLoadFile(client, MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath() + "/com.js.launcher_" + version, "com.js.launcher.apk");
+                CustomUtil.downLoadFile(client, MyApplication.getInstance().getContext().getExternalFilesDir(null).getAbsolutePath() + "/" + Contact.PACKAGE_NAME + "-" + version, Contact.PACKAGE_NAME + ".apk");
             }
         } catch (IOException e) {
             e.printStackTrace();
