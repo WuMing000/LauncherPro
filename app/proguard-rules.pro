@@ -42,15 +42,19 @@
 #
 #############################################
 
-# 保留我们使用的四大组件，自定义的Application等等这些类不被混淆
-# 因为这些子类都有可能被外部调用
+#Fragment不需要在AndroidManifest.xml中注册，需要额外保护下
+-keep public class * extends android.app.Fragment
+
+
+#继承activity,application,service,broadcastReceiver,contentprovider....不进行混淆
+-keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
 -keep public class * extends android.app.Service
 -keep public class * extends android.content.BroadcastReceiver
 -keep public class * extends android.content.ContentProvider
 -keep public class * extends android.app.backup.BackupAgentHelper
 -keep public class * extends android.preference.Preference
-
+-keep public class * extends android.view.View
 # 保留support下的所有类及其内部类
 -keep class android.support.** {*;}
 
