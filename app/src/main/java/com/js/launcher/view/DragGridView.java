@@ -434,6 +434,7 @@ public class DragGridView extends GridView {
             uninstallButton.setBackgroundColor(getResources().getColor(R.color.transparent));
             // 设置卸载按钮内文字
             uninstallButton.setText("卸载");
+            uninstallButton.setTextColor(getResources().getColor(R.color.my_gray));
             // 设置卸载按钮点击监听事件
             uninstallButton.setOnClickListener(new OnClickListener() {
                 @Override
@@ -449,12 +450,14 @@ public class DragGridView extends GridView {
 
         // 应用信息布局，同卸载布局定义
         LinearLayout linearLayout2 = new LinearLayout(getContext());
+        linearLayout2.setGravity(LinearLayout.VERTICAL);
         ImageView informationImg = new ImageView(getContext());
         Button informationButton = new Button(getContext());
         informationImg.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.information));
         informationButton.setId(R.id.btn_information);
         informationButton.setBackgroundColor(getResources().getColor(R.color.transparent));
         informationButton.setText("应用信息");
+        informationButton.setTextColor(getResources().getColor(R.color.my_gray));
         informationButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {

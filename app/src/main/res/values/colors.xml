@@ -10,6 +10,7 @@
     <color name="my_light_white">#FFECECEC</color>
     <color name="transparent">#00000000</color>
     <color name="gray">#F0FFFF</color>
+    <color name="my_gray" tools:ignore="MissingDefaultResource">#858585</color>
     <color name="picture_color_black_80">#80000000</color>
     <color name="picture_color_black_20">#20000000</color>
 </resources>
