@@ -59,6 +59,7 @@
 -keep class android.support.** {*;}
 
 -keep class org.apache.commons.net.** {*;}
+-keep class android.graphics.** {*;}
 
 # 保留继承的
 -keep public class * extends android.support.v4.**

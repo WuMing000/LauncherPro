@@ -82,5 +82,6 @@
         tools:ignore="ScopedStorage" />
 
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER"/>
 
 </manifest>

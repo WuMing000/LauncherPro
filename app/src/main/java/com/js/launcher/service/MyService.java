@@ -108,8 +108,12 @@ public class MyService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.e(TAG, "onDestroy");
-        unregisterReceiver(myInstalledReceiver);
-        unregisterReceiver(musicReceiver);
+        if (myInstalledReceiver != null) {
+            unregisterReceiver(myInstalledReceiver);
+        }
+        if (musicReceiver != null) {
+            unregisterReceiver(musicReceiver);
+        }
     }
 
     private void receive(){

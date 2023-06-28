@@ -1112,7 +1112,7 @@ public class MainActivity extends BaseActivity {
         mPageView = new ArrayList<>();
 
         // 设置主屏幕背景
-        setBackground();
+//        setBackground();
 
         // 使用数据库获取APP信息
         sp = getSharedPreferences("home_save_data", MODE_PRIVATE);
@@ -1302,13 +1302,16 @@ public class MainActivity extends BaseActivity {
                     Uri uri = null;
                     try {
                         uri = Uri.parse("http://www.baidu.com/s?&ie=utf-8&oe=UTF-8&wd=" + URLEncoder.encode(sourceText, "UTF-8"));
-                        Log.d(TAG, "source content is" + sourceText);
+                        Log.d(TAG, "source content is:" + sourceText);
                     } catch (UnsupportedEncodingException e1) {
                         e1.printStackTrace();
                     }
                     final Intent intent = new Intent();
                     intent.setAction("android.intent.action.VIEW");
                     intent.setData(uri);
+//                    ComponentName componentNameGallery = new ComponentName("com.android.browser", "com.android.browser.BrowserActivity");
+//                    intent.setComponent(componentNameGallery);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                 }
                 return false;
@@ -1644,6 +1647,7 @@ public class MainActivity extends BaseActivity {
         super.onResume();
         // 设置内容为空
         etSource.setText("");
+        etSource.clearFocus();
         if (audioManager.isMusicActive()) {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
             ivMusic.startAnimation(animation);//開始动画
@@ -1880,9 +1884,13 @@ public class MainActivity extends BaseActivity {
     public void onSetWallpaper() {
         //生成一个设置壁纸的请求
         try {
-            Intent intent = new Intent();
-            ComponentName componentName = new ComponentName("com.android.wallpaper", "com.android.wallpaper.picker.TopLevelPickerActivity");
-            intent.setComponent(componentName);
+//            Intent intent = new Intent();
+//            ComponentName componentName = new ComponentName("com.android.wallpaper", "com.android.wallpaper.picker.TopLevelPickerActivity");
+//            intent.setComponent(componentName);
+            //生成一个设置壁纸的请求
+            final Intent pickWallpaper = new Intent(Intent.ACTION_SET_WALLPAPER);
+            Intent intent = Intent.createChooser(pickWallpaper,"选择一种方式");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             //发送设置壁纸的请求
             startActivityForResult(intent, 1001);
         } catch (Exception e) {
@@ -1910,7 +1918,7 @@ public class MainActivity extends BaseActivity {
 //        ParcelFileDescriptor mParcelFileDescriptor = wallpaperManager.getWallpaperFile(WallpaperManager.FLAG_SYSTEM);//获取桌面壁纸
 //        FileDescriptor fileDescriptor = mParcelFileDescriptor.getFileDescriptor();
 //        Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);//获取Bitmap类型返回值
-        //        try {
+//        try {
 //            mParcelFileDescriptor.close();
 //        } catch(Exception e) {
 //            android.util.Log.d(TAG,"mParcelFileDescriptor.close() error");
