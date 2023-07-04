@@ -648,7 +648,6 @@ public class MainActivity extends BaseActivity {
                             appBeanList.add(new APPBean());
                         }
                         Log.d(TAG, "加载应用完成" + appBeanList.size());
-                        handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
                         // 把所有APP添加进数据库
                         new Thread() {
                             @Override
@@ -658,11 +657,14 @@ public class MainActivity extends BaseActivity {
                                 appListDataSaveUtils.setDataList("appList", appBeanList);
                             }
                         }.start();
+                        handler.sendEmptyMessageAtTime(HandlerManager.SHOW_APP_LIST, 100);
                     }
                     break;
                 case HandlerManager.SHOW_APP_LIST:
-                    mPageView.add(view1);
-                    mPageView.add(view2);
+                    if (mPageView != null && view1 != null && view2 != null) {
+                        mPageView.add(view1);
+                        mPageView.add(view2);
+                    }
                     // 数据库有值时，直接赋值
                     if (appList.size() != 0) {
                         appBeanList = appList;
@@ -688,7 +690,9 @@ public class MainActivity extends BaseActivity {
                         // 设置gridview适配器
                         gridView.setAdapter(myGridViewAdapter);
                         //每一个GridView作为一个View对象添加到ViewPager集合中
-                        mPageView.add(gridView);
+                        if (mPageView != null) {
+                            mPageView.add(gridView);
+                        }
                         // 刷新viewPager
 //                        pagerAdapter.notifyDataSetChanged();
                         pbLoading.setVisibility(View.GONE);
@@ -696,11 +700,17 @@ public class MainActivity extends BaseActivity {
                     }
                     // 获取底部圆点数据
                     getPointData();
-                    pagerAdapter.notifyDataSetChanged();
+                    if (pagerAdapter != null) {
+                        pagerAdapter.notifyDataSetChanged();
+                    }
                     //第一次显示小白点
-                    llPoint.getChildAt(0).setEnabled(true);
+                    if (llPoint.getChildAt(0) != null) {
+                        llPoint.getChildAt(0).setEnabled(true);
+                    }
                     // 设置默认显示第一页
-                    mViewPager.setCurrentItem(0);
+                    if (mViewPager != null) {
+                        mViewPager.setCurrentItem(0);
+                    }
                     break;
                 case HandlerManager.GET_SYSTEM_TIME:
                     // 更新时间，一秒发送
@@ -1203,25 +1213,29 @@ public class MainActivity extends BaseActivity {
             @Override
             public void run() {
                 super.run();
-                String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":"+ Contact.TOMCAT_SERVER_PORT + Contact.VERSION_URL);
-                Log.e(TAG, serverFile.length() + "=======");
-                String localVersionName = CustomUtil.getLocalVersionName();
-                if (serverFile.length() == 0) {
-                    handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
-                    return;
-                }
-                if (localVersionName.equals(serverFile)) {
-                    handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
-                } else {
-                    File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), Contact.PACKAGE_NAME + "-" + serverFile + ".apk");
-                    if (saveFile.exists()) {
-                        Message message = new Message();
-                        message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
-                        message.obj = saveFile;
-                        handler.sendMessageAtTime(message, 100);
-                    } else {
-                        getUpdateAPK(serverFile);
+                try {
+                    String serverFile = CustomUtil.getServerFile(Contact.SERVER_URL + ":"+ Contact.TOMCAT_SERVER_PORT + Contact.VERSION_URL);
+                    Log.e(TAG, serverFile.length() + "=======");
+                    String localVersionName = CustomUtil.getLocalVersionName();
+                    if (serverFile.length() == 0) {
+                        handler.sendEmptyMessageAtTime(HandlerManager.NETWORK_NO_CONNECT, 100);
+                        return;
                     }
+                    if (localVersionName.equals(serverFile)) {
+                        handler.sendEmptyMessageAtTime(HandlerManager.UPDATE_VERSION_SAME, 100);
+                    } else {
+                        File saveFile = new File(MyApplication.getInstance().getContext().getExternalFilesDir(null), Contact.PACKAGE_NAME + "-" + serverFile + ".apk");
+                        if (saveFile.exists()) {
+                            Message message = new Message();
+                            message.what = HandlerManager.UPDATE_VERSION_DIFFERENT;
+                            message.obj = saveFile;
+                            handler.sendMessageAtTime(message, 100);
+                        } else {
+                            getUpdateAPK(serverFile);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }.start();
@@ -1230,7 +1244,7 @@ public class MainActivity extends BaseActivity {
 
     private void getUpdateAPK(String version) {
         try {
-            Log.e(TAG, "================开始");
+            Log.e(TAG, "================run update");
             FTPClient client = new FTPClient();
             client.connect(Contact.FTP_SERVER_IP, Contact.FTP_SERVER_PORT);
             client.login(Contact.FTP_SERVER_USERNAME, Contact.FTP_SERVER_PASSWORD);
@@ -1669,21 +1683,22 @@ public class MainActivity extends BaseActivity {
             llPoint.removeAllViews();
         }
         pointViews.clear();
-        for (View view1 : mPageView) {
-
-            //创建底部指示器(小圆点)
-            view = new View(MainActivity.this);
-            view.setBackgroundResource(R.drawable.background_point);
-            view.setEnabled(false);
-            //设置宽高
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(20, 20);
-            //设置间隔
+        if (mPageView != null) {
+            for (int i = 0; i < mPageView.size(); i++) {
+                //创建底部指示器(小圆点)
+                view = new View(MainActivity.this);
+                view.setBackgroundResource(R.drawable.background_point);
+                view.setEnabled(false);
+                //设置宽高
+                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(20, 20);
+                //设置间隔
 //            if (pic != mPics[0]) {
                 layoutParams.leftMargin = 10;
 //            }
-            //添加到LinearLayout
-            llPoint.addView(view, layoutParams);
-            pointViews.add(view);
+                //添加到LinearLayout
+                llPoint.addView(view, layoutParams);
+                pointViews.add(view);
+            }
         }
     }
 
@@ -1955,9 +1970,9 @@ public class MainActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         // 清空集合
-        if (appBeanList != null) {
-            appBeanList.clear();
-        }
+//        if (appBeanList != null) {
+//            appBeanList.clear();
+//        }
         if (pagerAdapter != null) {
             pagerAdapter.notifyDataSetChanged();
             pagerAdapter = null;
