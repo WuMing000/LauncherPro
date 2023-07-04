@@ -1955,10 +1955,14 @@ public class MainActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         // 清空集合
-        appBeanList.clear();
-        pagerAdapter.notifyDataSetChanged();
+        if (appBeanList != null) {
+            appBeanList.clear();
+        }
+        if (pagerAdapter != null) {
+            pagerAdapter.notifyDataSetChanged();
+            pagerAdapter = null;
+        }
         mPageView = null;
-        pagerAdapter = null;
         mViewPager = null;
         if (updateDialog != null) {
             updateDialog.dismiss();
