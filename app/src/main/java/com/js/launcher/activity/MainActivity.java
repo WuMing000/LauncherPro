@@ -413,7 +413,7 @@ public class MainActivity extends BaseActivity {
                             mPageView.get(copyPageSelectedPosition + 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
                         } else if (copyPageSelectedPosition == 2) {
                             mPageView.get(copyPageSelectedPosition).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
-                            if (copyPageSelectedPosition > 2) {
+                            if (mPageView.size() > 3) {
                                 mPageView.get(copyPageSelectedPosition + 1).setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.selector_gridview_bg_stroke));
                             }
                         } else if (copyPageSelectedPosition == mPageView.size() - 1) {
