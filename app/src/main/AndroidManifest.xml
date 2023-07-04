@@ -15,6 +15,7 @@
             android:name=".activity.MainActivity"
             android:exported="true"
             android:screenOrientation="unspecified"
+            android:configChanges="orientation|keyboardHidden|navigation|screenSize"
             android:theme="@style/MyThemeFullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

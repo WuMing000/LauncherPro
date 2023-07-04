@@ -749,6 +749,7 @@ public class MainActivity extends BaseActivity {
                     String artist = bundle.getString("artist");
                     musicName = trackName;
                     musicSinger = artist;
+                    Log.d(TAG, "musicName:" + musicName + ",artist:" + artist);
                     // 设置歌名和歌手
                     tvMusicName.setText(musicName);
                     tvMusicSinger.setText(artist);
@@ -1070,6 +1071,74 @@ public class MainActivity extends BaseActivity {
         outState.putString("date", date);
         outState.putString("calendar", calendar);
         outState.putString("week", week);
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        LayoutInflater layoutInflater = getLayoutInflater();
+        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
+        int ori = mConfiguration.orientation; //获取屏幕方向
+        if (mPageView.size() != 0) {
+            if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                //横屏
+                view1 = layoutInflater.inflate(R.layout.one_view_pager_landscape, null);
+                view2 = layoutInflater.inflate(R.layout.two_view_pager_landscape, null);
+                mPageView.set(0, view1);
+                mPageView.set(1, view2);
+            } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                //竖屏
+                view1 = layoutInflater.inflate(R.layout.one_view_pager_portrait, null);
+                view2 = layoutInflater.inflate(R.layout.two_view_pager_portrait, null);
+                mPageView.set(0, view1);
+                mPageView.set(1, view2);
+            }
+        }
+        llBgHome = findViewById(R.id.ll_bg_home);
+        mViewPager = findViewById(R.id.my_view_pager);
+        pbLoading = findViewById(R.id.pb_loading);
+        tvLoading = findViewById(R.id.tv_loading);
+        llPoint = findViewById(R.id.ll_point);
+        tvTime = view1.findViewById(R.id.tv_time);
+        tvCalendar = view1.findViewById(R.id.tv_calendar);
+        tvWeek = view1.findViewById(R.id.tv_week);
+        handler.sendEmptyMessageAtTime(HandlerManager.GET_SYSTEM_TIME, 100);
+        ivPicture = view1.findViewById(R.id.iv_picture);
+        etSource = view1.findViewById(R.id.et_source);
+        rlMusic = view1.findViewById(R.id.rl_music);
+        ivMusic = view1.findViewById(R.id.iv_music);
+        tvMusicName = view1.findViewById(R.id.tv_music_name);
+        tvMusicSinger = view1.findViewById(R.id.tv_music_singer);
+        btnControl = view1.findViewById(R.id.btn_control);
+        btnPrevious = view1.findViewById(R.id.btn_previous);
+        btnNext = view1.findViewById(R.id.btn_next);
+        btnPicture = view1.findViewById(R.id.btn_picture);
+        btnProjectionScreen = view1.findViewById(R.id.btn_projection_screen);
+        btnAlarm = view1.findViewById(R.id.btn_alarm);
+        btnBrowser = view1.findViewById(R.id.btn_browser);
+        ibVideo = view2.findViewById(R.id.ib_video);
+        ibMusic = view2.findViewById(R.id.ib_music);
+        ibTiktok = view2.findViewById(R.id.ib_tiktok);
+        ibOffice = view2.findViewById(R.id.ib_office);
+        // 设置个性化字体
+        AssetManager mgr = getAssets();
+        Typeface tf = Typeface.createFromAsset(mgr, "fonts/Gilroy-Thin-13.otf");
+        tvTime.setTypeface(tf);
+        initClickListener();
+        Log.d(TAG, "1111111||||||" + copyPageSelectedPosition);
+        if (copyPageSelectedPosition > 1 && mPageView.size() != 0) {
+            for (int i = 2; i < mPageView.size(); i++) {
+                DragGridView view = (DragGridView) mPageView.get(i);
+                if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                    // 横屏时，设置六列
+                    view.setNumColumns(6);
+                } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                    // 竖屏时，设置三列
+                    view.setNumColumns(4);
+                }
+            }
+        }
+        pagerAdapter.notifyDataSetChanged();
     }
 
     @Override
