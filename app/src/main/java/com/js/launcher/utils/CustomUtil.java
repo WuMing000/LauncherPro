@@ -15,6 +15,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -46,7 +47,9 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.FileProvider;
 
 public class CustomUtil {
@@ -404,4 +407,23 @@ public class CustomUtil {
         }
         return true;
     }
+
+    /**
+     * 是否开启通知权限
+     * @param context
+     * @return
+     */
+    public static boolean isNotificationListenerEnabled(Context context) {
+        Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
+        Log.e(TAG, packageNames.toString());
+        Log.e(TAG, context.getPackageName());
+        if (!packageNames.contains(context.getPackageName())) {
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            return false;
+        }
+        return true;
+    }
+
 }

@@ -7,8 +7,10 @@ import android.app.AlertDialog;
 import android.app.Instrumentation;
 import android.app.WallpaperManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -20,9 +22,12 @@ import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
+import android.media.RemoteController;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
@@ -204,10 +209,9 @@ public class MainActivity extends BaseActivity {
             if (position == 0) {
                 if (audioManager.isMusicActive()) {
                     handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-                    ivMusic.startAnimation(animation);//開始动画
+
                 } else {
                     handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
-                    ivMusic.clearAnimation();
                 }
             }
 
@@ -738,10 +742,20 @@ public class MainActivity extends BaseActivity {
                 case HandlerManager.MUSIC_PLAY_UI :
                     // 更新暂停按钮
                     btnControl.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.btn_player_play_normal));
+                    ivMusic.clearAnimation();
                     break;
                 case HandlerManager.MUSIC_PAUSE_UI :
-                    // 更新播放按钮
-                    btnControl.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.btn_player_pause_normal));
+                    if (audioManager.isMusicActive()) {
+                        // 更新播放按钮
+                        btnControl.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.btn_player_pause_normal));
+                        ivMusic.startAnimation(animation);//開始动画
+                    } else {
+                        Intent intent = new Intent();
+                        ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusicpad", "com.tencent.qqmusicpad.activity.AppStarterActivity");
+                        intent.setComponent(componentNameGallery);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    }
                     break;
                 case HandlerManager.MUSIC_INFORMATION_UPDATE:
                     Bundle bundle = (Bundle) msg.obj;
@@ -1060,6 +1074,13 @@ public class MainActivity extends BaseActivity {
         }
     };
 
+    Runnable controlMusic = new Runnable() {
+        @Override
+        public void run() {
+            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+        }
+    };
+
     // 屏幕翻转时，调用
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
@@ -1076,6 +1097,7 @@ public class MainActivity extends BaseActivity {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        Log.d(TAG, "onConfigurationChanged=======");
         LayoutInflater layoutInflater = getLayoutInflater();
         Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
         int ori = mConfiguration.orientation; //获取屏幕方向
@@ -1120,22 +1142,34 @@ public class MainActivity extends BaseActivity {
         ibMusic = view2.findViewById(R.id.ib_music);
         ibTiktok = view2.findViewById(R.id.ib_tiktok);
         ibOffice = view2.findViewById(R.id.ib_office);
+        if (audioManager.isMusicActive()) {
+            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+//            ivMusic.startAnimation(animation);//開始动画
+        } else {
+            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
+//            ivMusic.clearAnimation();
+        }
+        // 使用数据库获取APP信息
+        sp = getSharedPreferences("home_save_data", MODE_PRIVATE);
+        // 使用数据库，设置歌名和歌手
+        spMusicName = sp.getString("musicName", "暂无歌名");
+        tvMusicName.setText(spMusicName);
+        spMusicSinger = sp.getString("musicSinger", "暂无歌手");
+        tvMusicSinger.setText(spMusicSinger);
         // 设置个性化字体
         AssetManager mgr = getAssets();
         Typeface tf = Typeface.createFromAsset(mgr, "fonts/Gilroy-Thin-13.otf");
         tvTime.setTypeface(tf);
         initClickListener();
         Log.d(TAG, "1111111||||||" + copyPageSelectedPosition);
-        if (copyPageSelectedPosition > 1 && mPageView.size() != 0) {
-            for (int i = 2; i < mPageView.size(); i++) {
-                DragGridView view = (DragGridView) mPageView.get(i);
-                if (ori == Configuration.ORIENTATION_LANDSCAPE) {
-                    // 横屏时，设置六列
-                    view.setNumColumns(6);
-                } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
-                    // 竖屏时，设置三列
-                    view.setNumColumns(4);
-                }
+        for (int i = 2; i < mPageView.size(); i++) {
+            DragGridView view = (DragGridView) mPageView.get(i);
+            if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                // 横屏时，设置六列
+                view.setNumColumns(6);
+            } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                // 竖屏时，设置三列
+                view.setNumColumns(4);
             }
         }
         pagerAdapter.notifyDataSetChanged();
@@ -1551,15 +1585,18 @@ public class MainActivity extends BaseActivity {
                         super.run();
                         // 通过发送键值实现
                         if (audioManager.isMusicActive()) {
+                            handler.removeCallbacks(controlMusic);
                             Instrumentation mInst = new Instrumentation();
                             mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PAUSE);
                             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
-                            ivMusic.clearAnimation();
+//                            ivMusic.clearAnimation();
                         } else {
+                            handler.removeCallbacks(controlMusic);
                             Instrumentation mInst = new Instrumentation();
                             mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PLAY);
-                            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-                            ivMusic.startAnimation(animation);//開始动画
+                            handler.postDelayed(controlMusic, 1000);
+//                            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+//                            ivMusic.startAnimation(animation);//開始动画
                         }
                     }
                 }.start();
@@ -1573,10 +1610,12 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void run() {
                         super.run();
+                        handler.removeCallbacks(controlMusic);
                         Instrumentation mInst = new Instrumentation();
                         mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-                        ivMusic.startAnimation(animation);//開始动画
+                        handler.postDelayed(controlMusic, 3000);
+//                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+//                        ivMusic.startAnimation(animation);//開始动画
                     }
                 }.start();
             }
@@ -1589,10 +1628,12 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void run() {
                         super.run();
+                        handler.removeCallbacks(controlMusic);
                         Instrumentation mInst = new Instrumentation();
                         mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_NEXT);
-                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-                        ivMusic.startAnimation(animation);//開始动画
+//                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+                        handler.postDelayed(controlMusic, 3000);
+//                        ivMusic.startAnimation(animation);//開始动画
                     }
                 }.start();
             }
@@ -1735,11 +1776,28 @@ public class MainActivity extends BaseActivity {
         etSource.clearFocus();
         if (audioManager.isMusicActive()) {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-            ivMusic.startAnimation(animation);//開始动画
+//            ivMusic.startAnimation(animation);//開始动画
         } else {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
-            ivMusic.clearAnimation();
+//            ivMusic.clearAnimation();
         }
+//        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
+//        int ori = mConfiguration.orientation; //获取屏幕方向
+//        if (copyPageSelectedPosition > 1 && mPageView.size() != 0) {
+//            for (int i = 2; i < mPageView.size(); i++) {
+//                DragGridView view = (DragGridView) mPageView.get(i);
+//                if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+//                    Log.e(TAG, "LANDSCAPE");
+//                    // 横屏时，设置六列
+//                    view.setNumColumns(6);
+//                } else if (ori == Configuration.ORIENTATION_PORTRAIT) {
+//                    Log.e(TAG, "PORTRAIT");
+//                    // 竖屏时，设置三列
+//                    view.setNumColumns(4);
+//                }
+//            }
+//        }
+//        pagerAdapter.notifyDataSetChanged();
     }
 
     /**

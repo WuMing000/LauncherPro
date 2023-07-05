@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 
 import com.js.launcher.service.GuardService;
+import com.js.launcher.service.MusicNotificationListenerService;
 import com.js.launcher.service.MyService;
 
 @SuppressLint("StaticFieldLeak")
@@ -33,6 +34,9 @@ public class MyApplication extends Application {
         } else {
             startService(new Intent(this, MyService.class));
             startService(new Intent(this, GuardService.class));
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            startService(new Intent(this, MusicNotificationListenerService.class));
         }
     }
 
