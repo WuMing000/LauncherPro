@@ -23,6 +23,7 @@ public class HandlerManager {
     public static final int VIEW_PAGER_ADAPTER_UPDATE = 16;
     public static final int DOWNLOAD_ERROR = 17;
     public static final int IS_INSTALL_APP = 18;
+    public static final int CONTROL_MUSIC = 19;
     public static ThreadLocal<Handler> threadLocal = new ThreadLocal<>();
 
     public static Handler getHandler() {

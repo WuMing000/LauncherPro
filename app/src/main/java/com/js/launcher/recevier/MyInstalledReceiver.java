@@ -3,10 +3,13 @@ package com.js.launcher.recevier;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.js.launcher.MyApplication;
 import com.js.launcher.manager.HandlerManager;
 
 // 应用安装卸载广播接收者
@@ -32,6 +35,16 @@ public class MyInstalledReceiver extends BroadcastReceiver {
 			message.obj = packageName;
 			handler.sendMessageAtTime(message, 100);
 			Log.i("launcher-homer", "卸载了 :" + packageName);
+			if ("com.tencent.qqmusicpad".equals(packageName.split(":")[1])) {
+				Handler musicHandler = HandlerManager.getHandler();
+				Message musicMessage = new Message();
+				musicMessage.what = HandlerManager.MUSIC_INFORMATION_UPDATE;
+				Bundle bundle = new Bundle();
+				bundle.putString("trackName", "暂无歌名");
+				bundle.putString("artist", "暂无歌手");
+				musicMessage.obj = bundle;
+				musicHandler.sendMessageAtTime(musicMessage, 100);
+			}
 		}
 	}
 }

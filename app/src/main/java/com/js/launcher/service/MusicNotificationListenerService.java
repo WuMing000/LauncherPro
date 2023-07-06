@@ -69,6 +69,10 @@ public class MusicNotificationListenerService extends NotificationListenerServic
         if (CustomUtil.isNotificationListenerEnabled(this)) {//开启通知使用权后再设置,否则会报权限错误
             initMediaSessionManager();
             registerRemoteController();
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                startService(new Intent(this, MusicNotificationListenerService.class));
+            }
         }
         return super.onStartCommand(intent, flags, startId);
     }

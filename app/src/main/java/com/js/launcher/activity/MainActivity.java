@@ -750,11 +750,22 @@ public class MainActivity extends BaseActivity {
                         btnControl.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.btn_player_pause_normal));
                         ivMusic.startAnimation(animation);//開始动画
                     } else {
-                        Intent intent = new Intent();
-                        ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusicpad", "com.tencent.qqmusicpad.activity.AppStarterActivity");
-                        intent.setComponent(componentNameGallery);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
+                        try {
+                            Intent intent = new Intent();
+                            ComponentName componentNameGallery = new ComponentName("com.tencent.qqmusicpad", "com.tencent.qqmusicpad.activity.AppStarterActivity");
+                            intent.setComponent(componentNameGallery);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(MainActivity.this, "系统中暂无该应用，请下载QQ音乐HD", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent();
+                            ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                            intent.setComponent(componentNameGallery);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent.putExtra("position", 0);
+                            startActivity(intent);
+                        }
                     }
                     break;
                 case HandlerManager.MUSIC_INFORMATION_UPDATE:
@@ -1013,6 +1024,9 @@ public class MainActivity extends BaseActivity {
                     updateDialog.setCancelable(false);
                     updateDialog.show();
                     break;
+                case HandlerManager.CONTROL_MUSIC:
+                    handler.postDelayed(playMusic, 3000);
+                    break;
                 default:
                     Log.e(TAG, "It's not send handler message.");
                     break;
@@ -1078,6 +1092,20 @@ public class MainActivity extends BaseActivity {
         @Override
         public void run() {
             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+        }
+    };
+
+    Runnable playMusic = new Runnable() {
+        @Override
+        public void run() {
+            Log.e(TAG, "playMusic");
+            if (audioManager.isMusicActive()) {
+                handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
+//            ivMusic.startAnimation(animation);//開始动画
+            } else {
+                handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
+//            ivMusic.clearAnimation();
+            }
         }
     };
 
@@ -1591,12 +1619,27 @@ public class MainActivity extends BaseActivity {
                             handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
 //                            ivMusic.clearAnimation();
                         } else {
-                            handler.removeCallbacks(controlMusic);
-                            Instrumentation mInst = new Instrumentation();
-                            mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PLAY);
-                            handler.postDelayed(controlMusic, 1000);
+                            if (CustomUtil.isAppInstalled("com.tencent.qqmusicpad")) {
+                                handler.removeCallbacks(controlMusic);
+                                Instrumentation mInst = new Instrumentation();
+                                mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PLAY);
+                                handler.postDelayed(controlMusic, 1000);
 //                            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
 //                            ivMusic.startAnimation(animation);//開始动画
+                            } else {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this, "系统中暂无该应用，请下载QQ音乐HD", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                Intent intent = new Intent();
+                                ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                                intent.setComponent(componentNameGallery);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                intent.putExtra("position", 0);
+                                startActivity(intent);
+                            }
                         }
                     }
                 }.start();
@@ -1610,12 +1653,27 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void run() {
                         super.run();
-                        handler.removeCallbacks(controlMusic);
-                        Instrumentation mInst = new Instrumentation();
-                        mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-                        handler.postDelayed(controlMusic, 3000);
+                        if (CustomUtil.isAppInstalled("com.tencent.qqmusicpad")) {
+                            handler.removeCallbacks(controlMusic);
+                            Instrumentation mInst = new Instrumentation();
+                            mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+                            handler.postDelayed(controlMusic, 3000);
 //                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
 //                        ivMusic.startAnimation(animation);//開始动画
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this, "系统中暂无该应用，请下载QQ音乐HD", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            Intent intent = new Intent();
+                            ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                            intent.setComponent(componentNameGallery);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent.putExtra("position", 0);
+                            startActivity(intent);
+                        }
                     }
                 }.start();
             }
@@ -1628,12 +1686,27 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void run() {
                         super.run();
-                        handler.removeCallbacks(controlMusic);
-                        Instrumentation mInst = new Instrumentation();
-                        mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_NEXT);
+                        if (CustomUtil.isAppInstalled("com.tencent.qqmusicpad")) {
+                            handler.removeCallbacks(controlMusic);
+                            Instrumentation mInst = new Instrumentation();
+                            mInst.sendKeyDownUpSync(KeyEvent.KEYCODE_MEDIA_NEXT);
 //                        handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-                        handler.postDelayed(controlMusic, 3000);
+                            handler.postDelayed(controlMusic, 3000);
 //                        ivMusic.startAnimation(animation);//開始动画
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this, "系统中暂无该应用，请下载QQ音乐HD", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            Intent intent = new Intent();
+                            ComponentName componentNameGallery = new ComponentName("com.js.appstore", "com.js.appstore.activity.NetworkCheckActivity");
+                            intent.setComponent(componentNameGallery);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent.putExtra("position", 0);
+                            startActivity(intent);
+                        }
                     }
                 }.start();
             }
@@ -1774,13 +1847,7 @@ public class MainActivity extends BaseActivity {
         // 设置内容为空
         etSource.setText("");
         etSource.clearFocus();
-        if (audioManager.isMusicActive()) {
-            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PAUSE_UI, 100);
-//            ivMusic.startAnimation(animation);//開始动画
-        } else {
-            handler.sendEmptyMessageAtTime(HandlerManager.MUSIC_PLAY_UI, 100);
-//            ivMusic.clearAnimation();
-        }
+        handler.sendEmptyMessageAtTime(HandlerManager.CONTROL_MUSIC, 100);
 //        Configuration mConfiguration = this.getResources().getConfiguration(); //获取设置的配置信息
 //        int ori = mConfiguration.orientation; //获取屏幕方向
 //        if (copyPageSelectedPosition > 1 && mPageView.size() != 0) {
@@ -1989,6 +2056,7 @@ public class MainActivity extends BaseActivity {
 //        setIconEnable(menu, true);
 //        getMenuInflater().inflate(R.menu.rv_content_menu, menu);
 //    }
+
 
 //    /**
 //     * 处理不同的菜单项

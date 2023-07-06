@@ -426,4 +426,10 @@ public class CustomUtil {
         return true;
     }
 
+    public static boolean isAppInstalled(String packageName) {
+        PackageManager manager = MyApplication.getInstance().getContext().getPackageManager();
+        Intent i = manager.getLaunchIntentForPackage(packageName);
+        return i != null;
+    }
+
 }
