@@ -57,6 +57,8 @@
 -keep public class * extends android.view.View
 # 保留support下的所有类及其内部类
 -keep class android.support.** {*;}
+-keep class android.media.** {*;}
+-keep class android.service.** {*;}
 
 -keep class org.apache.commons.net.** {*;}
 -keep class android.graphics.** {*;}

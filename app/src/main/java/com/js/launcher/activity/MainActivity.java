@@ -60,6 +60,7 @@ import com.js.launcher.utils.DataUtil;
 import com.js.launcher.view.DragGridView;
 import com.js.launcher.view.MyViewPager;
 import com.js.launcher.view.UpdateDialog;
+import com.js.launcher.view.WallPaperDialog;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
@@ -177,7 +178,7 @@ public class MainActivity extends BaseActivity {
 
     private Timer timer;
     private UpdateDialog updateDialog;
-    private AlertDialog wallDialog;
+    private WallPaperDialog wallDialog;
 
     private ProgressBar pbLoading;
     private TextView tvLoading;
@@ -722,22 +723,37 @@ public class MainActivity extends BaseActivity {
                     break;
                 case HandlerManager.HOME_LONG_CLICK :
                     // 设置壁纸
-                    wallDialog = new AlertDialog.Builder(MainActivity.this)
-                            .setMessage("是否设置壁纸")
-                            .setPositiveButton("设置壁纸", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    onSetWallpaper();
-                                }
-                            })
-                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.dismiss();
-                                    handler.removeCallbacks(updateWallpaper);
-                                }
-                            })
-                            .show();
+//                    wallDialog = new AlertDialog.Builder(MainActivity.this)
+//                            .setMessage("是否设置壁纸")
+//                            .setPositiveButton("设置壁纸", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialogInterface, int i) {
+//                                    onSetWallpaper();
+//                                }
+//                            })
+//                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialogInterface, int i) {
+//                                    dialogInterface.dismiss();
+//                                    handler.removeCallbacks(updateWallpaper);
+//                                }
+//                            })
+//                            .show();
+                    wallDialog = new WallPaperDialog(MainActivity.this);
+                    wallDialog.setWallpaperSettingsOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onSetWallpaper();
+                        }
+                    });
+                    wallDialog.setWallpaperCancelOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            wallDialog.dismiss();
+                            handler.removeCallbacks(updateWallpaper);
+                        }
+                    });
+                    wallDialog.show();
                     break;
                 case HandlerManager.MUSIC_PLAY_UI :
                     // 更新暂停按钮
