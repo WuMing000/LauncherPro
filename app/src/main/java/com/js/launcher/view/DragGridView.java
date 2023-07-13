@@ -425,6 +425,8 @@ public class DragGridView extends GridView {
         if (!isSystemAPP) {
             // 默认横向线性布局
             linearLayout1 = new LinearLayout(getContext());
+            linearLayout1.setOrientation(LinearLayout.HORIZONTAL);
+            linearLayout1.setGravity(Gravity.CENTER_VERTICAL);
             // 添加ImageView和卸载按钮
             ImageView uninstallImg = new ImageView(getContext());
             Button uninstallButton = new Button(getContext());
@@ -450,7 +452,8 @@ public class DragGridView extends GridView {
 
         // 应用信息布局，同卸载布局定义
         LinearLayout linearLayout2 = new LinearLayout(getContext());
-        linearLayout2.setGravity(LinearLayout.VERTICAL);
+        linearLayout2.setOrientation(LinearLayout.HORIZONTAL);
+        linearLayout2.setGravity(Gravity.CENTER_VERTICAL);
         ImageView informationImg = new ImageView(getContext());
         Button informationButton = new Button(getContext());
         informationImg.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.information));
